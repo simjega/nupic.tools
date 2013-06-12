@@ -1,6 +1,7 @@
 var connect = require('connect'),
     gh = require('./githubClient'),
     travis = require('./travis'),
+    contributors = require('./contributors'),
     TRAVIS_TOKEN = process.env.TRAVIS_TOKEN,
     GH_USERNAME = process.env.GH_USERNAME,
     GH_PASSWORD = process.env.GH_PASSWORD,
@@ -21,5 +22,6 @@ githubClient = new gh.GithubClient(GH_USERNAME, GH_PASSWORD, GH_ORG, GH_REPO);
 connect()
     .use(connect.logger('dev'))
     .use(connect.bodyParser())
+    .use('/contributors', contributors())
     .use('/travis', travis(TRAVIS_TOKEN, githubClient))
     .listen(8081);
