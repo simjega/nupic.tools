@@ -1,5 +1,6 @@
 var request = require('request'),
     url = require('url'),
+    qs = require('querystring'),
     csvUrl = 'http://numenta.org/resources/contributors.csv';
 
 function errorToHtml(error) {
@@ -45,24 +46,34 @@ function renderJson(out, res) {
     res.write(csvToJson(out));
 }
 
+function renderJsonP(out, cbName, res) {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.write(cbName + '(' + csvToJson(out) + ')');
+}
+
 function renderError(err, res) {
     res.setHeader('Content-Type', 'text/html');
     res.write('<html><body>' + errorToHtml(err) + '</body></html>');
 }
 
 function handler(req, res) {
-    var reqUrl = url.parse(req.url);
+    var reqUrl = url.parse(req.url),
+        query = qs.parse(reqUrl.query);
     console.log(reqUrl);
     request(csvUrl, function(err, csvResponse, body) {
         var out = '';
         if (err) {
             renderError(err, res);
-        } else if (reqUrl.path == '/.html') {
+        } else if (reqUrl.pathname == '/.html') {
             renderHtml(body, res);
-        } else if (reqUrl.path == '/.json') {
-            renderJson(body, res);
+        } else if (reqUrl.pathname == '/.json') {
+            if (query.callback) {
+                renderJsonP(body, query.callback, res);
+            } else {
+                renderJson(body, res);
+            }
         } else {
-            renderError(new Error('unrecognized data type ' + reqUrl.path), res);
+            renderError(new Error('unrecognized data type ' + reqUrl.pathname), res);
         }
         res.end();
     });
