@@ -7,11 +7,12 @@ Server for tooling around the development process for the NuPIC project.
 
 First, install nodejs and npm.
 
-Then, install connect and request:
+Then, install the following npm modules:
 
     npm install connect
     npm install request
     npm install github
+	npm install jquery
 
 ## Running it
 
