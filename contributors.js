@@ -76,14 +76,11 @@ function getMailingListRoster(callback) {
 }
 
 function updateWithMailingListDetails(csv, roster) {
-    var lines = csv.split('\n'),
+    var lines = csv.trim().split('\n'),
         header = lines.shift();
     header += ',Subscriber';
     lines.forEach(function(line, i) {
         var found = false;
-        if (! line) {
-            return;
-        }
         roster.forEach(function(email) {
             if (found) return;
             if (line.indexOf(email) > -1) {
