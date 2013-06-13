@@ -1,5 +1,6 @@
 var GitHubApi = require("github"),
-    GithubClient;
+    GithubClient,
+    prUrl = 'http://issues.numenta.org:8081/pullrequest';
 
 function GithubClient(user, password, org, repo) {
     var me = this;
@@ -15,17 +16,13 @@ function GithubClient(user, password, org, repo) {
         username: user,
         password: password
     });
-    console.log('Running a quick test of the client...');
-    // test the client
-    this.github.repos.getForks({
-        user: this.org,
-        repo: this.repo
-    }, function(err, forks) {
+    this.confirmWebhookExists(prUrl, 'pull_request', function(err) {
         if (err) {
-            console.error('There was an issue with the github client.');
-            process.exit(-1);
+            console.log('Error during webhook confirmation');
+            console.error(err);
+        } else {
+            console.log('Webhook confirmed.');
         }
-        console.log(me.org + '/' + me.repo + ' has ' + forks.length + ' forks.');
     });
 }
 
@@ -38,6 +35,44 @@ GithubClient.prototype.merge = function(head, base, callback) {
         head: head
     }, function(err, data) {
         callback(err);
+    });
+};
+
+GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
+    var me = this;
+    console.log('Looking for ' + event + ' hook for ' + url + '...');
+    this.github.repos.getHooks({
+        user: this.org,
+        repo: this.repo
+    }, function(err, hooks) {
+        var found = false;
+        if (err) {
+            return callback(err);
+        }
+        hooks.forEach(function(hook) {
+            if (url == hook.config.url) {
+                found = true;
+            }
+        });
+        console.log('And did it exist? ' + found);
+        if (! found) {
+            console.log('creating ' + event + ' hook for ' + url);
+            me.github.repos.createHook({
+                user: me.org,
+                repo: me.repo,
+                name: 'web', 
+                config: {
+                    url: url
+                },
+                events: ['pull_request']
+            }, function(err, data) {
+                if (err) {
+                    return callback(err);
+                }
+                console.log('Web hook created: ');
+                console.log(data);
+            });
+        }
     });
 };
 

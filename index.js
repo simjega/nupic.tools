@@ -2,6 +2,7 @@ var connect = require('connect'),
     gh = require('./githubClient'),
     travis = require('./travis'),
     contributors = require('./contributors'),
+    githubPullRequest = require('./prhandler'),
     TRAVIS_TOKEN = process.env.TRAVIS_TOKEN,
     GH_USERNAME = process.env.GH_USERNAME,
     GH_PASSWORD = process.env.GH_PASSWORD,
@@ -24,4 +25,5 @@ connect()
     .use(connect.bodyParser())
     .use('/contributors', contributors())
     .use('/travis', travis(TRAVIS_TOKEN, githubClient))
+    .use('/pullrequest', githubPullRequest(githubClient))
     .listen(8081);
