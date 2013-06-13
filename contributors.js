@@ -81,6 +81,9 @@ function updateWithMailingListDetails(csv, roster) {
     header += ',Subscriber';
     lines.forEach(function(line, i) {
         var found = false;
+        if (! line) {
+            return;
+        }
         roster.forEach(function(email) {
             if (found) return;
             if (line.indexOf(email) > -1) {
