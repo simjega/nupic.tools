@@ -43,7 +43,11 @@ GithubClient.prototype.isBehindMaster = function(sha, callback) {
         base: 'master',
         head: sha
     }, function(err, data) {
-        callback(err, data.behind_by > 0);
+        if (err) {
+            callback(err);
+        } else {
+            callback(err, data.behind_by > 0);
+        }
     });
 };
 
