@@ -38,6 +38,24 @@ GithubClient.prototype.merge = function(head, base, callback) {
     });
 };
 
+GithubClient.prototype.rejectPR = function(sha, reason) {
+    console.log('Rejecting ' + sha + ' because ' + reason);
+    this.github.statuses.create({
+        user: this.org,
+        repo: this.repo,
+        sha: sha,
+        state: 'failure',
+        description: reason
+    }, function(err, data) {
+        if (err) {
+            console.error(err);
+        } else {
+            console.log(sha + ' is failed.');
+            console.log(data);
+        }
+    });
+};
+
 GithubClient.prototype.prPending = function(sha) {
     console.log('Marking ' + sha + ' as pending...');
     this.github.statuses.create({
@@ -46,7 +64,7 @@ GithubClient.prototype.prPending = function(sha) {
         sha: sha,
         state: 'pending',
         description: 'Checking user and PR merge status...'
-    }, function(err) {
+    }, function(err, data) {
         if (err) {
             console.error(err);
         } else {

@@ -13,8 +13,9 @@ module.exports = function(githubClient) {
         // console.log('to:');
         // console.log(base);
         githubClient.prPending(head.sha);
-        if (user == 'rhyolight') {
-            // githubClient.rejectPR();
+
+        if (githubUser == 'rhyolight') {
+            // githubClient.rejectPR(head.sha, 'rhyolight sucks and should never code.');
         }
         res.end();
     };
