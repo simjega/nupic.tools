@@ -12,6 +12,11 @@ module.exports = function(githubClient) {
         // console.log(head);
         // console.log('to:');
         // console.log(base);
+        
+/*
+        if (githubUser == 'rhyolight') {
+            githubClient.rejectPR(head.sha, 'rhyolight is not allowed to submit PRs');
+        }
         githubClient.prPending(head.sha, function(err) {
             if (err) {
                 return console.error(err);
@@ -20,6 +25,7 @@ module.exports = function(githubClient) {
                 githubClient.rejectPR(head.sha, 'rhyolight is not allowed to submit PRs');
             }
         });
+*/
         res.end();
     };
 };
