@@ -81,6 +81,14 @@ GithubClient.prototype.prPending = function(sha, callback) {
     }, callback);
 };
 
+GithubClient.prototype.getAllOpenPullRequests = function(callback) {
+    this.github.pullRequests.getAll({
+        user: this.org,
+        repo: this.repo,
+        state: 'open'
+    }, callback);
+};
+
 GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
     var me = this;
     console.log('Looking for ' + event + ' hook for ' + url + '...');
