@@ -38,22 +38,16 @@ GithubClient.prototype.merge = function(head, base, callback) {
     });
 };
 
-GithubClient.prototype.rejectPR = function(sha, reason) {
+GithubClient.prototype.rejectPR = function(sha, reason, url, callback) {
     console.log('Rejecting ' + sha + ' because ' + reason);
     this.github.statuses.create({
         user: this.org,
         repo: this.repo,
         sha: sha,
         state: 'failure',
-        description: reason
-    }, function(err, data) {
-        if (err) {
-            console.error(err);
-        } else {
-            console.log(sha + ' is failed.');
-            console.log(data);
-        }
-    });
+        description: reason,
+        target_url: url
+    }, callback);
 };
 
 GithubClient.prototype.prPending = function(sha, callback) {

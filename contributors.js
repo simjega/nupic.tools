@@ -123,6 +123,13 @@ function handler(req, res) {
     });
 }
 
-module.exports = function() {
-    return handler;
+module.exports.requestHandler = handler;
+module.exports.getAll = function(callback) {
+    request(csvUrl, function(err, _, body) {
+        var out = '';
+        if (err) {
+            return callback(err);
+        }
+        callback(null, csvToJson(body));
+    });
 };

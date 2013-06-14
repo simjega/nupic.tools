@@ -23,7 +23,7 @@ githubClient = new gh.GithubClient(GH_USERNAME, GH_PASSWORD, GH_ORG, GH_REPO);
 connect()
     .use(connect.logger('dev'))
     .use(connect.bodyParser())
-    .use('/contributors', contributors())
+    .use('/contributors', contributors.requestHandler)
     .use('/travis', travis(TRAVIS_TOKEN, githubClient))
     .use('/pullrequest', githubPullRequest(githubClient))
     .listen(8081);

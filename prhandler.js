@@ -1,4 +1,4 @@
-
+var contributors = require('./contributors');
 
 module.exports = function(githubClient) {
     return function(req, res) {
@@ -13,6 +13,17 @@ module.exports = function(githubClient) {
         // console.log('to:');
         // console.log(base);
         
+        contributors.getAll(function(err, contribs) {
+            if (isNotContributor(githubUser, contribs)) {
+                githubClient.rejectPR(
+                    head.sha, 
+                    githubUser + ' has not signed the Numenta Contributor License',
+                    'http://numenta.com/licenses/cl/contributors.html');
+            } else {
+                githubClient.approvePR(head.sha, 'PR requester has signed the Numenta Contributor License');
+            }
+        });
+
 /*
         if (githubUser == 'rhyolight') {
             githubClient.rejectPR(head.sha, 'rhyolight is not allowed to submit PRs');
