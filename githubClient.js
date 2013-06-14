@@ -56,7 +56,7 @@ GithubClient.prototype.rejectPR = function(sha, reason) {
     });
 };
 
-GithubClient.prototype.prPending = function(sha) {
+GithubClient.prototype.prPending = function(sha, callback) {
     console.log('Marking ' + sha + ' as pending...');
     this.github.statuses.create({
         user: this.org,
@@ -64,13 +64,7 @@ GithubClient.prototype.prPending = function(sha) {
         sha: sha,
         state: 'pending',
         description: 'Checking user and PR merge status...'
-    }, function(err, data) {
-        if (err) {
-            console.error(err);
-        } else {
-            console.log(sha + ' is pending.');
-        }
-    });
+    }, callback);
 };
 
 GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {

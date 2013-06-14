@@ -12,11 +12,14 @@ module.exports = function(githubClient) {
         // console.log(head);
         // console.log('to:');
         // console.log(base);
-        githubClient.prPending(head.sha);
-
-        if (githubUser == 'rhyolight') {
-            // githubClient.rejectPR(head.sha, 'rhyolight sucks and should never code.');
-        }
+        githubClient.prPending(head.sha, function(err) {
+            if (err) {
+                return console.error(err);
+            }
+            if (githubUser == 'rhyolight') {
+                githubClient.rejectPR(head.sha, 'rhyolight is not allowed to submit PRs');
+            }
+        });
         res.end();
     };
 };
