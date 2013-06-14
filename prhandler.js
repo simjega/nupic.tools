@@ -8,10 +8,14 @@ module.exports = function(githubClient) {
             head = payload.pull_request.head,
             base = payload.pull_request.base;
         console.log('Received pull request "' + action + '" from ' + githubUser);
-        console.log('from:');
-        console.log(head);
-        console.log('to:');
-        console.log(base);
+        // console.log('from:');
+        // console.log(head);
+        // console.log('to:');
+        // console.log(base);
+        githubClient.prPending(head.sha);
+        if (user == 'rhyolight') {
+            // githubClient.rejectPR();
+        }
         res.end();
     };
 };

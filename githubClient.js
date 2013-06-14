@@ -38,6 +38,23 @@ GithubClient.prototype.merge = function(head, base, callback) {
     });
 };
 
+GithubClient.prototype.prPending = function(sha) {
+    console.log('Marking ' + sha + ' as pending...');
+    this.github.statuses.create({
+        user: this.org,
+        repo: this.repo,
+        sha: sha,
+        state: 'pending',
+        description: 'Checking user and PR merge status...'
+    }, function(err) {
+        if (err) {
+            console.error(err);
+        } else {
+            console.log(sha + ' is pending.');
+        }
+    });
+};
+
 GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
     var me = this;
     console.log('Looking for ' + event + ' hook for ' + url + '...');
