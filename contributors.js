@@ -130,6 +130,6 @@ module.exports.getAll = function(callback) {
         if (err) {
             return callback(err);
         }
-        callback(null, csvToJson(body));
+        callback(null, JSON.parse(csvToJson(body)).contributors);
     });
 };

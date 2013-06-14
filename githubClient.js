@@ -33,9 +33,18 @@ GithubClient.prototype.merge = function(head, base, callback) {
         repo: this.repo,
         base: base,
         head: head
-    }, function(err, data) {
-        callback(err);
-    });
+    }, callback);
+};
+
+GithubClient.prototype.approvePR = function(sha, callback) {
+    console.log('Approving ' + sha);
+    this.github.statuses.create({
+        user: this.org,
+        repo: this.repo,
+        sha: sha,
+        state: 'success',
+        description: 'NuPIC tools says you are good to go.'
+    }, callback);
 };
 
 GithubClient.prototype.rejectPR = function(sha, reason, url, callback) {
