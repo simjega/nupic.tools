@@ -43,7 +43,7 @@ GithubClient.prototype.approvePR = function(sha, callback) {
         repo: this.repo,
         sha: sha,
         state: 'success',
-        description: 'NuPIC tools says you are good to go.'
+        description: 'nupic.tools approves this pull request.'
     }, callback);
 };
 

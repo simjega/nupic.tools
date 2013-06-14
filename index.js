@@ -26,4 +26,8 @@ connect()
     .use('/contributors', contributors.requestHandler)
     .use('/travis', travis(TRAVIS_TOKEN, githubClient))
     .use('/pullrequest', githubPullRequest(githubClient))
+    .use('/', function(req, res) {
+        res.setHeader('Content-Type', 'text/html');
+        res.end('<html><body>nupic.tools is alive</body></html>');
+    })
     .listen(8081);

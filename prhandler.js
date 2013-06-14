@@ -1,10 +1,10 @@
 var contributors = require('./contributors');
 
 function isContributor(name, roster) {
-	return roster.map(function(p) { return p.Github; })
+    return roster.map(function(p) { return p.Github; })
                  .reduce(function(prev, curr) {
-					if (prev) return prev;
-					return curr == name;
+                    if (prev) return prev;
+                    return curr == name;
                  }, false);
 }
 
@@ -32,7 +32,7 @@ module.exports = function(githubClient) {
                 githubClient.rejectPR(
                     head.sha, 
                     githubUser + ' has not signed the Numenta Contributor License',
-                    'http://numenta.com/licenses/cl/contributors.html');
+                    'http://numenta.com/licenses/cl/');
             } else {
                 githubClient.approvePR(head.sha);
             }
