@@ -22,19 +22,22 @@ module.exports = function(githubClient) {
             return res.end();
         }
 
-        // console.log('from:');
-        // console.log(head);
-        // console.log('to:');
-        // console.log(base);
-        
         contributors.getAll(function(err, contribs) {
             if (! isContributor(githubUser, contribs)) {
-                githubClient.rejectPR(
-                    head.sha, 
+                githubClient.rejectPR(head.sha, 
                     githubUser + ' has not signed the Numenta Contributor License',
                     'http://numenta.com/licenses/cl/');
             } else {
-                githubClient.approvePR(head.sha);
+                // now we need to check to see if the commit is behind master
+                githubClient.isBehindMaster(head.sha, function(err, behind) {
+                    if (behind) {
+                        githubClient.rejectPR(head.sha, 
+                            'This PR needs to be fast-forwarded. ' + 
+                            'Please merge master into it.');
+                    } else {
+                        githubClient.approvePR(head.sha);
+                    }
+                });
             }
         });
 

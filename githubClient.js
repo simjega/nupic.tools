@@ -36,6 +36,19 @@ GithubClient.prototype.merge = function(head, base, callback) {
     }, callback);
 };
 
+GithubClient.prototype.isBehindMaster = function(sha, callback) {
+    this.github.repos.compareCommits({
+        user: this.org,
+        repo: this.repo,
+        base: 'master',
+        head: sha
+    }, function(err, data) {
+        if (err) return callback(err);
+        console.log(data);
+        callback(null, data.behind_by > 0);
+    });
+};
+
 GithubClient.prototype.approvePR = function(sha, callback) {
     console.log('Approving ' + sha);
     this.github.statuses.create({
