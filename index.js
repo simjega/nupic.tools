@@ -1,23 +1,29 @@
 var connect = require('connect'),
+    colors = require('colors'),
+    $ = require('jquery'),
     
     gh = require('./githubClient'),
     travis = require('./travis'),
     contributors = require('./contributors'),
     githubPullRequest = require('./prhandler'),
-    chatlogs = require('./chatlogs'),
+    // not using this yet
+    // chatlogs = require('./chatlogs'),
     cfg = require('./configReader').read(),
 
     HOST = cfg.host,
     PORT = cfg.port || 8081,
 
-    pullRequestWebhookUrl = 'http://' + HOST + ':' + PORT + '/pullrequest',
+    baseUrl = 'http://' + HOST + ':' + PORT,
+    pullRequestWebhookUrl = baseUrl + '/pullrequest',
 
     githubClient,
 
     // not using this yet
     // logDirectory = '~/Desktop/nupic/chatlogs',
-    
+
     channelName = 'nupic';
+
+console.log('nupic.tools server starting...'.green);
 
 if (! cfg.travis.token || ! cfg.github.username || ! cfg.github.password || 
     ! cfg.github.organization || ! cfg.github.repository) {
@@ -30,6 +36,12 @@ if (! cfg.travis.token || ! cfg.github.username || ! cfg.github.password ||
     process.exit(-1);
 }
 
+(function() {
+    var cfgCopy = $.extend(true, {}, cfg, {github: {password: '<hidden>'}})
+    console.log('nupic.tools will use the following configuration:');
+    console.log(JSON.stringify(cfgCopy, null, 2).yellow);
+}());
+
 githubClient = new gh.GithubClient(
     cfg.github.username, 
     cfg.github.password, 
@@ -38,7 +50,7 @@ githubClient = new gh.GithubClient(
 
 githubClient.confirmWebhookExists(pullRequestWebhookUrl, 'pull_request', function(err) {
     if (err) {
-        console.log('Error during webhook confirmation');
+        console.error('Error during webhook confirmation'.red);
         console.error(err);
     } else {
         console.log('Webhook confirmed.');
@@ -51,9 +63,12 @@ connect()
     .use('/contributors', contributors.requestHandler)
     .use('/travis', travis(cfg.travis.token, githubClient))
     .use('/pullrequest', githubPullRequest(githubClient))
-    .use('/chatlogs', chatlogs(logDirectory, channelName))
+    // not using this yet
+    // .use('/chatlogs', chatlogs(logDirectory, channelName))
     .use('/', function(req, res) {
         res.setHeader('Content-Type', 'text/html');
         res.end('<html><body>nupic.tools is alive</body></html>');
     })
-    .listen(PORT);
+    .listen(PORT, function() {
+        console.log(('\nServer running at ' + baseUrl + '\n').green);
+    });

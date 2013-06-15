@@ -100,7 +100,6 @@ GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
                 found = true;
             }
         });
-        console.log('And did it exist? ' + found);
         if (! found) {
             console.log('creating ' + event + ' hook for ' + url);
             me.github.repos.createHook({
@@ -118,6 +117,8 @@ GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
                 console.log('Web hook created: ');
                 console.log(data);
             });
+        } else {
+            callback();
         }
     });
 };
