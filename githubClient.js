@@ -95,6 +95,7 @@ GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
         if (err) {
             return callback(err);
         }
+        console.log(hooks);
         hooks.forEach(function(hook) {
             if (url == hook.config.url) {
                 found = true;
@@ -109,7 +110,7 @@ GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
                 config: {
                     url: url
                 },
-                events: ['pull_request']
+                events: ['pull_request', 'status']
             }, function(err, data) {
                 if (err) {
                     return callback(err);

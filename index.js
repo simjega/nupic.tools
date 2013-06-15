@@ -5,7 +5,7 @@ var connect = require('connect'),
     gh = require('./githubClient'),
     travis = require('./travis'),
     contributors = require('./contributors'),
-    githubPullRequest = require('./prhandler'),
+    githubHookHandler = require('./githubHook'),
     // not using this yet
     // chatlogs = require('./chatlogs'),
     cfg = require('./configReader').read(),
@@ -14,7 +14,8 @@ var connect = require('connect'),
     PORT = cfg.port || 8081,
 
     baseUrl = 'http://' + HOST + ':' + PORT,
-    pullRequestWebhookUrl = baseUrl + '/pullrequest',
+    githubHookPath = '/github-hook',
+    pullRequestWebhookUrl = baseUrl + githubHookPath,
 
     githubClient,
 
@@ -61,8 +62,8 @@ connect()
     .use(connect.logger('dev'))
     .use(connect.bodyParser())
     .use('/contributors', contributors.requestHandler)
-    .use('/travis', travis(cfg.travis.token, githubClient))
-    .use('/pullrequest', githubPullRequest(githubClient))
+    // .use('/travis', travis(cfg.travis.token, githubClient))
+    .use(githubHookPath, githubHookHandler(githubClient))
     // not using this yet
     // .use('/chatlogs', chatlogs(logDirectory, channelName))
     .use('/', function(req, res) {
