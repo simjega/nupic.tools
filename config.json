@@ -1,0 +1,13 @@
+{
+    "host": "issues.numenta.org",
+    "port": 8081,
+    "github": {
+        "username": "numenta-ci",
+        "password": "",
+        "organization": "numenta",
+        "repository": "nupic"
+    },
+    "travis": {
+        "token": ""
+    }
+}

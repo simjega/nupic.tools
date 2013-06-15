@@ -1,6 +1,5 @@
 var GitHubApi = require("github"),
-    GithubClient,
-    prUrl = 'http://issues.numenta.org:8081/pullrequest';
+    GithubClient;
 
 function GithubClient(user, password, org, repo) {
     var me = this;
@@ -15,14 +14,6 @@ function GithubClient(user, password, org, repo) {
         type: "basic",
         username: user,
         password: password
-    });
-    this.confirmWebhookExists(prUrl, 'pull_request', function(err) {
-        if (err) {
-            console.log('Error during webhook confirmation');
-            console.error(err);
-        } else {
-            console.log('Webhook confirmed.');
-        }
     });
 }
 
