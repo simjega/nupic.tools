@@ -1,4 +1,5 @@
-var contributors = require('./contributors'),
+var NUPIC_STATUS_PREFIX = 'NuPIC Status:',
+    contributors = require('./contributors'),
     githubClient;
 
 function isContributor(name, roster) {
@@ -33,7 +34,7 @@ function revalidateAllOpenPullRequests(githubUser, contributors) {
     githubClient.getAllOpenPullRequests(function(err, prs) {
         console.log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.sha; }).forEach(function(sha) {
-            performCompleteValidation(sha);
+            performCompleteValidation(sha, githubUser);
         });
     });
 }
@@ -60,30 +61,32 @@ function getLatestTravisStatus(list) {
 }
 
 function getLatestNupicStatus(list) {
-    return searchStatusListForDecription(list, 'NuPIC Status:');
+    return searchStatusListForDecription(list, NUPIC_STATUS_PREFIX);
 }
 
-function performCompleteValidation(sha) {
+function performCompleteValidation(sha, githubUser) {
     console.log('VALIDATING ' + sha);
 
     getAllStatuses(sha, function(err, statusHistory) {
+        if (err) throw err;
+
         var tstatus = getLatestTravisStatus(statusHistory);
         var nstatus = getLatestNupicStatus(statusHistory);
 
         if (! tstatus) {
             // fail because no travis build has run
-            githubClient.pendingPR(head.sha, 
+            githubClient.pendingPR(sha, 
                 'Travis CI build has not started.', 
                 'https://travis-ci.org/' + githubClient.org 
                     + '/' + githubClient.repo);
-        } else if (tstatus == 'success') {
+        } else if (tstatus.state == 'success') {
             console.log('...last travis build was successful');
             // run further validation on contributor
             if (! nstatus) {
                 console.log('no nupic validation has occurred on ' + sha);
                 // Nupic has never validated this sha, so run validation
                 contributors.getAll(function(err, contributors) {
-                    postTravisValidation(head.sha, githubUser, contributors);
+                    postTravisValidation(sha, githubUser, contributors);
                 });
             } else {
                 // If there is a nupic status and a travis status, we want to
@@ -96,17 +99,17 @@ function performCompleteValidation(sha) {
                     // re-run the nupic validation
                     console.log('Latest nupic status is out of date, rerunning...');
                     contributors.getAll(function(err, contributors) {
-                        postTravisValidation(head.sha, githubUser, contributors);
+                        postTravisValidation(sha, githubUser, contributors);
                     });
                 }
             }
 
-        } else if (tstatus == 'pending') {
+        } else if (tstatus.state == 'pending') {
             // do nothing until we're notified of a new status after the build
             // is complete
         } else {
             // travis failed or errored out
-            githubClient.rejectPR(head.sha,
+            githubClient.rejectPR(sha,
                 'Travis CI build failed!', 
                 tstatus.target_url);
         }
@@ -131,13 +134,21 @@ function handlePullRequest(payload) {
             });
         }
     } else {
-        performCompleteValidation(head.sha);
+        performCompleteValidation(head.sha, githubUser);
     }
 }
 
 function handleStateChange(payload) {
     console.log('State of ' + payload.sha + ' updated to ' + payload.state);
-    performCompleteValidation(payload.sha);
+    // Get statuses and check the latest one
+    getAllStatuses(payload.sha, function(err, statusHistory) {
+        var latestStatus = statusHistory[0];
+        if (latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+            // ignore statuses that were created by this server
+        } else {
+            performCompleteValidation(payload.sha, payload.pull_request.user.login);
+        }
+    });
 }
 
 module.exports = function(client) {
