@@ -9,8 +9,8 @@ function isContributor(name, roster) {
                  }, false);
 }
 
-function validateSha(sha, githubUser, contributors, callback) {
-    console.log('Validating SHA "' + sha + '"');
+function postTravisValidation(sha, githubUser, contributors, callback) {
+    console.log('Validating Nupic requirements on ' + sha);
     if (! isContributor(githubUser, contributors)) {
         githubClient.rejectPR(sha, 
             githubUser + ' has not signed the Numenta Contributor License',
@@ -21,7 +21,7 @@ function validateSha(sha, githubUser, contributors, callback) {
             if (behind) {
                 githubClient.rejectPR(sha, 
                     'This PR needs to be fast-forwarded. ' + 
-                    'Please merge master into it.', callback);
+                    'Please merge master into it.', null, callback);
             } else {
                 githubClient.approvePR(sha, callback);
             }
@@ -33,8 +33,83 @@ function revalidateAllOpenPullRequests(githubUser, contributors) {
     githubClient.getAllOpenPullRequests(function(err, prs) {
         console.log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.sha; }).forEach(function(sha) {
-            validateSha(sha, githubUser, contributors);
+            performCompleteValidation(sha);
         });
+    });
+}
+
+function getAllStatuses(sha, callback) {
+    githubClient.github.statuses.get({
+        user: githubClient.org,
+        repo: githubClient.repo,
+        sha: sha
+    }, callback);
+}
+
+function searchStatusListForDecription(list, description) {
+    var i = 0;
+    for (; i<list.length; i++) {
+        if (list[i].description.indexOf(description) == 0) {
+            return list[i];
+        }
+    }
+}
+
+function getLatestTravisStatus(list) {
+    return searchStatusListForDecription(list, 'The Travis CI build');
+}
+
+function getLatestNupicStatus(list) {
+    return searchStatusListForDecription(list, 'NuPIC Status:');
+}
+
+function performCompleteValidation(sha) {
+    console.log('VALIDATING ' + sha);
+
+    getAllStatuses(sha, function(err, statusHistory) {
+        var tstatus = getLatestTravisStatus(statusHistory);
+        var nstatus = getLatestNupicStatus(statusHistory);
+
+        if (! tstatus) {
+            // fail because no travis build has run
+            githubClient.pendingPR(head.sha, 
+                'Travis CI build has not started.', 
+                'https://travis-ci.org/' + githubClient.org 
+                    + '/' + githubClient.repo);
+        } else if (tstatus == 'success') {
+            console.log('...last travis build was successful');
+            // run further validation on contributor
+            if (! nstatus) {
+                console.log('no nupic validation has occurred on ' + sha);
+                // Nupic has never validated this sha, so run validation
+                contributors.getAll(function(err, contributors) {
+                    postTravisValidation(head.sha, githubUser, contributors);
+                });
+            } else {
+                // If there is a nupic status and a travis status, we want to
+                // check that the nupic status is newer. The nupic status is 
+                // the one we always want to be up front.
+                if (new Date(nstatus.updated_at) > new Date(tstatus.updated_at)) {
+                    // nupic status is newer, which is what we want
+                    console.log('Latest nupic status is valid. No change required.');
+                } else {
+                    // re-run the nupic validation
+                    console.log('Latest nupic status is out of date, rerunning...');
+                    contributors.getAll(function(err, contributors) {
+                        postTravisValidation(head.sha, githubUser, contributors);
+                    });
+                }
+            }
+
+        } else if (tstatus == 'pending') {
+            // do nothing until we're notified of a new status after the build
+            // is complete
+        } else {
+            // travis failed or errored out
+            githubClient.rejectPR(head.sha,
+                'Travis CI build failed!', 
+                tstatus.target_url);
+        }
     });
 }
 
@@ -50,39 +125,19 @@ function handlePullRequest(payload) {
         // if this pull request just got merged, we need to re-validate the
         // fast-forward status of all the other open pull requests
         if (payload.pull_request.merged) {
-            console.log('Noticed a PR just merged... time to revalidate all the other pull requests!');
+            console.log('A PR just merged. Re-validating open pull requests...');
             contributors.getAll(function(err, contributors) {
                 revalidateAllOpenPullRequests(githubUser, contributors);
             });
         }
     } else {
-
-        getLatestTravisStatus(function(err, status) {
-            if (! status) {
-                // fail because no travis build has run
-            } else if (status == 'success') {
-                // run further validation on contributor
-            }
-        });
-
-        contributors.getAll(function(err, contributors) {
-            validateSha(head.sha, githubUser, contributors);
-        });
-
-        // githubClient.github.statuses.get({
-        //     user: githubClient.org,
-        //     repo: githubClient.repo,
-        //     sha: head.sha
-        // }, function(err, data) {
-        //     if (err) return console.error(err);
-        //     console.log("STATUS DATA: ");
-        //     console.log(data);
-        // });
+        performCompleteValidation(head.sha);
     }
 }
 
 function handleStateChange(payload) {
-    console.log('state of ' + payload.sha + ' updated to ' + payload.state);
+    console.log('State of ' + payload.sha + ' updated to ' + payload.state);
+    performCompleteValidation(payload.sha);
 }
 
 module.exports = function(client) {

@@ -6,12 +6,12 @@ function GithubClient(user, password, org, repo) {
     this.org = org;
     this.repo = repo;
     this.github = new GitHubApi({
-        version: "3.0.0",
+        version: '3.0.0',
         timeout: 5000
     });
     console.log('GithubClient created for user ' + user);
     this.github.authenticate({
-        type: "basic",
+        type: 'basic',
         username: user,
         password: password
     });
@@ -49,7 +49,7 @@ GithubClient.prototype.approvePR = function(sha, callback) {
         repo: this.repo,
         sha: sha,
         state: 'success',
-        description: 'nupic.tools approves this pull request.'
+        description: 'NuPIC Status: Travis passed, contributor confirmed, fast-forward confirmed.'
     }, callback);
 };
 
@@ -60,19 +60,20 @@ GithubClient.prototype.rejectPR = function(sha, reason, url, callback) {
         repo: this.repo,
         sha: sha,
         state: 'failure',
-        description: reason,
+        description: 'NuPIC Status: ' + reason,
         target_url: url
     }, callback);
 };
 
-GithubClient.prototype.prPending = function(sha, callback) {
-    console.log('Marking ' + sha + ' as pending...');
+GithubClient.prototype.pendingPR = function(sha, reason, url, callback) {
+    console.log('Marking ' + sha + ' as pending because ' + reason);
     this.github.statuses.create({
         user: this.org,
         repo: this.repo,
         sha: sha,
         state: 'pending',
-        description: 'Checking user and PR merge status...'
+        description: 'NuPIC Status: ' + reason,
+        target_url: url
     }, callback);
 };
 
@@ -95,7 +96,6 @@ GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
         if (err) {
             return callback(err);
         }
-        console.log(hooks);
         hooks.forEach(function(hook) {
             if (url == hook.config.url) {
                 found = true;

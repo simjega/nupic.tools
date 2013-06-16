@@ -6,15 +6,18 @@ var connect = require('connect'),
     travis = require('./travis'),
     contributors = require('./contributors'),
     githubHookHandler = require('./githubHook'),
+    statusReporter = require('./statusReporter'),
+    cfg = require('./configReader').read(),
+
     // not using this yet
     // chatlogs = require('./chatlogs'),
-    cfg = require('./configReader').read(),
 
     HOST = cfg.host,
     PORT = cfg.port || 8081,
 
     baseUrl = 'http://' + HOST + ':' + PORT,
     githubHookPath = '/github-hook',
+    statusReportPath = '/shaStatus',
     pullRequestWebhookUrl = baseUrl + githubHookPath,
 
     githubClient,
@@ -64,6 +67,7 @@ connect()
     .use('/contributors', contributors.requestHandler)
     // .use('/travis', travis(cfg.travis.token, githubClient))
     .use(githubHookPath, githubHookHandler(githubClient))
+    .use(statusReportPath, statusReporter(githubClient))
     // not using this yet
     // .use('/chatlogs', chatlogs(logDirectory, channelName))
     .use('/', function(req, res) {
