@@ -6,8 +6,5 @@
         "password": "",
         "organization": "numenta",
         "repository": "nupic"
-    },
-    "travis": {
-        "token": ""
     }
 }

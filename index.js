@@ -3,7 +3,6 @@ var connect = require('connect'),
     $ = require('jquery'),
     
     gh = require('./githubClient'),
-    travis = require('./travis'),
     contributors = require('./contributors'),
     githubHookHandler = require('./githubHook'),
     statusReporter = require('./statusReporter'),
@@ -29,10 +28,9 @@ var connect = require('connect'),
 
 console.log('nupic.tools server starting...'.green);
 
-if (! cfg.travis.token || ! cfg.github.username || ! cfg.github.password || 
+if (! cfg.github.username || ! cfg.github.password || 
     ! cfg.github.organization || ! cfg.github.repository) {
     console.error('The following values are required in the config.json or config-' + process.env.USER + '.json file:\n' +
-        '\t- travis.token\n' +
         '\t- github.username\n' +
         '\t- github.password\n' +
         '\t- github.organization\n' +
@@ -65,7 +63,6 @@ connect()
     .use(connect.logger('dev'))
     .use(connect.bodyParser())
     .use('/contributors', contributors.requestHandler)
-    // .use('/travis', travis(cfg.travis.token, githubClient))
     .use(githubHookPath, githubHookHandler(githubClient))
     .use(statusReportPath, statusReporter(githubClient))
     // not using this yet
