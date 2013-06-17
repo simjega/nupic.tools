@@ -21,7 +21,9 @@ function getAllStatuses(sha, callback) {
         user: githubClient.org,
         repo: githubClient.repo,
         sha: sha
-    }, callback);
+    }, function(err, statuses) {
+        callback(err, (statuses || []));
+    });
 }
 
 function postNewNupicStatus(sha, statusDetails) {
