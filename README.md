@@ -1,17 +1,13 @@
 nupic-tools
 =============
 
-Server for tooling around a development process that ensures the `master` branch is always green, without the needs for a development branch. This is being used to support the development process of the [NuPIC](http://github.com/numenta/nupic) project, but it is ALMOST generalized enough to be used for any project (the `contributor` code is not generic, but can be easily removed).
+Server for tooling around a development process that ensures the `master` branch is always green, without the need for a development branch. This is being used to support the [development process](https://github.com/numenta/nupic/wiki/Developer-Workflow) of the [NuPIC](http://github.com/numenta/nupic) project, but it is ALMOST generalized enough to be used for any project (the `contributor` code is not generic, but can be easily removed).
 
 This server registers a web hook URL with github when it starts up (if it doesn't already exist) and gets notified on pull requests and status changes on the repository specified in the [configuration](#configuration). When pull requests or SHA status updates are received, it runs validators against the SHAs. 
 
-> TODO: Update the documentation for the NuPIC development process that includes the services provided in this server, and update this documentation to link to the new flow.
-
 ## Installation
 
-First, install nodejs and npm.
-
-Then, install this npm module and its dependencies:
+First, install nodejs and npm. Checkout this codebase and change into the `nupic.tools` directory. Then, run the following `npm` command to install all the dependencies necessary to run this server.
 
     npm install .
 
@@ -19,7 +15,7 @@ Then, install this npm module and its dependencies:
 
 ### Configuration
 
-Default configuration settings are in the `config.json` file, but it doesn't have all the information the application needs to run. The github password, for example, has been removed. To provide these instance-level settings, create a new config file using the username of the logged-in user. For example, mine is called `confing-mtaylor.json`. This is where you'll keep your secret configuration settings, like Travis CI token and github password.
+Default configuration settings are in the `config.json` file, but it doesn't have all the information the application needs to run. The github password, for example, has been removed. To provide these instance-level settings, create a new config file using the username of the logged-in user. For example, mine is called `confing-rhyolight.json`. This is where you'll keep your private configuration settings, like your github password.
 
 ### Github API Credentials
 
@@ -37,6 +33,8 @@ Validators are modules stored in the `commitValidators` directory, which follow 
 - `statusHistory`: an array of status objects from the [Github Status API](http://developer.github.com/v3/repos/statuses/) for the pull request's `head` SHA
 - `githubClient`: an instance of `GithubClient` (see the `githubClient.js` file), which has some convenience methods as well as the underlying `github` object from the [node-github](https://github.com/ajaxorg/node-github) library (TODO: may want to get rid of the GithubClient class and just pass around the raw node-github api object.)
 - `callback`: function to call when validation is complete. Expects an error and result object. The result object should contain at the least, a `state` attribute. It can also contain `description` and `target_url`, which will be used to create the new Github status
+
+Each validator also exports a `name` so it can be identified for logging.
 
 The current validators are:
 
