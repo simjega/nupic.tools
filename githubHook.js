@@ -104,7 +104,7 @@ function handlePullRequest(payload) {
             });
         }
     } else {
-        performCompleteValidation(payload.pull_request);
+        performCompleteValidation(head.sha, githubUser);
     }
 }
 
@@ -116,7 +116,7 @@ function handleStateChange(payload) {
         if (latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
             // ignore statuses that were created by this server
         } else {
-            performCompleteValidation(payload.pull_request);
+            performCompleteValidation(payload.sha, payload.sender.login);
         }
     });
 }

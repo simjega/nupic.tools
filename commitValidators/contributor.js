@@ -8,10 +8,7 @@ function isContributor(name, roster) {
                  }, false);
 }
 
-function validator(pullRequest, statusHistory, _, callback) {
-    var sha = pullRequest.head.sha,
-        githubUser = pullRequest.user.login;
-
+function validator(sha, githubUser, statusHistory, _, callback) {
     contributors.getAll(function(err, contributors) {
         var response = {
             state: 'success',

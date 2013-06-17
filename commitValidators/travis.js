@@ -9,9 +9,8 @@ function getLatestTravisStatus(list) {
     }
 }
 
-function validator(pullRequest, statusHistory, githubClient, callback) {
+function validator(sha, githubUser, statusHistory, githubClient, callback) {
     var tstatus = getLatestTravisStatus(statusHistory);
-    var sha = pullRequest.sha;
 
     if (! tstatus) {
         // When Travis has not started a build, we report 'pending'.

@@ -1,5 +1,4 @@
-function validator(pullRequest, statusHistory, githubClient, callback) {
-    var sha = pullRequest.head.sha;
+function validator(sha, githubUser, statusHistory, githubClient, callback) {
     // now we need to check to see if the commit is behind master
     githubClient.isBehindMaster(sha, function(err, behind) {
         var result = {
