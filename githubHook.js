@@ -1,34 +1,11 @@
 var NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     contributors = require('./contributors'),
+    validators = [],
     githubClient;
 
-function isContributor(name, roster) {
-    return roster.map(function(p) { return p.Github; })
-                 .reduce(function(prev, curr) {
-                    if (prev) return prev;
-                    return curr == name;
-                 }, false);
-}
-
-function postTravisValidation(sha, githubUser, contributors, callback) {
-    console.log('Validating Nupic requirements on ' + sha);
-    if (! isContributor(githubUser, contributors)) {
-        githubClient.rejectPR(sha, 
-            githubUser + ' has not signed the Numenta Contributor License',
-            'http://numenta.com/licenses/cl/', callback);
-    } else {
-        // now we need to check to see if the commit is behind master
-        githubClient.isBehindMaster(sha, function(err, behind) {
-            if (behind) {
-                githubClient.rejectPR(sha, 
-                    'This PR needs to be fast-forwarded. ' + 
-                    'Please merge master into it.', null, callback);
-            } else {
-                githubClient.approvePR(sha, callback);
-            }
-        });
-    }
-}
+validators.push(require('./commitValidators/travis'));
+validators.push(require('./commitValidators/contributor'));
+validators.push(require('./commitValidators/fastForward'));
 
 function revalidateAllOpenPullRequests(githubUser, contributors) {
     githubClient.getAllOpenPullRequests(function(err, prs) {
@@ -47,72 +24,65 @@ function getAllStatuses(sha, callback) {
     }, callback);
 }
 
-function searchStatusListForDecription(list, description) {
-    var i = 0;
-    for (; i<list.length; i++) {
-        if (list[i].description.indexOf(description) == 0) {
-            return list[i];
-        }
-    }
+function postNewNupicStatus(sha, statusDetails) {
+    console.log('Posting new NuPIC Status to github for ' + sha);
+    console.log(statusDetails);
+    githubClient.github.statuses.create({
+        user: githubClient.org,
+        repo: githubClient.repo,
+        sha: sha,
+        state: statusDetails.state,
+        description: 'NuPIC Status: ' + statusDetails.description,
+        target_url: statusDetails.target_url
+    });
 }
 
-function getLatestTravisStatus(list) {
-    return searchStatusListForDecription(list, 'The Travis CI build');
-}
+function performCompleteValidation(pullRequest) {
+    var sha = pullRequest.head.sha;
 
-function getLatestNupicStatus(list) {
-    return searchStatusListForDecription(list, NUPIC_STATUS_PREFIX);
-}
-
-function performCompleteValidation(sha, githubUser) {
-    console.log('VALIDATING ' + sha);
+    console.log('\nVALIDATING ' + sha);
 
     getAllStatuses(sha, function(err, statusHistory) {
         if (err) throw err;
+        // clone of the global validators array
+        var commitValidators = validators.slice(0),
+            validationFailed = false;
 
-        var tstatus = getLatestTravisStatus(statusHistory);
-        var nstatus = getLatestNupicStatus(statusHistory);
-
-        if (! tstatus) {
-            // fail because no travis build has run
-            githubClient.pendingPR(sha, 
-                'Travis CI build has not started.', 
-                'https://travis-ci.org/' + githubClient.org 
-                    + '/' + githubClient.repo);
-        } else if (tstatus.state == 'success') {
-            console.log('...last travis build was successful');
-            // run further validation on contributor
-            if (! nstatus) {
-                console.log('no nupic validation has occurred on ' + sha);
-                // Nupic has never validated this sha, so run validation
-                contributors.getAll(function(err, contributors) {
-                    postTravisValidation(sha, githubUser, contributors);
+        function runNextValidation() {
+            var validator;
+            if (validationFailed) return;
+            validator = commitValidators.shift();
+            if (validator) {
+                console.log('Running commit validator: ' + validator.name);
+                validator.validate(pullRequest, statusHistory, githubClient, function(err, result) {
+                    if (err) {
+                        console.error('Error running commit validator "' + validator.name + '"');
+                        console.error(err);
+                        return;
+                    }
+                    console.log(validator.name + ' result was ' + result.state);
+                    if (result.state !== 'success') {
+                        // Upon failure, we set a flag that will skip the 
+                        // remaining validators and post a failure status.
+                        validationFailed = true;
+                        postNewNupicStatus(sha, result);
+                    }
+                    console.log(validator.name + ' complete... running next validator');
+                    runNextValidation();
                 });
             } else {
-                // If there is a nupic status and a travis status, we want to
-                // check that the nupic status is newer. The nupic status is 
-                // the one we always want to be up front.
-                if (new Date(nstatus.updated_at) > new Date(tstatus.updated_at)) {
-                    // nupic status is newer, which is what we want
-                    console.log('Latest nupic status is valid. No change required.');
-                } else {
-                    // re-run the nupic validation
-                    console.log('Latest nupic status is out of date, rerunning...');
-                    contributors.getAll(function(err, contributors) {
-                        postTravisValidation(sha, githubUser, contributors);
-                    });
-                }
+                // No more validators left in the array, so we can complete the
+                // validation successfully.
+                postNewNupicStatus(sha, {
+                    state: 'success',
+                    description: 'All validations passed (' + validators.map(function(v) { return v.name; }).join(', ') + ')'
+                });
             }
-
-        } else if (tstatus.state == 'pending') {
-            // do nothing until we're notified of a new status after the build
-            // is complete
-        } else {
-            // travis failed or errored out
-            githubClient.rejectPR(sha,
-                'Travis CI build failed!', 
-                tstatus.target_url);
         }
+
+        console.log('Kicking off validation...');
+        runNextValidation();
+
     });
 }
 
@@ -134,7 +104,7 @@ function handlePullRequest(payload) {
             });
         }
     } else {
-        performCompleteValidation(head.sha, githubUser);
+        performCompleteValidation(payload.pull_request);
     }
 }
 
@@ -146,7 +116,7 @@ function handleStateChange(payload) {
         if (latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
             // ignore statuses that were created by this server
         } else {
-            performCompleteValidation(payload.sha, payload.pull_request.user.login);
+            performCompleteValidation(payload.pull_request);
         }
     });
 }
