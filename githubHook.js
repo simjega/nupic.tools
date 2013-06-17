@@ -10,7 +10,7 @@ validators.push(require('./commitValidators/fastForward'));
 function revalidateAllOpenPullRequests(githubUser, contributors) {
     githubClient.getAllOpenPullRequests(function(err, prs) {
         console.log('Found ' + prs.length + ' open pull requests...');
-        prs.map(function(pr) { return pr.sha; }).forEach(function(sha) {
+        prs.map(function(pr) { return pr.head.sha; }).forEach(function(sha) {
             performCompleteValidation(sha, githubUser);
         });
     });
@@ -25,8 +25,7 @@ function getAllStatuses(sha, callback) {
 }
 
 function postNewNupicStatus(sha, statusDetails) {
-    console.log('Posting new NuPIC Status to github for ' + sha);
-    console.log(statusDetails);
+    console.log('Posting new NuPIC Status (' + statusDetails.state + ') to github for ' + sha);
     githubClient.github.statuses.create({
         user: githubClient.org,
         repo: githubClient.repo,
@@ -37,8 +36,7 @@ function postNewNupicStatus(sha, statusDetails) {
     });
 }
 
-function performCompleteValidation(pullRequest) {
-    var sha = pullRequest.head.sha;
+function performCompleteValidation(sha, githubUser) {
 
     console.log('\nVALIDATING ' + sha);
 
@@ -54,7 +52,7 @@ function performCompleteValidation(pullRequest) {
             validator = commitValidators.shift();
             if (validator) {
                 console.log('Running commit validator: ' + validator.name);
-                validator.validate(pullRequest, statusHistory, githubClient, function(err, result) {
+                validator.validate(sha, githubUser, statusHistory, githubClient, function(err, result) {
                     if (err) {
                         console.error('Error running commit validator "' + validator.name + '"');
                         console.error(err);
