@@ -42,41 +42,6 @@ GithubClient.prototype.isBehindMaster = function(sha, callback) {
     });
 };
 
-GithubClient.prototype.approvePR = function(sha, callback) {
-    console.log('Approving ' + sha);
-    this.github.statuses.create({
-        user: this.org,
-        repo: this.repo,
-        sha: sha,
-        state: 'success',
-        description: 'NuPIC Status: Travis passed, contributor confirmed, fast-forward confirmed.'
-    }, callback);
-};
-
-GithubClient.prototype.rejectPR = function(sha, reason, url, callback) {
-    console.log('Rejecting ' + sha + ' because ' + reason);
-    this.github.statuses.create({
-        user: this.org,
-        repo: this.repo,
-        sha: sha,
-        state: 'failure',
-        description: 'NuPIC Status: ' + reason,
-        target_url: url
-    }, callback);
-};
-
-GithubClient.prototype.pendingPR = function(sha, reason, url, callback) {
-    console.log('Marking ' + sha + ' as pending because ' + reason);
-    this.github.statuses.create({
-        user: this.org,
-        repo: this.repo,
-        sha: sha,
-        state: 'pending',
-        description: 'NuPIC Status: ' + reason,
-        target_url: url
-    }, callback);
-};
-
 GithubClient.prototype.getAllOpenPullRequests = function(callback) {
     this.github.pullRequests.getAll({
         user: this.org,
