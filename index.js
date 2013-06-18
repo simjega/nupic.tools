@@ -6,6 +6,7 @@ var connect = require('connect'),
     contributors = require('./contributors'),
     githubHookHandler = require('./githubHook'),
     statusReporter = require('./statusReporter'),
+    pullRequestReporter = require('./pullRequestReporter'),
     cfg = require('./configReader').read(),
 
     // not using this yet
@@ -17,6 +18,7 @@ var connect = require('connect'),
     baseUrl = 'http://' + HOST + ':' + PORT,
     githubHookPath = '/github-hook',
     statusReportPath = '/shaStatus',
+    pullRequestReportPath = '/prStatus',
     pullRequestWebhookUrl = baseUrl + githubHookPath,
 
     githubClient,
@@ -65,6 +67,7 @@ connect()
     .use('/contributors', contributors.requestHandler)
     .use(githubHookPath, githubHookHandler(githubClient))
     .use(statusReportPath, statusReporter(githubClient))
+    .use(pullRequestReportPath, pullRequestReporter(githubClient))
     // not using this yet
     // .use('/chatlogs', chatlogs(logDirectory, channelName))
     .use('/', function(req, res) {

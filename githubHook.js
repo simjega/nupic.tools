@@ -16,16 +16,6 @@ function revalidateAllOpenPullRequests(githubUser, contributors) {
     });
 }
 
-function getAllStatuses(sha, callback) {
-    githubClient.github.statuses.get({
-        user: githubClient.org,
-        repo: githubClient.repo,
-        sha: sha
-    }, function(err, statuses) {
-        callback(err, (statuses || []));
-    });
-}
-
 function postNewNupicStatus(sha, statusDetails) {
     console.log('Posting new NuPIC Status (' + statusDetails.state + ') to github for ' + sha);
     githubClient.github.statuses.create({
@@ -42,7 +32,7 @@ function performCompleteValidation(sha, githubUser) {
 
     console.log('\nVALIDATING ' + sha);
 
-    getAllStatuses(sha, function(err, statusHistory) {
+    githubClient.getAllStatusesFor(sha, function(err, statusHistory) {
         if (err) throw err;
         // clone of the global validators array
         var commitValidators = validators.slice(0),
@@ -111,7 +101,7 @@ function handlePullRequest(payload) {
 function handleStateChange(payload) {
     console.log('State of ' + payload.sha + ' updated to ' + payload.state);
     // Get statuses and check the latest one
-    getAllStatuses(payload.sha, function(err, statusHistory) {
+    githubClient.getAllStatusesFor(payload.sha, function(err, statusHistory) {
         var latestStatus = statusHistory[0];
         if (latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
             // ignore statuses that were created by this server

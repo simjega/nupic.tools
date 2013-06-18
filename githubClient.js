@@ -50,6 +50,16 @@ GithubClient.prototype.getAllOpenPullRequests = function(callback) {
     }, callback);
 };
 
+GithubClient.prototype.getAllStatusesFor = function(sha, callback) {
+    this.github.statuses.get({
+        user: this.org,
+        repo: this.repo,
+        sha: sha
+    }, function(err, statuses) {
+        callback(err, (statuses || []));
+    });
+};
+
 GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
     var me = this;
     console.log('Looking for ' + event + ' hook for ' + url + '...');
