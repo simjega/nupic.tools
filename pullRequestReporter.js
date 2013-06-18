@@ -3,12 +3,12 @@ var url = require('url'),
 
 function renderJson(out, res) {
     res.setHeader('Content-Type', 'application/json');
-    res.write(out);
+    res.end(out);
 }
 
 function renderJsonP(out, cbName, res) {
     res.setHeader('Content-Type', 'application/javascript');
-    res.write(cbName + '(' + out + ')');
+    res.end(cbName + '(' + out + ')');
 }
 
 module.exports = function(ghClient) {
@@ -26,6 +26,7 @@ module.exports = function(ghClient) {
                     // Done!
                     out = JSON.stringify(out);
                     if (query.callback) {
+                        console.log(query.callback);
                         renderJsonP(out, query.callback, res);
                     } else {
                         renderJson(out, res);
