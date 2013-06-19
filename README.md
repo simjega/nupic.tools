@@ -29,7 +29,8 @@ The github username and password required in your configuration is used to acces
 
 Validators are modules stored in the `commitValidators` directory, which follow the same export pattern. Each one exports a function called `validate` that will be passed the following arguments:
 
-- `pullRequest`: the pull request object received on the Github webhook
+- `sha`: the SHA of the pull request's head
+- `githubUser`: the github login of the pull request originator
 - `statusHistory`: an array of status objects from the [Github Status API](http://developer.github.com/v3/repos/statuses/) for the pull request's `head` SHA
 - `githubClient`: an instance of `GithubClient` (see the `githubClient.js` file), which has some convenience methods as well as the underlying `github` object from the [node-github](https://github.com/ajaxorg/node-github) library (TODO: may want to get rid of the GithubClient class and just pass around the raw node-github api object.)
 - `callback`: function to call when validation is complete. Expects an error and result object. The result object should contain at the least, a `state` attribute. It can also contain `description` and `target_url`, which will be used to create the new Github status
