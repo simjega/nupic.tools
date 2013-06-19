@@ -37,7 +37,7 @@ GithubClient.prototype.isBehindMaster = function(sha, callback) {
         if (err) {
             callback(err);
         } else {
-            callback(err, data.behind_by > 0);
+            callback(err, data.behind_by > 0, data.behind_by);
         }
     });
 };
