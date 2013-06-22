@@ -10,7 +10,7 @@ var connect = require('connect'),
     cfg = require('./configReader').read(),
 
     // not using this yet
-    // chatlogs = require('./chatlogs'),
+    chatlogs = require('./chatlogs'),
 
     HOST = cfg.host,
     PORT = cfg.port || 8081,
@@ -24,7 +24,7 @@ var connect = require('connect'),
     githubClient,
 
     // not using this yet
-    // logDirectory = '~/Desktop/nupic/chatlogs',
+    logDirectory = '/Users/mtaylor/Desktop/nupic/chatlogs',
 
     channelName = 'nupic';
 
@@ -69,7 +69,7 @@ connect()
     .use(statusReportPath, statusReporter(githubClient))
     .use(pullRequestReportPath, pullRequestReporter(githubClient))
     // not using this yet
-    // .use('/chatlogs', chatlogs(logDirectory, channelName))
+    .use('/chatlogs', chatlogs(logDirectory, channelName))
     .use('/', function(req, res) {
         res.setHeader('Content-Type', 'text/html');
         res.end('<html><body>nupic.tools is alive</body></html>');
