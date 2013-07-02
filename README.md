@@ -43,6 +43,16 @@ The current validators are:
 - *contributor*: Ensures pull request originator is within a contributor listing
 - *fastForward*: Ensures the pull request `head` has the `master` branch merged into it
 
+## Testing
+
+To test, you must install `mocha`:
+
+    npm install mocha -g
+
+Then, run:
+
+    mocha --recursive
+
 ## Notes
 
 A lot of crap gets dumped to stdout at the moment. 

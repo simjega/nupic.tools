@@ -8,14 +8,14 @@ function isContributor(name, roster) {
                  }, false);
 }
 
-function validator(sha, githubUser, statusHistory, _, callback) {
+function validator(sha, githubUser, _, _, callback) {
     contributors.getAll(function(err, contributors) {
         var response = {
             state: 'success',
         };
         if (err) return callback(err);
         if (! isContributor(githubUser, contributors)) {
-            response.status = 'failure';
+            response.state = 'failure';
             response.description = githubUser + ' has not signed the Numenta Contributor License';
             response.target_url = 'http://numenta.com/licenses/cl/';
         }
