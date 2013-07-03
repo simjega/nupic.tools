@@ -1,4 +1,5 @@
-var connect = require('connect'),
+var assert = require('assert'),
+    connect = require('connect'),
     colors = require('colors'),
     $ = require('jquery'),
     
@@ -21,59 +22,97 @@ var connect = require('connect'),
     pullRequestReportPath = '/prStatus',
     pullRequestWebhookUrl = baseUrl + githubHookPath,
 
-    githubClient,
+    githubClients = {},
 
     // not using this yet
     // logDirectory = '~/Desktop/nupic/chatlogs',
 
     channelName = 'nupic';
 
-console.log('nupic.tools server starting...'.green);
-
-if (! cfg.github.username || ! cfg.github.password || 
-    ! cfg.github.organization || ! cfg.github.repository) {
-    console.error('The following values are required in the config.json or config-' + process.env.USER + '.json file:\n' +
-        '\t- github.username\n' +
-        '\t- github.password\n' +
-        '\t- github.organization\n' +
-        '\t- github.repository');
+function die(err) {
+    console.error(err);
     process.exit(-1);
 }
 
-(function() {
-    var cfgCopy = $.extend(true, {}, cfg, {github: {password: '<hidden>'}})
+function resolveConfig(config) {
+    var cfgCopy = $.extend(true, {}, config),
+        monitor = cfgCopy.monitor;
+
+    assert(config.monitor);
+    assert(config.monitor.length, 'The "monitor" configuration must be an array, and cannot be empty.');
+
+    monitor.forEach(function(m, i) {
+        // Verify values.
+        assert(monitor[i].username, 'monitor at ' + i + ' missing username');
+        assert(monitor[i].password, 'monitor at ' + i + ' missing password');
+        assert(monitor[i].organization, 'monitor at ' + i + ' missing organization');
+        assert(monitor[i].repository, 'monitor at ' + i + ' missing repository');
+        // Obscure passwords.
+        cfgCopy.monitor[i].password = '<hidden>';
+    });
     console.log('nupic.tools will use the following configuration:');
     console.log(JSON.stringify(cfgCopy, null, 2).yellow);
-}());
 
-githubClient = new gh.GithubClient(
-    cfg.github.username, 
-    cfg.github.password, 
-    cfg.github.organization, 
-    cfg.github.repository);
+}
 
-githubClient.confirmWebhookExists(pullRequestWebhookUrl, 'pull_request', function(err) {
-    if (err) {
-        console.error('Error during webhook confirmation'.red);
-        console.error(err);
-    } else {
-        console.log('Webhook confirmed.');
-    }
-});
+function establishWebHooks(config, callback) {
+    var count = 0;
+    // Set up one github client for each repo target in config.
+    config.monitor.forEach(function(repoTarget) {
+        var githubClient = new gh.GithubClient(
+            repoTarget.username, 
+            repoTarget.password, 
+            repoTarget.organization, 
+            repoTarget.repository
+        );
 
-connect()
-    .use(connect.logger('dev'))
-    .use(connect.bodyParser())
-    .use('/contributors', contributors.requestHandler)
-    .use(githubHookPath, githubHookHandler(githubClient))
-    .use(statusReportPath, statusReporter(githubClient))
-    .use(pullRequestReportPath, pullRequestReporter(githubClient))
-    // not using this yet
-    // .use('/chatlogs', chatlogs(logDirectory, channelName))
-    .use('/', function(req, res) {
-        res.setHeader('Content-Type', 'text/html');
-        res.end('<html><body>nupic.tools is alive</body></html>');
-    })
-    .listen(PORT, function() {
-        console.log(('\nServer running at ' + baseUrl + '\n').green);
+        githubClient.confirmWebhookExists(pullRequestWebhookUrl, 'pull_request', function(err) {
+            if (err) {
+                console.error(('Error during webhook confirmation for ' + githubClient.toString()).red);
+                die(err);
+            } else {
+                console.log(('Webhook for ' + githubClient.toString() + ' confirmed.').green);
+                count++;
+            }
+            githubClients[repoTarget.organization + '/' + repoTarget.repository] = githubClient;
+            if (count == (config.monitor.length ))  {
+                callback();
+            }
+        });
     });
+}
+
+console.log('nupic.tools server starting...'.green);
+
+resolveConfig(cfg);
+
+establishWebHooks(cfg, function() {
+
+    connect()
+        .use(connect.logger('dev'))
+        .use(connect.bodyParser())
+        .use('/contributors', contributors.requestHandler)
+        .use(githubHookPath, githubHookHandler(githubClients))
+        .use(statusReportPath, statusReporter(githubClients))
+        .use(pullRequestReportPath, pullRequestReporter(githubClients))
+        // not using this yet
+        // .use('/chatlogs', chatlogs(logDirectory, channelName))
+
+        // Simple report on what this server is monitoring.
+        .use('/', function(req, res) {
+            var repoList = '<ul>';
+            var itemHtml = Object.keys(githubClients).map(function(key) {
+                return '<a target="_blank" href="http://github.com/' + key + '/">http://github.com/' + key + '</a>';
+            });
+            repoList += '<li>' + itemHtml.join('</li><li>') + '</li></ul>';
+            res.setHeader('Content-Type', 'text/html');
+            res.end('<html><body>\n<h1>nupic.tools is alive</h1>\n' 
+                + '<h3>This server is monitoring the following repositories:</h3>'
+                + repoList + '\n</body></html>');
+        })
+        
+        .listen(PORT, function() {
+            console.log(('\nServer running at ' + baseUrl + '\n').green);
+        });
+
+});

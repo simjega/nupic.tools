@@ -9,7 +9,7 @@ function GithubClient(user, password, org, repo) {
         version: '3.0.0',
         timeout: 5000
     });
-    console.log('GithubClient created for user ' + user);
+    console.log('GithubClient created for ' + user + ' on ' + org + '/' + repo);
     this.github.authenticate({
         type: 'basic',
         username: user,
@@ -62,7 +62,7 @@ GithubClient.prototype.getAllStatusesFor = function(sha, callback) {
 
 GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
     var me = this;
-    console.log('Looking for ' + event + ' hook for ' + url + '...');
+    console.log('Looking for ' + event + ' hook for ' + url + ' on ' + this.toString() + '...');
     this.github.repos.getHooks({
         user: this.org,
         repo: this.repo
@@ -97,6 +97,10 @@ GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
             callback();
         }
     });
+};
+
+GithubClient.prototype.toString = function() {
+    return this.org + '/' + this.repo;
 };
 
 module.exports.GithubClient = GithubClient;

@@ -1,7 +1,7 @@
 var NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     contributors = require('./contributors'),
     validators = [],
-    githubClient;
+    githubClients;
 
 validators.push(require('./commitValidators/travis'));
 validators.push(require('./commitValidators/contributor'));
@@ -111,16 +111,22 @@ function handleStateChange(payload) {
     });
 }
 
-module.exports = function(client) {
-    githubClient = client;
+function getGithubClientForRequest(req) {
+
+}
+
+module.exports = function(clients) {
+    githubClients = clients;
     return function(req, res) {
         var payload = JSON.parse(req.body.payload);
 
-        if (payload.state) {
-            handleStateChange(payload);
-        } else {
-            handlePullRequest(payload);
-        }
+        console.log(payload);
+
+        // if (payload.state) {
+        //     handleStateChange(payload);
+        // } else {
+        //     handlePullRequest(payload);
+        // }
 
         res.end();
 

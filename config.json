@@ -1,10 +1,10 @@
 {
     "host": "issues.numenta.org",
     "port": 8081,
-    "github": {
+    "monitor": [{
         "username": "numenta-ci",
-        "password": "",
+        "password": "RuCCVTukN3Hj2V",
         "organization": "numenta",
-        "repository": "nupic"
-    }
+        "repository": "experiments"
+    }]
 }

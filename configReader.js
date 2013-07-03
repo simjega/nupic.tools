@@ -19,14 +19,17 @@ function readConfigFileIntoObject(path) {
 }
 
 function read() {
-    var defaultConfig = readConfigFileIntoObject(configFile);
-    var userConfig = {};
+    var defaultConfig = readConfigFileIntoObject(configFile),
+        userConfig = {},
+        output;
     try {
         userConfig = readConfigFileIntoObject(userFile);
     } catch(e) {
         // no user file no problem
     }
-    return $.extend({}, defaultConfig, userConfig);
+    output = $.extend(true, {}, defaultConfig, userConfig);
+    output.monitor = defaultConfig.monitor.concat(userConfig.monitor);
+    return output;
 }
 
 module.exports.read = read;
