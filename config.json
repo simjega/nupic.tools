@@ -5,6 +5,7 @@
         "username": "numenta-ci",
         "password": "RuCCVTukN3Hj2V",
         "organization": "numenta",
-        "repository": "experiments"
+        "repository": "experiments",
+        "contributors": "http://numenta.org/resources/contributors.csv"
     }]
 }

@@ -1,23 +1,24 @@
 var GitHubApi = require("github"),
-    GithubClient;
+    RepositoryClient;
 
-function GithubClient(user, password, org, repo) {
-    var me = this;
-    this.org = org;
-    this.repo = repo;
+function RepositoryClient(config) {
+    this.user = config.username;
+    this.org = config.organization;
+    this.repo = config.repository;
+    this.contributorsUrl = config.contributors;
     this.github = new GitHubApi({
         version: '3.0.0',
         timeout: 5000
     });
-    console.log('GithubClient created for ' + user + ' on ' + org + '/' + repo);
+    console.log('RepositoryClient created for ' + this.user + ' on ' + this.org + '/' + this.repo);
     this.github.authenticate({
         type: 'basic',
-        username: user,
-        password: password
+        username: this.user,
+        password: config.password
     });
 }
 
-GithubClient.prototype.merge = function(head, base, callback) {
+RepositoryClient.prototype.merge = function(head, base, callback) {
     console.log('merging ' + head + ' into ' + base + '...');
     this.github.repos.merge({
         user: this.org,
@@ -27,7 +28,7 @@ GithubClient.prototype.merge = function(head, base, callback) {
     }, callback);
 };
 
-GithubClient.prototype.isBehindMaster = function(sha, callback) {
+RepositoryClient.prototype.isBehindMaster = function(sha, callback) {
     this.github.repos.compareCommits({
         user: this.org,
         repo: this.repo,
@@ -42,7 +43,7 @@ GithubClient.prototype.isBehindMaster = function(sha, callback) {
     });
 };
 
-GithubClient.prototype.getAllOpenPullRequests = function(callback) {
+RepositoryClient.prototype.getAllOpenPullRequests = function(callback) {
     this.github.pullRequests.getAll({
         user: this.org,
         repo: this.repo,
@@ -50,7 +51,7 @@ GithubClient.prototype.getAllOpenPullRequests = function(callback) {
     }, callback);
 };
 
-GithubClient.prototype.getAllStatusesFor = function(sha, callback) {
+RepositoryClient.prototype.getAllStatusesFor = function(sha, callback) {
     this.github.statuses.get({
         user: this.org,
         repo: this.repo,
@@ -60,7 +61,7 @@ GithubClient.prototype.getAllStatusesFor = function(sha, callback) {
     });
 };
 
-GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
+RepositoryClient.prototype.confirmWebhookExists = function(url, event, callback) {
     var me = this;
     console.log('Looking for ' + event + ' hook for ' + url + ' on ' + this.toString() + '...');
     this.github.repos.getHooks({
@@ -99,8 +100,8 @@ GithubClient.prototype.confirmWebhookExists = function(url, event, callback) {
     });
 };
 
-GithubClient.prototype.toString = function() {
+RepositoryClient.prototype.toString = function() {
     return this.org + '/' + this.repo;
 };
 
-module.exports.GithubClient = GithubClient;
+module.exports = RepositoryClient;

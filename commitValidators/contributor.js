@@ -8,8 +8,8 @@ function isContributor(name, roster) {
                  }, false);
 }
 
-function validator(sha, githubUser, _, _, callback) {
-    contributors.getAll(function(err, contributors) {
+function validator(sha, githubUser, _, githubClient, callback) {
+    contributors.getAll(githubClient.contributorsUrl, function(err, contributors) {
         var response = {
             state: 'success',
         };

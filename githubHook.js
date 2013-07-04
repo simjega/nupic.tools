@@ -89,7 +89,7 @@ function handlePullRequest(payload, githubClient) {
         // fast-forward status of all the other open pull requests
         if (payload.pull_request.merged) {
             console.log('A PR just merged. Re-validating open pull requests...');
-            contributors.getAll(function(err, contributors) {
+            contributors.getAll(githubClient.contributorsUrl, function(err, contributors) {
                 revalidateAllOpenPullRequests(githubUser, contributors, githubClient);
             });
         }
@@ -112,7 +112,6 @@ function handleStateChange(payload, githubClient) {
 }
 
 function getGithubClientForRequest(payload) {
-    console.log(payload);
     var repo = payload.name || payload.repository.full_name;
     return githubClients[repo];
 }

@@ -3,7 +3,7 @@ var assert = require('assert'),
     colors = require('colors'),
     $ = require('jquery'),
     
-    gh = require('./githubClient'),
+    RepositoryClient = require('./repoClient'),
     contributors = require('./contributors'),
     githubHookHandler = require('./githubHook'),
     statusReporter = require('./statusReporter'),
@@ -59,12 +59,7 @@ function establishWebHooks(config, callback) {
     var count = 0;
     // Set up one github client for each repo target in config.
     config.monitor.forEach(function(repoTarget) {
-        var githubClient = new gh.GithubClient(
-            repoTarget.username, 
-            repoTarget.password, 
-            repoTarget.organization, 
-            repoTarget.repository
-        );
+        var githubClient = new RepositoryClient(repoTarget);
 
         githubClient.confirmWebhookExists(pullRequestWebhookUrl, 'pull_request', function(err) {
             if (err) {
@@ -91,7 +86,6 @@ establishWebHooks(cfg, function() {
     connect()
         .use(connect.logger('dev'))
         .use(connect.bodyParser())
-        .use('/contributors', contributors.requestHandler)
         .use(githubHookPath, githubHookHandler(githubClients))
         .use(statusReportPath, statusReporter(githubClients))
         .use(pullRequestReportPath, pullRequestReporter(githubClients))
