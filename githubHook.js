@@ -103,7 +103,7 @@ function handleStateChange(payload, githubClient) {
     // Get statuses and check the latest one
     githubClient.getAllStatusesFor(payload.sha, function(err, statusHistory) {
         var latestStatus = statusHistory[0];
-        if (latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+        if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
             // ignore statuses that were created by this server
         } else {
             performCompleteValidation(payload.sha, payload.sender.login, githubClient);
