@@ -25,6 +25,11 @@ function read() {
     } catch(e) {
         // no user file, no problem
     }
+    ['host', 'port'].forEach(function(key) {
+        if (userConfig[key] !== undefined) {
+            defaultConfig[key] = userConfig[key];
+        }
+    });
     defaultConfig.monitor = defaultConfig.monitor.concat(userConfig.monitor);
     return defaultConfig;
 }
