@@ -28,24 +28,31 @@ function die(err) {
 }
 
 function resolveConfig(config) {
-    var cfgCopy = $.extend(true, {}, config),
-        monitor = cfgCopy.monitor;
+    var monitor = config.monitor,
+        obscuredMonitor;
 
     assert(config.monitor);
     assert(config.monitor.length, 'The "monitor" configuration must be an array, and cannot be empty.');
 
-    monitor.forEach(function(m, i) {
+    obscuredMonitor = monitor.map(function(m, i) {
         // Verify values.
-        assert(monitor[i].username, 'monitor at ' + i + ' missing username');
-        assert(monitor[i].password, 'monitor at ' + i + ' missing password');
-        assert(monitor[i].organization, 'monitor at ' + i + ' missing organization');
-        assert(monitor[i].repository, 'monitor at ' + i + ' missing repository');
-        // Obscure passwords.
-        cfgCopy.monitor[i].password = '<hidden>';
+        assert(m.username, 'monitor at ' + i + ' missing username');
+        assert(m.password, 'monitor at ' + i + ' missing password');
+        assert(m.organization, 'monitor at ' + i + ' missing organization');
+        assert(m.repository, 'monitor at ' + i + ' missing repository');
+        // Obscure passwords for console log.
+        return {
+            username: m.username,
+            password: '<hidden>',
+            organization: m.organization,
+            repository: m.repository
+        };
     });
+    config.monitor = obscuredMonitor;
     console.log('nupic.tools will use the following configuration:');
-    console.log(JSON.stringify(cfgCopy, null, 2).yellow);
-
+    console.log(JSON.stringify(config, null, 2).yellow);
+    // replace original monitor object with password
+    config.monitor = monitor;
 }
 
 function establishWebHooks(config, callback) {

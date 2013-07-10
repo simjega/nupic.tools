@@ -1,11 +1,15 @@
-var NUPIC_STATUS_PREFIX = 'NuPIC Status:',
+var fs = require('fs'),
     contributors = require('./contributors'),
+    NUPIC_STATUS_PREFIX = 'NuPIC Status:',
+    VALIDATOR_DIR = './validators',
     validators = [],
     githubClients;
 
-validators.push(require('./commitValidators/travis'));
-validators.push(require('./commitValidators/contributor'));
-validators.push(require('./commitValidators/fastForward'));
+function initializeValidators(dir) {
+    fs.readdirSync(dir).forEach(function(validator) {
+        validators.push(require(dir + '/' + validator.split('.').shift()));
+    });
+}
 
 function revalidateAllOpenPullRequests(githubUser, contributors, githubClient) {
     githubClient.getAllOpenPullRequests(function(err, prs) {
@@ -118,6 +122,7 @@ function getGithubClientForRequest(payload) {
 
 module.exports = function(clients) {
     githubClients = clients;
+    initializeValidators(VALIDATOR_DIR);
     return function(req, res) {
         var payload = JSON.parse(req.body.payload),
             githubClient = getGithubClientForRequest(payload);
