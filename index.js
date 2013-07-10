@@ -18,7 +18,7 @@ var assert = require('assert'),
     pullRequestReportPath = '/prStatus',
     pullRequestWebhookUrl = baseUrl + githubHookPath,
 
-    githubClients = {},
+    repoClients = {},
 
     channelName = 'nupic';
 
@@ -27,50 +27,31 @@ function die(err) {
     process.exit(-1);
 }
 
-function resolveConfig(config) {
-    var monitor = config.monitor,
-        obscuredMonitor;
-
-    assert(config.monitor);
-    assert(config.monitor.length, 'The "monitor" configuration must be an array, and cannot be empty.');
-
-    obscuredMonitor = monitor.map(function(m, i) {
-        // Verify values.
-        assert(m.username, 'monitor at ' + i + ' missing username');
-        assert(m.password, 'monitor at ' + i + ' missing password');
-        assert(m.organization, 'monitor at ' + i + ' missing organization');
-        assert(m.repository, 'monitor at ' + i + ' missing repository');
-        // Obscure passwords for console log.
-        return {
-            username: m.username,
-            password: '<hidden>',
-            organization: m.organization,
-            repository: m.repository
-        };
-    });
-    config.monitor = obscuredMonitor;
-    console.log('nupic.tools will use the following configuration:');
-    console.log(JSON.stringify(config, null, 2).yellow);
-    // replace original monitor object with password
-    config.monitor = monitor;
-}
-
 function establishWebHooks(config, callback) {
     var count = 0;
     // Set up one github client for each repo target in config.
-    config.monitor.forEach(function(repoTarget) {
-        var githubClient = new RepositoryClient(repoTarget);
+    Object.keys(config.monitors).forEach(function(monitorKey) {
+        var monitorConfig = config.monitors[monitorKey],
+            keyParts = monitorKey.split('/'),
+            org = keyParts.shift(),
+            repo = keyParts.shift(),
+            repoClient;
 
-        githubClient.confirmWebhookExists(pullRequestWebhookUrl, 'pull_request', function(err) {
+        monitorConfig.organization = org;
+        monitorConfig.repository = repo;
+
+        repoClient = new RepositoryClient(monitorConfig);
+
+        repoClient.confirmWebhookExists(pullRequestWebhookUrl, 'pull_request', function(err) {
             if (err) {
-                console.error(('Error during webhook confirmation for ' + githubClient.toString()).red);
+                console.error(('Error during webhook confirmation for ' + repoClient.toString()).red);
                 die(err);
             } else {
-                console.log(('Webhook for ' + githubClient.toString() + ' confirmed.').green);
+                console.log(('Webhook for ' + repoClient.toString() + ' confirmed.').green);
                 count++;
             }
-            githubClients[repoTarget.organization + '/' + repoTarget.repository] = githubClient;
-            if (count == (config.monitor.length ))  {
+            repoClients[monitorKey] = repoClient;
+            if (count == (Object.keys(config.monitors).length))  {
                 callback();
             }
         });
@@ -78,22 +59,22 @@ function establishWebHooks(config, callback) {
 }
 
 console.log('nupic.tools server starting...'.green);
-
-resolveConfig(cfg);
+console.log('nupic.tools will use the following configuration:');
+console.log(JSON.stringify(cfg, null, 2).yellow);
 
 establishWebHooks(cfg, function() {
 
     connect()
         .use(connect.logger('dev'))
         .use(connect.bodyParser())
-        .use(githubHookPath, githubHookHandler(githubClients))
-        .use(statusReportPath, statusReporter(githubClients))
-        .use(pullRequestReportPath, pullRequestReporter(githubClients))
+        .use(githubHookPath, githubHookHandler(repoClients))
+        .use(statusReportPath, statusReporter(repoClients))
+        .use(pullRequestReportPath, pullRequestReporter(repoClients))
 
         // Simple report on what this server is monitoring.
         .use('/', function(req, res) {
             var repoList = '<ul>';
-            var itemHtml = Object.keys(githubClients).map(function(key) {
+            var itemHtml = Object.keys(repoClients).map(function(key) {
                 return '<a target="_blank" href="http://github.com/' + key + '/">http://github.com/' + key + '</a>';
             });
             repoList += '<li>' + itemHtml.join('</li><li>') + '</li></ul>';

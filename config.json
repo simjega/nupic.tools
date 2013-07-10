@@ -1,11 +1,14 @@
 {
     "host": "issues.numenta.org",
     "port": 8081,
-    "monitor": [{
-        "username": "numenta-ci",
-        "password": "RuCCVTukN3Hj2V",
-        "organization": "numenta",
-        "repository": "experiments",
-        "contributors": "http://numenta.org/resources/contributors.csv"
-    }]
+
+    "monitors": {
+
+        "numenta/experiments": {
+            "username": "numenta-ci",
+            "password": "CHANGE ME",
+            "contributors": "http://numenta.org/resources/contributors.csv"
+        }
+
+    }
 }

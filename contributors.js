@@ -1,5 +1,3 @@
-// TODO: rename this module
-
 var request = require('request'),
     url = require('url'),
     qs = require('querystring'),

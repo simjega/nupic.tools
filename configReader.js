@@ -5,7 +5,8 @@ var fs = require('fs'),
 
 function readConfigFileIntoObject(path) {
     if (! fs.existsSync(path)) {
-        throw new Error('Config file "' + path + '" does not exist!');
+        console.warn('Config file "' + path + '" does not exist!');
+        return;
     }
     var raw = fs.readFileSync(path, 'utf-8');
     var obj;
@@ -18,20 +19,26 @@ function readConfigFileIntoObject(path) {
 }
 
 function read() {
-    var defaultConfig = readConfigFileIntoObject(configFile),
-        userConfig = {};
-    try {
-        userConfig = readConfigFileIntoObject(userFile);
-    } catch(e) {
-        // no user file, no problem
+    var config = readConfigFileIntoObject(configFile),
+        userConfig = null;
+    userConfig = readConfigFileIntoObject(userFile);
+    if (userConfig) {
+        ['host', 'port'].forEach(function(key) {
+            if (userConfig[key] !== undefined) {
+                config[key] = userConfig[key];
+            }
+        });
+        Object.keys(userConfig.monitors).forEach(function(outerKey) {
+            if (! config.monitors[outerKey]) {
+                config.monitors[outerKey] = userConfig.monitors[outerKey];
+            } else {
+                Object.keys(userConfig.monitors[outerKey]).forEach(function(innerKey) {
+                    config.monitors[outerKey][innerKey] = userConfig.monitors[outerKey][innerKey];
+                });
+            }
+        });
     }
-    ['host', 'port'].forEach(function(key) {
-        if (userConfig[key] !== undefined) {
-            defaultConfig[key] = userConfig[key];
-        }
-    });
-    defaultConfig.monitor = defaultConfig.monitor.concat(userConfig.monitor);
-    return defaultConfig;
+    return config;
 }
 
 module.exports.read = read;

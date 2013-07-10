@@ -1,7 +1,10 @@
 var assert = require('assert'),
     proxyquire = require('proxyquire'),
     contribStub = {},
-    contributor = proxyquire('../../commitValidators/contributor', 
+    githubClientStub = {
+        contributorsUrl: 'contribUrl'
+    },
+    contributor = proxyquire('../../validators/contributor', 
                     {'contributors': contribStub});
 
 contribStub.getAll = function(cb) {
@@ -24,7 +27,7 @@ describe('contributor validator', function() {
         assert.equal(contributor.name, 'Contributor Validator', 'Wrong commit validator name');
     });
     it('returns success state when user exists', function(done) {
-        contributor.validate('sha', 'rhyolight', null, null, function(err, status) {
+        contributor.validate('sha', 'rhyolight', null, githubClientStub, function(err, status) {
             assert.ifError(err, 'error thrown during validation');
             assert(status.state, 'no status state returned');
             assert.equal(status.state, 'success', 'wrong status state');
@@ -32,7 +35,7 @@ describe('contributor validator', function() {
         });
     });
     it('returns failure status when user does not exist', function(done) {
-        contributor.validate('sha', 'NOPE', null, null, function(err, status) {
+        contributor.validate('sha', 'NOPE', null, githubClientStub, function(err, status) {
             assert.ifError(err, 'error thrown during validation');
             assert(status.state, 'no status state returned');
             assert.equal(status.state, 'failure', 'wrong status state');
