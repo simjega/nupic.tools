@@ -1,7 +1,6 @@
 var assert = require('assert'),
     connect = require('connect'),
     colors = require('colors'),
-    $ = require('jquery'),
     
     RepositoryClient = require('./repoClient'),
     contributors = require('./contributors'),
@@ -9,9 +8,6 @@ var assert = require('assert'),
     statusReporter = require('./statusReporter'),
     pullRequestReporter = require('./pullRequestReporter'),
     cfg = require('./configReader').read(),
-
-    // not using this yet
-    // chatlogs = require('./chatlogs'),
 
     HOST = cfg.host,
     PORT = cfg.port || 8081,
@@ -23,9 +19,6 @@ var assert = require('assert'),
     pullRequestWebhookUrl = baseUrl + githubHookPath,
 
     githubClients = {},
-
-    // not using this yet
-    // logDirectory = '~/Desktop/nupic/chatlogs',
 
     channelName = 'nupic';
 
@@ -89,8 +82,6 @@ establishWebHooks(cfg, function() {
         .use(githubHookPath, githubHookHandler(githubClients))
         .use(statusReportPath, statusReporter(githubClients))
         .use(pullRequestReportPath, pullRequestReporter(githubClients))
-        // not using this yet
-        // .use('/chatlogs', chatlogs(logDirectory, channelName))
 
         // Simple report on what this server is monitoring.
         .use('/', function(req, res) {

@@ -1,5 +1,4 @@
 var fs = require('fs'),
-    $ = require('jquery'),
     configFile = './config.json',
     username = process.env.USER.toLowerCase(),
     userFile = './config-' + username + '.json';
@@ -27,7 +26,6 @@ function read() {
     } catch(e) {
         // no user file no problem
     }
-    output = $.extend(true, {}, defaultConfig, userConfig);
     output.monitor = defaultConfig.monitor.concat(userConfig.monitor);
     return output;
 }

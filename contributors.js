@@ -3,7 +3,6 @@
 var request = require('request'),
     url = require('url'),
     qs = require('querystring'),
-    $ = require('jquery'),
     monitors;
 
 function csvToJson(csv) {
