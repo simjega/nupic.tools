@@ -15,7 +15,6 @@
     "dependencies": {
         "colors"    : "*",
         "connect"   : "*",
-        "jquery"    : "*",
         "request"   : "*",
         "github"    : "*"
     },

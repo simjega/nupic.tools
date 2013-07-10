@@ -1,22 +1,26 @@
-var NUPIC_STATUS_PREFIX = 'NuPIC Status:',
+var fs = require('fs'),
     contributors = require('./contributors'),
+    NUPIC_STATUS_PREFIX = 'NuPIC Status:',
+    VALIDATOR_DIR = './validators',
     validators = [],
-    githubClient;
+    githubClients;
 
-validators.push(require('./commitValidators/travis'));
-validators.push(require('./commitValidators/contributor'));
-validators.push(require('./commitValidators/fastForward'));
+function initializeValidators(dir) {
+    fs.readdirSync(dir).forEach(function(validator) {
+        validators.push(require(dir + '/' + validator.split('.').shift()));
+    });
+}
 
-function revalidateAllOpenPullRequests(githubUser, contributors) {
+function revalidateAllOpenPullRequests(githubUser, contributors, githubClient) {
     githubClient.getAllOpenPullRequests(function(err, prs) {
         console.log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.head.sha; }).forEach(function(sha) {
-            performCompleteValidation(sha, githubUser);
+            performCompleteValidation(sha, githubUser, githubClient);
         });
     });
 }
 
-function postNewNupicStatus(sha, statusDetails) {
+function postNewNupicStatus(sha, statusDetails, githubClient) {
     console.log('Posting new NuPIC Status (' + statusDetails.state + ') to github for ' + sha);
     githubClient.github.statuses.create({
         user: githubClient.org,
@@ -28,7 +32,7 @@ function postNewNupicStatus(sha, statusDetails) {
     });
 }
 
-function performCompleteValidation(sha, githubUser) {
+function performCompleteValidation(sha, githubUser, githubClient) {
 
     console.log('\nVALIDATING ' + sha);
 
@@ -55,7 +59,7 @@ function performCompleteValidation(sha, githubUser) {
                         // Upon failure, we set a flag that will skip the 
                         // remaining validators and post a failure status.
                         validationFailed = true;
-                        postNewNupicStatus(sha, result);
+                        postNewNupicStatus(sha, result, githubClient);
                     }
                     console.log(validator.name + ' complete... running next validator');
                     runNextValidation();
@@ -66,7 +70,7 @@ function performCompleteValidation(sha, githubUser) {
                 postNewNupicStatus(sha, {
                     state: 'success',
                     description: 'All validations passed (' + validators.map(function(v) { return v.name; }).join(', ') + ')'
-                });
+                }, githubClient);
             }
         }
 
@@ -76,7 +80,7 @@ function performCompleteValidation(sha, githubUser) {
     });
 }
 
-function handlePullRequest(payload) {
+function handlePullRequest(payload, githubClient) {
     var action = payload.action,
         githubUser = payload.pull_request.user.login,
         head = payload.pull_request.head,
@@ -89,16 +93,16 @@ function handlePullRequest(payload) {
         // fast-forward status of all the other open pull requests
         if (payload.pull_request.merged) {
             console.log('A PR just merged. Re-validating open pull requests...');
-            contributors.getAll(function(err, contributors) {
-                revalidateAllOpenPullRequests(githubUser, contributors);
+            contributors.getAll(githubClient.contributorsUrl, function(err, contributors) {
+                revalidateAllOpenPullRequests(githubUser, contributors, githubClient);
             });
         }
     } else {
-        performCompleteValidation(head.sha, githubUser);
+        performCompleteValidation(head.sha, githubUser, githubClient);
     }
 }
 
-function handleStateChange(payload) {
+function handleStateChange(payload, githubClient) {
     console.log('State of ' + payload.sha + ' updated to ' + payload.state);
     // Get statuses and check the latest one
     githubClient.getAllStatusesFor(payload.sha, function(err, statusHistory) {
@@ -106,20 +110,27 @@ function handleStateChange(payload) {
         if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
             // ignore statuses that were created by this server
         } else {
-            performCompleteValidation(payload.sha, payload.sender.login);
+            performCompleteValidation(payload.sha, payload.sender.login, githubClient);
         }
     });
 }
 
-module.exports = function(client) {
-    githubClient = client;
+function getGithubClientForRequest(payload) {
+    var repo = payload.name || payload.repository.full_name;
+    return githubClients[repo];
+}
+
+module.exports = function(clients) {
+    githubClients = clients;
+    initializeValidators(VALIDATOR_DIR);
     return function(req, res) {
-        var payload = JSON.parse(req.body.payload);
+        var payload = JSON.parse(req.body.payload),
+            githubClient = getGithubClientForRequest(payload);
 
         if (payload.state) {
-            handleStateChange(payload);
+            handleStateChange(payload, githubClient);
         } else {
-            handlePullRequest(payload);
+            handlePullRequest(payload, githubClient);
         }
 
         res.end();

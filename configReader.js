@@ -1,5 +1,4 @@
 var fs = require('fs'),
-    $ = require('jquery'),
     configFile = './config.json',
     username = process.env.USER.toLowerCase(),
     userFile = './config-' + username + '.json';
@@ -19,14 +18,20 @@ function readConfigFileIntoObject(path) {
 }
 
 function read() {
-    var defaultConfig = readConfigFileIntoObject(configFile);
-    var userConfig = {};
+    var defaultConfig = readConfigFileIntoObject(configFile),
+        userConfig = {};
     try {
         userConfig = readConfigFileIntoObject(userFile);
     } catch(e) {
-        // no user file no problem
+        // no user file, no problem
     }
-    return $.extend({}, defaultConfig, userConfig);
+    ['host', 'port'].forEach(function(key) {
+        if (userConfig[key] !== undefined) {
+            defaultConfig[key] = userConfig[key];
+        }
+    });
+    defaultConfig.monitor = defaultConfig.monitor.concat(userConfig.monitor);
+    return defaultConfig;
 }
 
 module.exports.read = read;
