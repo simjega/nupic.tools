@@ -9,6 +9,7 @@ function isContributor(name, roster) {
 }
 
 function validator(sha, githubUser, _, githubClient, callback) {
+    console.log('Validating contributor "' + githubUser + '"...');
     contributors.getAll(githubClient.contributorsUrl, function(err, contributors) {
         var response = {
             state: 'success',
