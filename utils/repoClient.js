@@ -10,7 +10,6 @@ function RepositoryClient(config) {
         version: '3.0.0',
         timeout: 5000
     });
-    console.log('RepositoryClient created for ' + this.user + ' on ' + this.org + '/' + this.repo);
     this.github.authenticate({
         type: 'basic',
         username: this.user,
@@ -63,7 +62,6 @@ RepositoryClient.prototype.getAllStatusesFor = function(sha, callback) {
 
 RepositoryClient.prototype.confirmWebhookExists = function(url, event, callback) {
     var me = this;
-    console.log('Looking for ' + event + ' hook for ' + url + ' on ' + this.toString() + '...');
     this.github.repos.getHooks({
         user: this.org,
         repo: this.repo
@@ -78,7 +76,6 @@ RepositoryClient.prototype.confirmWebhookExists = function(url, event, callback)
             }
         });
         if (! found) {
-            console.log('creating ' + event + ' hook for ' + url);
             me.github.repos.createHook({
                 user: me.org,
                 repo: me.repo,
@@ -91,8 +88,7 @@ RepositoryClient.prototype.confirmWebhookExists = function(url, event, callback)
                 if (err) {
                     return callback(err);
                 }
-                console.log('Web hook created: ');
-                console.log(data);
+                callback(null, data);
             });
         } else {
             callback();

@@ -21,8 +21,18 @@ function revalidateAllOpenPullRequests(githubUser, contributors, repoClient) {
     });
 }
 
+function coloredStatus(status) {
+    if (status == 'success') {
+        return status.green;
+    } else if (status == 'pending') {
+        return status.yellow;
+    } else {
+        return status.red;
+    }
+}
+
 function postNewNupicStatus(sha, statusDetails, repoClient) {
-    console.log('Posting new NuPIC Status (' + statusDetails.state + ') to github for ' + sha);
+    console.log('Posting new NuPIC Status (' + coloredStatus(statusDetails.state) + ') to github for ' + sha);
     repoClient.github.statuses.create({
         user: repoClient.org,
         repo: repoClient.repo,
@@ -35,7 +45,7 @@ function postNewNupicStatus(sha, statusDetails, repoClient) {
 
 function performCompleteValidation(sha, githubUser, repoClient) {
 
-    console.log('\nVALIDATING ' + sha);
+    console.log(('\nVALIDATING ' + sha).cyan);
 
     repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
         if (err) throw err;
@@ -120,8 +130,6 @@ function handleStateChange(payload, repoClient) {
             performCompleteValidation(payload.sha, payload.sender.login, repoClient);
         }
     });
-
-
 }
 
 module.exports = function(clients) {

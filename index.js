@@ -46,13 +46,20 @@ function establishWebHooks(config, callback) {
         monitorConfig.repository = repo;
 
         repoClient = new RepositoryClient(monitorConfig);
+        console.log('RepositoryClient created for ' + monitorConfig.username.magenta + ' on ' + repoClient.toString().magenta);
 
-        repoClient.confirmWebhookExists(pullRequestWebhookUrl, 'pull_request', function(err) {
+        repoClient.confirmWebhookExists(pullRequestWebhookUrl, 'pull_request', function(err, hook) {
             if (err) {
                 console.error(('Error during webhook confirmation for ' + repoClient.toString()).red);
                 die(err);
             } else {
-                console.log(('Webhook for ' + repoClient.toString() + ' confirmed.').green);
+                if (hook) {
+                    console.log(('Webhook created on ' + repoClient.toString() + ':\n'
+                                            + '\tfor "' + hook.events.join(', ') + '"\n'
+                                            + '\ton ' + hook.config.url).yellow);
+                } else {
+                    console.log(('Webhook exists for ' + repoClient.toString()).green);
+                }
                 count++;
             }
             repoClients[monitorKey] = repoClient;
