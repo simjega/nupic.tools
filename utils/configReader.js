@@ -1,7 +1,4 @@
-var fs = require('fs'),
-    configFile = './config.json',
-    username = process.env.USER.toLowerCase(),
-    userFile = './config-' + username + '.json';
+var fs = require('fs');
 
 function readConfigFileIntoObject(path) {
     if (! fs.existsSync(path)) {
@@ -18,9 +15,13 @@ function readConfigFileIntoObject(path) {
     return obj;
 }
 
-function read() {
-    var config = readConfigFileIntoObject(configFile),
+function read(configFile) {
+    var username = process.env.USER.toLowerCase(),
+        configSplit = configFile.split('.'),
+        userFile = configSplit.slice(0, configSplit.length - 1).join('.') + '-' + username + '.json',
+        config = readConfigFileIntoObject(configFile),
         userConfig = null;
+    console.log(userFile);
     userConfig = readConfigFileIntoObject(userFile);
     if (userConfig) {
         ['host', 'port'].forEach(function(key) {

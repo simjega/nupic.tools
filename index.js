@@ -1,22 +1,21 @@
 var assert = require('assert'),
+    fs = require('fs'),
     connect = require('connect'),
     colors = require('colors'),
     
-    RepositoryClient = require('./repoClient'),
-    contributors = require('./contributors'),
+    RepositoryClient = require('./utils/repoClient'),
     githubHookHandler = require('./githubHook'),
-    statusReporter = require('./statusReporter'),
-    pullRequestReporter = require('./pullRequestReporter'),
-    cfg = require('./configReader').read(),
+    cfg = require('./utils/configReader').read('./config.json'),
 
     HOST = cfg.host,
     PORT = cfg.port || 8081,
 
     baseUrl = 'http://' + HOST + ':' + PORT,
     githubHookPath = '/github-hook',
-    statusReportPath = '/shaStatus',
-    pullRequestReportPath = '/prStatus',
     pullRequestWebhookUrl = baseUrl + githubHookPath,
+
+    HANDLER_DIR = './handlers',
+    handlers = [],
 
     repoClients = {},
 
@@ -25,6 +24,12 @@ var assert = require('assert'),
 function die(err) {
     console.error(err);
     process.exit(-1);
+}
+
+function initializeHandlers(dir) {
+    fs.readdirSync(dir).forEach(function(handler) {
+        handlers.push(require(dir + '/' + handler.split('.').shift()));
+    });
 }
 
 function establishWebHooks(config, callback) {
@@ -64,28 +69,29 @@ console.log(JSON.stringify(cfg, null, 2).yellow);
 
 establishWebHooks(cfg, function() {
 
-    connect()
+    var app = connect()
         .use(connect.logger('dev'))
         .use(connect.bodyParser())
         .use(githubHookPath, githubHookHandler(repoClients))
-        .use(statusReportPath, statusReporter(repoClients))
-        .use(pullRequestReportPath, pullRequestReporter(repoClients))
 
-        // Simple report on what this server is monitoring.
-        .use('/', function(req, res) {
-            var repoList = '<ul>';
-            var itemHtml = Object.keys(repoClients).map(function(key) {
-                return '<a target="_blank" href="http://github.com/' + key + '/">http://github.com/' + key + '</a>';
-            });
-            repoList += '<li>' + itemHtml.join('</li><li>') + '</li></ul>';
-            res.setHeader('Content-Type', 'text/html');
-            res.end('<html><body>\n<h1>nupic.tools is alive</h1>\n' 
-                + '<h3>This server is monitoring the following repositories:</h3>'
-                + repoList + '\n</body></html>');
-        })
-        
-        .listen(PORT, function() {
-            console.log(('\nServer running at ' + baseUrl + '\n').green);
+    initializeHandlers(HANDLER_DIR);
+
+    handlers.forEach(function(handlerConfig) {
+        var urls = Object.keys(handlerConfig);
+        urls.forEach(function(url) {
+            var handler = handlerConfig[url](repoClients, handlers),
+                name = handler.name,
+                desc = handler.description,
+                msg = '==> ' + name + ' listening for url pattern: ' + url;
+            if (! handler.disabled) {
+                console.log(msg.cyan);
+                app.use(url, handler);
+            }
         });
+    });
+        
+    app.listen(PORT, function() {
+        console.log(('\nServer running at ' + baseUrl + '\n').green);
+    });
 
 });
