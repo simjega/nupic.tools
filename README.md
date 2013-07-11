@@ -3,7 +3,7 @@ nupic-tools
 
 Server for tooling around a development process that ensures the `master` branch is always green, without the need for a development branch. This is being used to support the [development process](https://github.com/numenta/nupic/wiki/Developer-Workflow) of the [NuPIC](http://github.com/numenta/nupic) project, but it is generalized enough to be used for any project.
 
-This server registers a web hook URL with github when it starts up (if it doesn't already exist) and gets notified on pull requests and status changes on the repository specified in the [configuration](#configuration). When pull requests or SHA status updates are received, it runs validators against the SHAs. 
+This server registers a web hook URL with github when it starts up (if it doesn't already exist) and gets notified on pull requests and status changes on the repositories specified in the [configuration](#configuration). When pull requests or SHA status updates are received, it runs [validators](#validators) against the SHAs. 
 
 It can be configured to monitor many github repositories.
 
@@ -19,6 +19,10 @@ First, install nodejs and npm. Checkout this codebase and change into the `nupic
 
 Default configuration settings are in the `config.json` file, but it doesn't have all the information the application needs to run. The github passwords within the `monitors` section, for example, have been removed. To provide these instance-level settings, create a new config file using the username of the logged-in user. For example, mine is called `config-rhyolight.json`. This is where you'll keep your private configuration settings, like your github passwords. You can also add as many `monitors` as you wish. The key for each monitor should be the github organization/repository name.
 
+#### Monitors
+
+Each monitor you add to the configuration will be used to register webhook urls with github. The server listens for updates from github webhooks, then runs all the [validators](#validators) in the `validators` directory when appropriate. This occurs when a pull request is opened, reopened, or synchronized. The status of the HEAD SHA of each pull request is also monitored, so when outside service update a status of a pull request, the validators rerun on the pull request. 
+
 ### Github API Credentials
 
 The github username and password required in your configuration is used to access the [Github API](http://developer.github.com/). The credentials uses must have push access to the repository declared in the same section.
@@ -26,6 +30,8 @@ The github username and password required in your configuration is used to acces
 ### Start the server:
 
     node index.js
+
+Now hit http://localhost:8081 (or whatever port you specified in the configuration file) and you should see a status page reporting what repositories are being monitored, as well as what extra services are provided by [HTTP Handlers](#http_handler_addons).
 
 ## Validators
 
@@ -45,9 +51,9 @@ You can add as many validators in the `validator` directory, and they will autom
 - *contributor*: Ensures pull request originator is within a contributor listing
 - *fastForward*: Ensures the pull request `head` has the `master` branch merged into it
 
-## Notes
+## HTTP Handler Addons
 
-A lot of crap gets dumped to stdout at the moment. 
+It's easy to create additional HTTP handlers for different URL patterns. Just create a module within the `handlers` directory that exports an object keyed by the URL pattern it should handle. The value for each key should be a function that returns a request handler function. This function will be given access to all repository clients for the monitors specified in the configuration, as well as all the other HTTP handlers within the application. The actual request handler function returned by this function will be given an HTTP Request and HTTP response object, node.js style.
 
 ## Make sure it stays running!
 
