@@ -32,7 +32,6 @@ function initializeHandlers(dir) {
     });
 }
 
-
 function establishWebHooks(config, callback) {
     var count = 0;
     // Set up one github client for each repo target in config.
