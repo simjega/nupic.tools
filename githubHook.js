@@ -106,7 +106,7 @@ function handlePullRequest(payload, repoClient) {
 function handleStateChange(payload, repoClient) {
     console.log('State of ' + payload.sha + ' updated to ' + payload.state);
     // Ignore state changes on closed pull requests
-    if (payload.pull_request.state == 'closed') {
+    if (payload.pull_request && payload.pull_request.state == 'closed') {
         console.log(('Ignoring status of closed pull request (' + payload.sha + ')').yellow);
         return;
     }
