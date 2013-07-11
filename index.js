@@ -3,9 +3,9 @@ var assert = require('assert'),
     connect = require('connect'),
     colors = require('colors'),
     
-    RepositoryClient = require('./repoClient'),
+    RepositoryClient = require('./utils/repoClient'),
     githubHookHandler = require('./githubHook'),
-    cfg = require('./configReader').read(),
+    cfg = require('./utils/configReader').read('./config.json'),
 
     HOST = cfg.host,
     PORT = cfg.port || 8081,

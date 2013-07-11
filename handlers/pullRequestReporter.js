@@ -38,7 +38,7 @@ function prReporter(req, res) {
         if (! repoClients[query.repo]) {
             return jsonUtils.renderErrors(
                 [new Error('Server is not monitoring repository identified by "' + query.repo + '".')], 
-                res
+                res, query.callback
             );
         }
         repoKeys = [query.repo];
@@ -54,11 +54,7 @@ function prReporter(req, res) {
             if (Object.keys(allPrs).length == totalReposToQuery) {
                 // Done!
                 var out = totalReposToQuery == 1 ? allPrs[Object.keys(allPrs)[0]] : allPrs;
-                if (query.callback) {
-                    jsonUtils.renderJsonp(out, query.callback, res);
-                } else {
-                    jsonUtils.renderJson(out, res);
-                }
+                jsonUtils.render(out, res, query.callback);
             }
         });
     });

@@ -8,6 +8,7 @@ function shaReporter(req, res) {
         query = qs.parse(reqUrl.query),
         sha = query.sha,
         repo = query.repo,
+        jsonPCallback = query.callback,
         repoClient = repoClients[repo],
         errors = [];
 
@@ -18,7 +19,7 @@ function shaReporter(req, res) {
         errors.push(new Error('Missing "sha" query parameter.'));
     }
     if (errors.length) {
-        return jsonUtils.renderErrors(errors, res);
+        return jsonUtils.renderErrors(errors, res, jsonPCallback);
     }
 
     repoClient.github.statuses.get({
@@ -26,7 +27,7 @@ function shaReporter(req, res) {
         repo: repoClient.repo,
         sha: sha
     }, function(err, statuses) {
-        jsonUtils.renderJson(statuses, res);
+        jsonUtils.render(statuses, res, jsonPCallback);
     });
 }
 

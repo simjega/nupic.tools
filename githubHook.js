@@ -1,6 +1,6 @@
 var fs = require('fs'),
     colors = require('colors'),
-    contributors = require('./contributors'),
+    contributors = require('./utils/contributors'),
     NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     VALIDATOR_DIR = './validators',
     validators = [],

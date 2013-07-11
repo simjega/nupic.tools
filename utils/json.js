@@ -20,15 +20,26 @@ function renderJsonp(output, cbName, res) {
     res.end(textOut);
 }
 
-function renderErrors(errs, res) {
-    var out = JSON.stringify({errors: errs.map(function(e) { return e.message; })});
+function renderErrors(errs, res, callbackName) {
+    var errors = {errors: errs.map(function(e) { return e.message; })};
     res.statusCode = 400;
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Length', out.length);
-    res.end(out);
+    if (callbackName) {
+        renderJsonp(errors, callbackName, res);
+    } else {
+        renderJson(errors, res);
+    }
+}
+
+function render(payload, response, callbackName) {
+    if (callbackName) {
+        return renderJsonp(payload, callbackName, response);
+    } else {
+        return renderJson(payload, response);
+    }
 }
 
 module.exports = {
+    render: render,
     renderJson: renderJson,
     renderJsonp: renderJsonp,
     renderErrors: renderErrors

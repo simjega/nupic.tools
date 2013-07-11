@@ -1,4 +1,4 @@
-var contributors = require('../contributors');
+var contributors = require('../utils/contributors');
 
 function isContributor(name, roster) {
     return roster.map(function(p) { return p.Github; })
