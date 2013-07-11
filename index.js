@@ -4,10 +4,7 @@ var assert = require('assert'),
     colors = require('colors'),
     
     RepositoryClient = require('./repoClient'),
-    contributors = require('./contributors'),
     githubHookHandler = require('./githubHook'),
-    statusReporter = require('./statusReporter'),
-    // pullRequestReporter = require('./pullRequestReporter'),
     cfg = require('./configReader').read(),
 
     HOST = cfg.host,
@@ -15,8 +12,6 @@ var assert = require('assert'),
 
     baseUrl = 'http://' + HOST + ':' + PORT,
     githubHookPath = '/github-hook',
-    statusReportPath = '/shaStatus',
-    // pullRequestReportPath = '/prStatus',
     pullRequestWebhookUrl = baseUrl + githubHookPath,
 
     HANDLER_DIR = './handlers',
@@ -79,7 +74,6 @@ establishWebHooks(cfg, function() {
         .use(connect.logger('dev'))
         .use(connect.bodyParser())
         .use(githubHookPath, githubHookHandler(repoClients))
-        .use(statusReportPath, statusReporter(repoClients))
 
     initializeHandlers(HANDLER_DIR);
 
@@ -89,8 +83,7 @@ establishWebHooks(cfg, function() {
             var handler = handlerConfig[url](repoClients, handlers),
                 name = handler.name,
                 desc = handler.description,
-                msg = 'Configuring HTTP request handler...\n';
-            msg += name + ' listening for url pattern: ' + url + '\n\t' + desc;
+                msg = '==> ' + name + ' listening for url pattern: ' + url;
             if (! handler.disabled) {
                 console.log(msg.cyan);
                 app.use(url, handler);

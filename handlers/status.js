@@ -35,6 +35,7 @@ function statusReporter(req, res) {
     htmlOut += createHandlerReport(httpHandlers);
     htmlOut += '\n</body></html>';
     res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Length', htmlOut.length);
     res.end(htmlOut);
 }
 
