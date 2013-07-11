@@ -17,7 +17,7 @@ First, install nodejs and npm. Checkout this codebase and change into the `nupic
 
 ### Configuration
 
-Default configuration settings are in the `config.json` file, but it doesn't have all the information the application needs to run. The github passwords within the `monitors` section, for example, have been removed. To provide these instance-level settings, create a new config file using the username of the logged-in user. For example, mine is called `config-rhyolight.json`. This is where you'll keep your private configuration settings, like your github passwords. You can also add as many `monitors` as you wish. The key for each monitor should be the github organization/repository name.
+Default configuration settings are in the `./conf/config.json` file, but it doesn't have all the information the application needs to run. The github passwords within the `monitors` section, for example, have been removed. To provide these instance-level settings, create a new config file using the username of the logged-in user. For example, mine is called `./conf/config-rhyolight.json`. This is where you'll keep your private configuration settings, like your github passwords. You can also add as many `monitors` as you wish. The key for each monitor should be the github organization/repository name.
 
 #### Monitors
 

@@ -5,7 +5,7 @@ var assert = require('assert'),
     
     RepositoryClient = require('./utils/repoClient'),
     githubHookHandler = require('./githubHook'),
-    cfg = require('./utils/configReader').read('./config.json'),
+    cfg = require('./utils/configReader').read('./conf/config.json'),
 
     HOST = cfg.host,
     PORT = cfg.port || 8081,
