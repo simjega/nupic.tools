@@ -5,21 +5,20 @@ var assert = require('assert'),
         contributorsUrl: 'contribUrl'
     },
     contributor = proxyquire('../../validators/contributor', 
-                    {'contributors': contribStub});
+                    {'../utils/contributors': contribStub});
 
-contribStub.getAll = function(cb) {
-    cb(null, {"contributors":
-        [
-            {
-                "Name":"Matthew Taylor",
-                "Github":"rhyolight",
-                "Email":"matt@numenta.org",
-                "Committer":1,
-                "Reviewer":1,
-                "Subscriber":1
-            }
-        ]
-    });
+contribStub.getAll = function(url, cb) {
+    assert.equal(url, 'contribUrl', 'contributors.getAll sent bad url');
+    cb(null, [
+        {
+            "Name":"Matthew Taylor",
+            "Github":"rhyolight",
+            "Email":"matt@numenta.org",
+            "Committer":1,
+            "Reviewer":1,
+            "Subscriber":1
+        }
+    ]);
 };
 
 describe('contributor validator', function() {
