@@ -110,7 +110,12 @@ function handlePullRequest(payload, repoClient) {
             });
         }
     } else {
-        performCompleteValidation(head.sha, githubUser, repoClient);
+        // Only process PRs against the master branch.
+        if (payload.pull_request.base.ref == 'master') {
+            performCompleteValidation(head.sha, githubUser, repoClient);
+        } else {
+            console.log(('Ignoring pull request against ' + payload.pull_request.base.label).yellow);
+        }
     }
 }
 

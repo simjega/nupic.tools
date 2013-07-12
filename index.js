@@ -12,7 +12,7 @@ var assert = require('assert'),
 
     baseUrl = 'http://' + HOST + ':' + PORT,
     githubHookPath = '/github-hook',
-    pullRequestWebhookUrl = baseUrl + githubHookPath,
+    prWebhookUrl = baseUrl + githubHookPath,
 
     HANDLER_DIR = './handlers',
     handlers = [],
@@ -46,9 +46,11 @@ function establishWebHooks(config, callback) {
         monitorConfig.repository = repo;
 
         repoClient = new RepositoryClient(monitorConfig);
-        console.log('RepositoryClient created for ' + monitorConfig.username.magenta + ' on ' + repoClient.toString().magenta);
+        console.log('RepositoryClient created for ' 
+            + monitorConfig.username.magenta + ' on ' 
+            + repoClient.toString().magenta);
 
-        repoClient.confirmWebhookExists(pullRequestWebhookUrl, 'pull_request', function(err, hook) {
+        repoClient.confirmWebhookExists(prWebhookUrl, ['pull_request', 'status'], function(err, hook) {
             if (err) {
                 console.error(('Error during webhook confirmation for ' + repoClient.toString()).red);
                 die(err);

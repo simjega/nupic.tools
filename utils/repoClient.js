@@ -60,7 +60,7 @@ RepositoryClient.prototype.getAllStatusesFor = function(sha, callback) {
     });
 };
 
-RepositoryClient.prototype.confirmWebhookExists = function(url, event, callback) {
+RepositoryClient.prototype.confirmWebhookExists = function(url, events, callback) {
     var me = this;
     this.github.repos.getHooks({
         user: this.org,
@@ -83,7 +83,7 @@ RepositoryClient.prototype.confirmWebhookExists = function(url, event, callback)
                 config: {
                     url: url
                 },
-                events: ['pull_request', 'status']
+                events: events
             }, function(err, data) {
                 if (err) {
                     return callback(err);
