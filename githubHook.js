@@ -65,17 +65,18 @@ function performCompleteValidation(sha, githubUser, repoClient) {
                         console.error(err);
                         return;
                     }
-                    console.log(validator.name + ' result was ' + result.state);
+                    console.log(validator.name + ' result was ' + coloredStatus(result.state));
                     if (result.state !== 'success') {
                         // Upon failure, we set a flag that will skip the 
                         // remaining validators and post a failure status.
                         validationFailed = true;
                         postNewNupicStatus(sha, result, repoClient);
                     }
-                    console.log(validator.name + ' complete... running next validator');
+                    console.log(validator.name + ' complete.');
                     runNextValidation();
                 });
             } else {
+                console.log('Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
                 postNewNupicStatus(sha, {
