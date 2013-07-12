@@ -86,7 +86,7 @@ establishWebHooks(cfg, function() {
     handlers.forEach(function(handlerConfig) {
         var urls = Object.keys(handlerConfig);
         urls.forEach(function(url) {
-            var handler = handlerConfig[url](repoClients, handlers),
+            var handler = handlerConfig[url](repoClients, handlers, cfg),
                 name = handler.name,
                 desc = handler.description,
                 msg = '==> ' + name + ' listening for url pattern: ' + url;

@@ -13,10 +13,11 @@
         "url": "https://github.com/numenta/nupic.tools.git"
     },
     "dependencies": {
-        "colors"    : "*",
-        "connect"   : "*",
-        "request"   : "*",
-        "github"    : "*"
+        "colors"        : "*",
+        "connect"       : "*",
+        "request"       : "*",
+        "github"        : "*",
+        "ansi-to-html"  : "*"
     },
     "devDependencies": {
         "proxyquire": "*"

@@ -1,11 +1,12 @@
 var repoClients,
-    httpHandlers;
+    httpHandlers,
+    config;
 
 function createHandlerReport(handlers) {
     var itemHtml = handlers.map(function(handlerConfig) {
         var urls = Object.keys(handlerConfig);
         return urls.map(function(url) {
-            var handler = handlerConfig[url](repoClients, handlers),
+            var handler = handlerConfig[url](repoClients, handlers, config),
                 name = handler.name,
                 desc = handler.description;
                 htmlOut = '<a target="_blank" href="' + url + '">' + name + '</a>: ' + desc;
@@ -43,9 +44,10 @@ statusReporter.name = 'Status Reporter';
 statusReporter.description = 'Reports the repositories this tools server is monitoring.';
 
 module.exports = {
-    '/': function(_repoClients, _httpHandlers) {
+    '/': function(_repoClients, _httpHandlers, _config) {
         repoClients = _repoClients;
         httpHandlers = _httpHandlers;
+        config = _config;
         return statusReporter;
     }
 };

@@ -21,10 +21,10 @@ function read(configFile) {
         userFile = configSplit.slice(0, configSplit.length - 1).join('.') + '-' + username + '.json',
         config = readConfigFileIntoObject(configFile),
         userConfig = null;
-    console.log(userFile);
+
     userConfig = readConfigFileIntoObject(userFile);
     if (userConfig) {
-        ['host', 'port'].forEach(function(key) {
+        ['host', 'port', 'logDirectory'].forEach(function(key) {
             if (userConfig[key] !== undefined) {
                 config[key] = userConfig[key];
             }
