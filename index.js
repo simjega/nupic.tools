@@ -70,9 +70,19 @@ function establishWebHooks(config, callback) {
     });
 }
 
+function sterilizeConfig(config) {
+    var out = JSON.parse(JSON.stringify(config));
+    Object.keys(out.monitors).forEach(function(k) {
+        if (out.monitors[k].password) {
+            out.monitors[k].password = '<hidden>';
+        }
+    });
+    return out;
+}
+
 console.log('nupic.tools server starting...'.green);
 console.log('nupic.tools will use the following configuration:');
-console.log(JSON.stringify(cfg, null, 2).yellow);
+console.log(JSON.stringify(sterilizeConfig(cfg), null, 2).yellow);
 
 establishWebHooks(cfg, function() {
 
