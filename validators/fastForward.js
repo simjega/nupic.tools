@@ -4,8 +4,10 @@ function validator(sha, githubUser, statusHistory, githubClient, callback) {
         var result = {
             state: 'success'
         };
-        if (err) return callback(err);
-        if (isBehind) {
+        if (err) {
+            result.state = 'failure';
+            result.description = 'This commit does not seem to be on the same tree as master.';
+        } else if (isBehind) {
             result.state = 'failure';
             result.description = 'You must merge ' + behindBy 
                 + ' commits from the destination branch.';

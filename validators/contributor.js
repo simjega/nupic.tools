@@ -1,6 +1,8 @@
 var contributors = require('../utils/contributors');
 
 function isContributor(name, roster) {
+    if (name == null || name == undefined) return false;
+    if (name === false) return true; // explicit false means ignore
     return roster.map(function(p) { return p.Github; })
                  .reduce(function(prev, curr) {
                     if (prev) return prev;

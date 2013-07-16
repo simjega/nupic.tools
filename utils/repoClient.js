@@ -60,6 +60,14 @@ RepositoryClient.prototype.getAllStatusesFor = function(sha, callback) {
     });
 };
 
+RepositoryClient.prototype.getCommit = function(sha, callback) {
+    this.github.repos.getCommit({
+        user: this.org,
+        repo: this.repo,
+        sha: sha
+    }, callback);
+};
+
 RepositoryClient.prototype.confirmWebhookExists = function(url, events, callback) {
     var me = this;
     this.github.repos.getHooks({

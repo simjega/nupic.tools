@@ -1,6 +1,7 @@
 var fs = require('fs'),
     colors = require('colors'),
     contributors = require('./utils/contributors'),
+    performCompleteValidation = require('./utils/shaValidator'),
     NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     VALIDATOR_DIR = './validators',
     validators = [],
@@ -16,79 +17,8 @@ function revalidateAllOpenPullRequests(githubUser, contributors, repoClient) {
     repoClient.getAllOpenPullRequests(function(err, prs) {
         console.log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.head.sha; }).forEach(function(sha) {
-            performCompleteValidation(sha, githubUser, repoClient);
+            performCompleteValidation(sha, githubUser, repoClient, validators);
         });
-    });
-}
-
-function coloredStatus(status) {
-    if (status == 'success') {
-        return status.green;
-    } else if (status == 'pending') {
-        return status.yellow;
-    } else {
-        return status.red;
-    }
-}
-
-function postNewNupicStatus(sha, statusDetails, repoClient) {
-    console.log('Posting new NuPIC Status (' + coloredStatus(statusDetails.state) + ') to github for ' + sha);
-    repoClient.github.statuses.create({
-        user: repoClient.org,
-        repo: repoClient.repo,
-        sha: sha,
-        state: statusDetails.state,
-        description: 'NuPIC Status: ' + statusDetails.description,
-        target_url: statusDetails.target_url
-    });
-}
-
-function performCompleteValidation(sha, githubUser, repoClient) {
-
-    console.log(('\nVALIDATING ' + sha).cyan);
-
-    repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
-        if (err) throw err;
-        // clone of the global validators array
-        var commitValidators = validators.slice(0),
-            validationFailed = false;
-
-        function runNextValidation() {
-            var validator;
-            if (validationFailed) return;
-            validator = commitValidators.shift();
-            if (validator) {
-                console.log('Running commit validator: ' + validator.name);
-                validator.validate(sha, githubUser, statusHistory, repoClient, function(err, result) {
-                    if (err) {
-                        console.error('Error running commit validator "' + validator.name + '"');
-                        console.error(err);
-                        return;
-                    }
-                    console.log(validator.name + ' result was ' + coloredStatus(result.state));
-                    if (result.state !== 'success') {
-                        // Upon failure, we set a flag that will skip the 
-                        // remaining validators and post a failure status.
-                        validationFailed = true;
-                        postNewNupicStatus(sha, result, repoClient);
-                    }
-                    console.log(validator.name + ' complete.');
-                    runNextValidation();
-                });
-            } else {
-                console.log('Validation complete.');
-                // No more validators left in the array, so we can complete the
-                // validation successfully.
-                postNewNupicStatus(sha, {
-                    state: 'success',
-                    description: 'All validations passed (' + validators.map(function(v) { return v.name; }).join(', ') + ')'
-                }, repoClient);
-            }
-        }
-
-        console.log('Kicking off validation...');
-        runNextValidation();
-
     });
 }
 
@@ -112,7 +42,7 @@ function handlePullRequest(payload, repoClient) {
     } else {
         // Only process PRs against the master branch.
         if (payload.pull_request.base.ref == 'master') {
-            performCompleteValidation(head.sha, githubUser, repoClient);
+            performCompleteValidation(head.sha, githubUser, repoClient, validators);
         } else {
             console.log(('Ignoring pull request against ' + payload.pull_request.base.label).yellow);
         }
@@ -133,7 +63,7 @@ function handleStateChange(payload, repoClient) {
             // ignore statuses that were created by this server
             console.log(('Ignoring "' + payload.state + '" status created by nupic.tools.').yellow);
         } else {
-            performCompleteValidation(payload.sha, payload.sender.login, repoClient);
+            performCompleteValidation(payload.sha, payload.sender.login, repoClient, validators);
         }
     });
 }

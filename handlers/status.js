@@ -44,7 +44,7 @@ statusReporter.name = 'Status Reporter';
 statusReporter.description = 'Reports the repositories this tools server is monitoring.';
 
 module.exports = {
-    '/': function(_repoClients, _httpHandlers, _config) {
+    '/status': function(_repoClients, _httpHandlers, _config) {
         repoClients = _repoClients;
         httpHandlers = _httpHandlers;
         config = _config;
