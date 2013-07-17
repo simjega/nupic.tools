@@ -79,12 +79,13 @@ function validateSha(req, res) {
 
 }
 
+initializeValidators(VALIDATOR_DIR);
+
 validateSha.name = 'SHA Validator';
 validateSha.description = 'Given a sha parameter, forces a complete validation and reports results.';
 
 module.exports = {
     '/validate': function(_repoClients) {
-        initializeValidators(VALIDATOR_DIR);
         repoClients = _repoClients;
         return validateSha;
     }
