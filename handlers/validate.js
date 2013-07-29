@@ -42,6 +42,7 @@ function validateSha(req, res) {
     var reqUrl = url.parse(req.url),
         query = qs.parse(reqUrl.query),
         sha = query.sha,
+        postStatus = query.postStatus || false,
         repo = query.repo,
         jsonPCallback = query.callback,
         repoClient = repoClients[repo],
@@ -61,7 +62,7 @@ function validateSha(req, res) {
             return jsonUtils.renderErrors(errors, res, jsonPCallback);
         }
         committer = payload.author ? payload.author.login : false;
-        shaValidator(sha, committer, client, validators, function (sha, statusDetails, repoClient) {
+        shaValidator(sha, committer, client, validators, postStatus, function (sha, statusDetails, repoClient) {
             var htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
             htmlOut += '<h2>' + repoClient.toString() + '</h2>\n';
             htmlOut += '<h2>' + sha + '</h2>\n';

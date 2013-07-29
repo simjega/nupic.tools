@@ -20,9 +20,20 @@ function postNewNupicStatus(sha, statusDetails, repoClient) {
     });
 }
 
-function performCompleteValidation(sha, githubUser, repoClient, validators, callback) {
-    var postStatus = postNewNupicStatus;
-    if (callback) postStatus = callback;
+function performCompleteValidation(sha, githubUser, repoClient, validators, postStatus, cb) {
+    var callback = cb;
+    // default dummy callback for simpler code later
+    if (! cb) {
+        callback = function() {};
+    }
+    // if we should post the status to github, we'll wrap the callback with our
+    // status posting logic
+    if (postStatus) {
+        callback = function() {
+            postNewNupicStatus.apply(this, arguments);
+            cb.apply(this, arguments);
+        };
+    }
 
     console.log(('\nVALIDATING ' + sha).cyan);
 
@@ -42,7 +53,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, call
                     if (err) {
                         console.error('Error running commit validator "' + validator.name + '"');
                         console.error(err);
-                        return postStatus(sha, {
+                        return callback(sha, {
                             state: 'error',
                             description: 'Error running commit validator "' + validator.name + '": ' + err.message 
                         }, repoClient);
@@ -52,7 +63,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, call
                         // Upon failure, we set a flag that will skip the 
                         // remaining validators and post a failure status.
                         validationFailed = true;
-                        postStatus(sha, result, repoClient);
+                        callback(sha, result, repoClient);
                     }
                     console.log(validator.name + ' complete.');
                     runNextValidation();
@@ -61,7 +72,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, call
                 console.log('Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
-                postStatus(sha, {
+                callback(sha, {
                     state: 'success',
                     description: 'All validations passed (' + validators.map(function(v) { return v.name; }).join(', ') + ')'
                 }, repoClient);

@@ -17,7 +17,7 @@ function revalidateAllOpenPullRequests(githubUser, contributors, repoClient) {
     repoClient.getAllOpenPullRequests(function(err, prs) {
         console.log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.head.sha; }).forEach(function(sha) {
-            performCompleteValidation(sha, githubUser, repoClient, validators);
+            performCompleteValidation(sha, githubUser, repoClient, validators, true);
         });
     });
 }
@@ -42,7 +42,7 @@ function handlePullRequest(payload, repoClient) {
     } else {
         // Only process PRs against the master branch.
         if (payload.pull_request.base.ref == 'master') {
-            performCompleteValidation(head.sha, githubUser, repoClient, validators);
+            performCompleteValidation(head.sha, githubUser, repoClient, validators, true);
         } else {
             console.log(('Ignoring pull request against ' + payload.pull_request.base.label).yellow);
         }
@@ -63,7 +63,7 @@ function handleStateChange(payload, repoClient) {
             // ignore statuses that were created by this server
             console.log(('Ignoring "' + payload.state + '" status created by nupic.tools.').yellow);
         } else {
-            performCompleteValidation(payload.sha, payload.sender.login, repoClient, validators);
+            performCompleteValidation(payload.sha, payload.sender.login, repoClient, validators, true);
         }
     });
 }
