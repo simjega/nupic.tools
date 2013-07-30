@@ -31,7 +31,9 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
     if (postStatus) {
         callback = function() {
             postNewNupicStatus.apply(this, arguments);
-            cb.apply(this, arguments);
+            if (cb) {
+                cb.apply(this, arguments);
+            }
         };
     }
 
