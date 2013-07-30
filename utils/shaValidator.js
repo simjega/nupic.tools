@@ -20,6 +20,18 @@ function postNewNupicStatus(sha, statusDetails, repoClient) {
     });
 }
 
+function revalidateAllOpenPullRequests(contributors, repoClient, validators, callback) {
+    repoClient.getAllOpenPullRequests(function(err, prs) {
+        console.log('Found ' + prs.length + ' open pull requests...');
+        prs.map(function(pr) { return pr.head; }).forEach(function(head) {
+            performCompleteValidation(head.sha, head.user.login, repoClient, validators, true);
+        });
+        if (callback) {
+            callback(null, prs.map(function(pr) { return pr.number; }));
+        }
+    });
+}
+
 function performCompleteValidation(sha, githubUser, repoClient, validators, postStatus, cb) {
     var callback = cb;
     // default dummy callback for simpler code later
@@ -87,4 +99,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
     });
 }
 
-module.exports = performCompleteValidation;
+module.exports = {
+    performCompleteValidation: performCompleteValidation,
+    revalidateAllOpenPullRequests: revalidateAllOpenPullRequests
+};

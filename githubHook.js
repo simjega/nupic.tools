@@ -1,7 +1,7 @@
 var fs = require('fs'),
     colors = require('colors'),
     contributors = require('./utils/contributors'),
-    performCompleteValidation = require('./utils/shaValidator'),
+    shaValidator = require('./utils/shaValidator'),
     NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     VALIDATOR_DIR = './validators',
     validators = [],
@@ -10,15 +10,6 @@ var fs = require('fs'),
 function initializeValidators(dir) {
     fs.readdirSync(dir).forEach(function(validator) {
         validators.push(require(dir + '/' + validator.split('.').shift()));
-    });
-}
-
-function revalidateAllOpenPullRequests(githubUser, contributors, repoClient) {
-    repoClient.getAllOpenPullRequests(function(err, prs) {
-        console.log('Found ' + prs.length + ' open pull requests...');
-        prs.map(function(pr) { return pr.head.sha; }).forEach(function(sha) {
-            performCompleteValidation(sha, githubUser, repoClient, validators, true);
-        });
     });
 }
 
@@ -36,13 +27,13 @@ function handlePullRequest(payload, repoClient) {
         if (payload.pull_request.merged) {
             console.log('A PR just merged. Re-validating open pull requests...');
             contributors.getAll(repoClient.contributorsUrl, function(err, contributors) {
-                revalidateAllOpenPullRequests(githubUser, contributors, repoClient);
+                shaValidator.revalidateAllOpenPullRequests(contributors, repoClient, validators);
             });
         }
     } else {
         // Only process PRs against the master branch.
         if (payload.pull_request.base.ref == 'master') {
-            performCompleteValidation(head.sha, githubUser, repoClient, validators, true);
+            shaValidator.performCompleteValidation(head.sha, githubUser, repoClient, validators, true);
         } else {
             console.log(('Ignoring pull request against ' + payload.pull_request.base.label).yellow);
         }
@@ -63,7 +54,7 @@ function handleStateChange(payload, repoClient) {
             // ignore statuses that were created by this server
             console.log(('Ignoring "' + payload.state + '" status created by nupic.tools.').yellow);
         } else {
-            performCompleteValidation(payload.sha, payload.sender.login, repoClient, validators, true);
+            shaValidator.performCompleteValidation(payload.sha, payload.sender.login, repoClient, validators, true);
         }
     });
 }

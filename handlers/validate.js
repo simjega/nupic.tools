@@ -2,6 +2,7 @@ var fs = require('fs'),
     url = require('url'),
     qs = require('querystring'),
     shaValidator = require('../utils/shaValidator'),
+    contributors = require('../utils/contributors'),
     jsonUtils = require('../utils/json'),
     VALIDATOR_DIR = './validators',
     validators = [],
@@ -51,32 +52,53 @@ function validateSha(req, res) {
     if (! sha) {
         errors.push(new Error('Missing "sha" query parameter.'));
     }
+    if (repo && repoClient == undefined) {
+        errors.push(new Error('No repo called "' + repo + '".'));
+    }
     if (errors.length) {
         return jsonUtils.renderErrors(errors, res, jsonPCallback);
     }
 
-    findClientFor(sha, function(client, payload) {
-        var committer;
-        if (! client) {
-            errors.push(new Error('No match for sha "' + sha + '" in any known repositories.'));
-            return jsonUtils.renderErrors(errors, res, jsonPCallback);
-        }
-        committer = payload.author ? payload.author.login : false;
-        shaValidator(sha, committer, client, validators, postStatus, function (sha, statusDetails, repoClient) {
-            var htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
-            htmlOut += '<h2>' + repoClient.toString() + '</h2>\n';
-            htmlOut += '<h2>' + sha + '</h2>\n';
-            htmlOut += '<h3>' + statusDetails.state + '</h3>\n';
-            htmlOut += '<p>' + statusDetails.description + '</p>\n';
-            if (statusDetails.target_url) {
-                htmlOut += '<p><a href="' + statusDetails.target_url + '">Details</a></p>\n';
-            }
-            htmlOut += '\n</body></html>';
-            res.setHeader('Content-Type', 'text/html');
-            res.setHeader('Content-Length', htmlOut.length);
-            res.end(htmlOut);
+    if (repo && sha == 'all') {
+        contributors.getAll(repoClient.contributorsUrl, function(err, contributors) {
+            shaValidator.revalidateAllOpenPullRequests(contributors, repoClient, validators, function(err, numbers) {
+                var htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
+                htmlOut += '<h2>' + repoClient.toString() + '</h2>\n';
+                htmlOut += '<h2>' + sha + '</h2>\n';
+                htmlOut += '<h3>Revalidated following prs (by id)</h3>\n';
+                htmlOut += '<ul><li>\n';
+                htmlOut += numbers.join('</li>\n<li>');
+                htmlOut += '</li></ul>\n';
+                htmlOut += '\n</body></html>';
+                res.setHeader('Content-Type', 'text/html');
+                res.setHeader('Content-Length', htmlOut.length);
+                res.end(htmlOut);
+            });
         });
-    });
+    } else {
+        findClientFor(sha, function(client, payload) {
+            var committer;
+            if (! client) {
+                errors.push(new Error('No match for sha "' + sha + '" in any known repositories.'));
+                return jsonUtils.renderErrors(errors, res, jsonPCallback);
+            }
+            committer = payload.author ? payload.author.login : false;
+            shaValidator.performCompleteValidation(sha, committer, client, validators, postStatus, function (sha, statusDetails, repoClient) {
+                var htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
+                htmlOut += '<h2>' + repoClient.toString() + '</h2>\n';
+                htmlOut += '<h2>' + sha + '</h2>\n';
+                htmlOut += '<h3>' + statusDetails.state + '</h3>\n';
+                htmlOut += '<p>' + statusDetails.description + '</p>\n';
+                if (statusDetails.target_url) {
+                    htmlOut += '<p><a href="' + statusDetails.target_url + '">Details</a></p>\n';
+                }
+                htmlOut += '\n</body></html>';
+                res.setHeader('Content-Type', 'text/html');
+                res.setHeader('Content-Length', htmlOut.length);
+                res.end(htmlOut);
+            });
+        });
+    }
 
 }
 
