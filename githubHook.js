@@ -9,7 +9,9 @@ var fs = require('fs'),
 
 function initializeValidators(dir) {
     fs.readdirSync(dir).forEach(function(validator) {
-        validators.push(require(dir + '/' + validator.split('.').shift()));
+        if(handler.charAt(0) != "." && handler.substr(handler.length - 3) == ".js")   {
+            validators.push(require(dir + '/' + validator.split('.').shift()));
+        }
     });
 }
 
