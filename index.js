@@ -28,7 +28,9 @@ function die(err) {
 
 function initializeHandlers(dir) {
     fs.readdirSync(dir).forEach(function(handler) {
-        handlers.push(require(dir + '/' + handler.split('.').shift()));
+        if(handler.charAt(0) != "." && handler.substr(handler.length-3) == ".js")   {
+            handlers.push(require(dir + '/' + handler.split('.').shift()));
+        }
     });
 }
 
