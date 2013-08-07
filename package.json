@@ -5,7 +5,9 @@
     "description": "Set of tools for integration between github, travis, and our developer workflow.",
     "contributors": [{
         "name": "Matt Taylor",
-        "email": "matt@numenta.org"
+        "email": "matt@numenta.org",
+        "name": "Carl Friess",
+        "email": "carl.friess@me.com"
     }],
     "main": "index.js",
     "repository": {
@@ -17,7 +19,8 @@
         "connect"       : "*",
         "request"       : "*",
         "github"        : "*",
-        "ansi-to-html"  : "*"
+        "ansi-to-html"  : "*",
+        "jsdom"         : "*"
     },
     "devDependencies": {
         "proxyquire": "*"
