@@ -23,7 +23,8 @@
         "ansi-to-html"  : "*"
     },
     "devDependencies": {
-        "proxyquire": "*"
+        "proxyquire": "*",
+        "mocha": "1.12.x"
     },
     "license": "MIT",
     "engines": {
