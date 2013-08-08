@@ -113,11 +113,7 @@ function checkIfLastRequestAndBuildOutput (response)  {
 
         } else if (outputType == "JSON") {
 
-            console.log(data);
-
             jsonUtils.render(data,response);
-
-            response.end();
 
         }
 
