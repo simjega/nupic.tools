@@ -1,19 +1,12 @@
 var fs = require('fs'),
     colors = require('colors'),
+    utils = require('./utils/general'),
     contributors = require('./utils/contributors'),
     shaValidator = require('./utils/shaValidator'),
     NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     VALIDATOR_DIR = './validators',
-    validators = [],
+    dynamicValidatorModules = [],
     repoClients;
-
-function initializeValidators(dir) {
-    fs.readdirSync(dir).forEach(function(validator) {
-        if(handler.charAt(0) != "." && handler.substr(handler.length - 3) == ".js")   {
-            validators.push(require(dir + '/' + validator.split('.').shift()));
-        }
-    });
-}
 
 function handlePullRequest(payload, repoClient) {
     var action = payload.action,
@@ -29,13 +22,13 @@ function handlePullRequest(payload, repoClient) {
         if (payload.pull_request.merged) {
             console.log('A PR just merged. Re-validating open pull requests...');
             contributors.getAll(repoClient.contributorsUrl, function(err, contributors) {
-                shaValidator.revalidateAllOpenPullRequests(contributors, repoClient, validators);
+                shaValidator.revalidateAllOpenPullRequests(contributors, repoClient, dynamicValidatorModules);
             });
         }
     } else {
         // Only process PRs against the master branch.
         if (payload.pull_request.base.ref == 'master') {
-            shaValidator.performCompleteValidation(head.sha, githubUser, repoClient, validators, true);
+            shaValidator.performCompleteValidation(head.sha, githubUser, repoClient, dynamicValidatorModules, true);
         } else {
             console.log(('Ignoring pull request against ' + payload.pull_request.base.label).yellow);
         }
@@ -56,14 +49,14 @@ function handleStateChange(payload, repoClient) {
             // ignore statuses that were created by this server
             console.log(('Ignoring "' + payload.state + '" status created by nupic.tools.').yellow);
         } else {
-            shaValidator.performCompleteValidation(payload.sha, payload.sender.login, repoClient, validators, true);
+            shaValidator.performCompleteValidation(payload.sha, payload.sender.login, repoClient, dynamicValidatorModules, true);
         }
     });
 }
 
 module.exports = function(clients) {
     repoClients = clients;
-    initializeValidators(VALIDATOR_DIR);
+    dynamicValidatorModules = utils.initializeModulesWithin(VALIDATOR_DIR);
     return function(req, res) {
         var payload = JSON.parse(req.body.payload),
             repoName = payload.name || payload.repository.full_name,
