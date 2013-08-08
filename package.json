@@ -8,6 +8,9 @@
         "email": "matt@numenta.org"
     }],
     "main": "index.js",
+    "scripts": {
+        "test": "mocha test --recursive"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/numenta/nupic.tools.git"
