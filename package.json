@@ -11,6 +11,9 @@
         "email": "carl.friess@me.com"
     }],
     "main": "index.js",
+    "scripts": {
+        "test": "mocha test --recursive"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/numenta/nupic.tools.git"
@@ -24,7 +27,8 @@
         "jsdom"         : "*"
     },
     "devDependencies": {
-        "proxyquire": "*"
+        "proxyquire": "*",
+        "mocha": "1.12.x"
     },
     "license": "MIT",
     "engines": {
