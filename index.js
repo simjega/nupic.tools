@@ -3,6 +3,7 @@ var assert = require('assert'),
     connect = require('connect'),
     colors = require('colors'),
     
+    utils = require('./utils/general'),
     RepositoryClient = require('./utils/repoClient'),
     githubHookHandler = require('./githubHook'),
     cfg = require('./utils/configReader').read('./conf/config.json'),
@@ -15,7 +16,6 @@ var assert = require('assert'),
     prWebhookUrl = baseUrl + githubHookPath,
 
     HANDLER_DIR = './handlers',
-    handlers = [],
 
     repoClients = {},
 
@@ -24,14 +24,6 @@ var assert = require('assert'),
 function die(err) {
     console.error(err);
     process.exit(-1);
-}
-
-function initializeHandlers(dir) {
-    fs.readdirSync(dir).forEach(function(handler) {
-        if(handler.charAt(0) != "." && handler.substr(handler.length-3) == ".js")   {
-            handlers.push(require(dir + '/' + handler.split('.').shift()));
-        }
-    });
 }
 
 function establishWebHooks(config, callback) {
@@ -90,17 +82,19 @@ console.log(JSON.stringify(sterilizeConfig(cfg), null, 2).yellow);
 
 establishWebHooks(cfg, function() {
 
-    var app = connect()
-        .use(connect.logger('dev'))
-        .use(connect.bodyParser())
-        .use(githubHookPath, githubHookHandler(repoClients))
+    var dynamicHttpHandlerModules,
+        app = connect();
 
-    initializeHandlers(HANDLER_DIR);
+    app.use(connect.logger('dev'))
+       .use(connect.bodyParser())
+       .use(githubHookPath, githubHookHandler(repoClients));
 
-    handlers.forEach(function(handlerConfig) {
+    dynamicHttpHandlerModules = utils.initializeModulesWithin(HANDLER_DIR);
+
+    dynamicHttpHandlerModules.forEach(function(handlerConfig) {
         var urls = Object.keys(handlerConfig);
         urls.forEach(function(url) {
-            var handler = handlerConfig[url](repoClients, handlers, cfg),
+            var handler = handlerConfig[url](repoClients, dynamicHttpHandlerModules, cfg),
                 name = handler.name,
                 desc = handler.description,
                 msg = '==> ' + name + ' listening for url pattern: ' + url;
