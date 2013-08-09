@@ -52,7 +52,9 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
     console.log(('\nVALIDATING ' + sha).cyan);
 
     repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
-        if (err) throw err;
+        if (err) {
+            return cb(new Error('Error communicating with Github API.'));
+        }
         // clone of the global validators array
         var commitValidators = validators.slice(0),
             validationFailed = false;
