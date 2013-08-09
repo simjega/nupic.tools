@@ -4,7 +4,6 @@ var jsonUtils = require('../utils/json');
 
 function mailingListReporter (request, response) {
 
-    var outputType;
     var total;
     var numberSubsHTML;
     var numberSubsNoDigest;
@@ -20,11 +19,6 @@ function mailingListReporter (request, response) {
     var date
     var arrayPos;
 
-    if(nodeURL.parse(request.url,false,true).pathname.split(".").pop() == "json")   {
-        outputType = "JSON";
-    }   else    {
-        outputType = "HTML";
-    }
 
     data.messages = {};
     requestCount = 0;
@@ -65,7 +59,7 @@ function mailingListReporter (request, response) {
         requestCount++;
         if (requestCount >= urls.length + 1) {
             data.messages.total = total;
-            BuildOutput(response, outputType, data);
+            BuildOutput(request, response, data);
         }
 
     });
@@ -86,7 +80,7 @@ function mailingListReporter (request, response) {
             requestCount++;
             if (requestCount >= urls.length + 1) {
                 data.messages.total = total;
-                BuildOutput(response, outputType, data);
+                BuildOutput(request, response, data);
             }
 
         });
@@ -95,9 +89,21 @@ function mailingListReporter (request, response) {
 
 }
 
-function BuildOutput (response, outputType, data)  {
+function BuildOutput (request, response, data)  {
 
-    if(outputType == "HTML")    {
+    if(nodeURL.parse(request.url,false,true).pathname.split(".").pop() == "json")    {
+
+        if(nodeURL.parse(request.url).query !== null)   {
+
+            jsonUtils.renderJsonp(data, nodeURL.parse(request.url, true).query.callback, response);
+
+        }   else    {
+
+            jsonUtils.render(data,response);
+
+        }
+
+    }   else    {
 
         response.write("<html><head><title>Mailing List Statistics</title></head><body style='background-color: #F0F2F2;'><div style='width: 400px; margin-left: auto; margin-right: auto; margin-top: 50px; font-family: Arial; background-color: #EAEAEA; box-shadow: 1px 1px 50px 5px rgba(0, 0, 0, 0.5); -webkit-box-shadow: 1px 1px 50px 5px rgba(0, 0, 0, 0.5); padding: 25px; -webkit-border-radius: 10px; border-radius: 10px;'><center><span style='line-height: 50px;'><b style='font-size:24px;'>Mailing List Statistics</b><br />Total Subscribers: ");
         response.write(data.subscribers.toString());
@@ -117,10 +123,6 @@ function BuildOutput (response, outputType, data)  {
 
         response.end();
 
-    } else if (outputType == "JSON") {
-
-        jsonUtils.render(data,response);
-
     }
 
 }
@@ -128,7 +130,7 @@ function BuildOutput (response, outputType, data)  {
 
 
 mailingListReporter.name = 'Mailing List Reporter';
-mailingListReporter.description = 'Provides statistics about the mailing list. (Outputs HTML or JSON depending on extention [*.html or *.json].)';
+mailingListReporter.description = 'Provides statistics about the mailing list. (Outputs HTML or JSON depending on extention [*.html or *.json]. For JASONP add query "callback" [ex.: ...?callback=foo].)';
 
 module.exports = {
     '/maillist': function() {
