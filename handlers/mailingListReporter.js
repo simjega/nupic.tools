@@ -35,7 +35,7 @@ function mailingListReporter (request, response) {
     month = 4;    //Start in May
     year = 2013;  //Start in 2013
     date = new Date();
-    arrayPos = 1;
+    arrayPos = 0;
     while (year <= date.getYear() || month <= date.getMonth()) {
 
         urls.push({
