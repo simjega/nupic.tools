@@ -6,6 +6,9 @@
     "contributors": [{
         "name": "Matt Taylor",
         "email": "matt@numenta.org"
+        },{
+        "name": "Carl Friess",
+        "email": "carl.friess@me.com"
     }],
     "main": "index.js",
     "scripts": {
@@ -20,7 +23,8 @@
         "connect"       : "*",
         "request"       : "*",
         "github"        : "*",
-        "ansi-to-html"  : "*"
+        "ansi-to-html"  : "*",
+        "jsdom"         : "*"
     },
     "devDependencies": {
         "proxyquire": "*",
