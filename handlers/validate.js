@@ -61,8 +61,15 @@ function validateSha(req, res) {
 
     if (repo && sha == 'all') {
         contributors.getAll(repoClient.contributorsUrl, function(err, contributors) {
+            if (err) {
+                return jsonUtils.renderErrors([err]);
+            }
             shaValidator.revalidateAllOpenPullRequests(contributors, repoClient, validators, function(err, numbers) {
-                var htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
+                var htmlOut;
+                if (err) {
+                    return jsonUtils.renderErrors([err]);
+                }
+                htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
                 htmlOut += '<h2>' + repoClient.toString() + '</h2>\n';
                 htmlOut += '<h2>' + sha + '</h2>\n';
                 htmlOut += '<h3>Revalidated following prs (by id)</h3>\n';
