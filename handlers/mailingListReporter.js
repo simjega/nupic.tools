@@ -17,15 +17,15 @@ function mailingListReporter (request, response) {
     var monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     var month;
     var year;
+    var date
     var arrayPos;
 
-    if(nodeURL.parse(request.url,false,true).pathname.split(".").pop() == "json")
+    if(nodeURL.parse(request.url,false,true).pathname.split(".").pop() == "json")   {
         outputType = "JSON";
-    else
+    }   else    {
         outputType = "HTML";
+    }
 
-    urls = [];
-    data = {};
     data.messages = {};
     requestCount = 0;
     total = 0;
@@ -34,7 +34,7 @@ function mailingListReporter (request, response) {
 
     month = 4;    //Start in May
     year = 2013;  //Start in 2013
-    var date = new Date();
+    date = new Date();
     arrayPos = 1;
     while (year <= date.getYear() || month <= date.getMonth()) {
 
