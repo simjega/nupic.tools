@@ -89,7 +89,7 @@ function mailingListReporter (request, response) {
 
 }
 
-function BuildOutput (request, response, data)  {
+function buildOutput (request, response, data)  {
 
     if(nodeURL.parse(request.url,false,true).pathname.split(".").pop() == "json")    {
 
