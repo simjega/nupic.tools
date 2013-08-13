@@ -15,6 +15,13 @@ function RepositoryClient(config) {
         username: this.user,
         password: config.password
     });
+    if (config.hasOwnProperty('validators'))    {
+        this.validators = {};
+        if (config.validators.hasOwnProperty('excludes'))   {
+            this.validators.excludes = [];
+            this.validators.excludes = config.validators.excludes;
+        }
+    }
 }
 
 RepositoryClient.prototype.merge = function(head, base, callback) {

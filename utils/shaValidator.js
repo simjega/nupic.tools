@@ -57,14 +57,18 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         }
         // clone of the global validators array
         var commitValidators = validators.slice(0),
-            validationFailed = false;
+            validationFailed = false,
+            validatorsRun = [],
+            validatorsSkipped = 0;
 
         function runNextValidation() {
             var validator;
             if (validationFailed) return;
             validator = commitValidators.shift();
-            if (validator) {
+
+            if (validator && repoClient.validators.excludes.indexOf(validator.name) == -1) {
                 console.log('Running commit validator: ' + validator.name);
+                validatorsRun.push(validator);
                 validator.validate(sha, githubUser, statusHistory, repoClient, function(err, result) {
                     if (err) {
                         console.error('Error running commit validator "' + validator.name + '"');
@@ -84,13 +88,16 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                     console.log(validator.name + ' complete.');
                     runNextValidation();
                 });
+            } else if (validator) {
+                validatorsSkipped++;
+                runNextValidation();
             } else {
                 console.log('Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
                 callback(sha, {
                     state: 'success',
-                    description: 'All validations passed (' + validators.map(function(v) { return v.name; }).join(', ') + ')'
+                    description: 'All validations passed (' + validatorsRun.map(function(v) { return v.name; }).join(', ') + ' [' + validatorsSkipped + ' skipped])'
                 }, repoClient);
             }
         }
