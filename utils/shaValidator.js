@@ -59,7 +59,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         var commitValidators = validators.slice(0),
             validationFailed = false,
             validatorsRun = [],
-            validatorsSkipped = 0;
+            validatorsSkipped = [];
 
         function runNextValidation() {
             var validator;
@@ -89,7 +89,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                     runNextValidation();
                 });
             } else if (validator) {
-                validatorsSkipped++;
+                validatorsSkipped.push(validator);
                 runNextValidation();
             } else {
                 console.log('Validation complete.');
@@ -97,7 +97,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                 // validation successfully.
                 callback(sha, {
                     state: 'success',
-                    description: 'All validations passed (' + validatorsRun.map(function(v) { return v.name; }).join(', ') + ' [' + validatorsSkipped + ' skipped])'
+                    description: 'All validations passed (' + validatorsRun.map(function(v) { return v.name; }).join(', ') + ' [' + validatorsSkipped.length + ' skipped])'
                 }, repoClient);
             }
         }
