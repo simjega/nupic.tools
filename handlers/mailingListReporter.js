@@ -59,7 +59,7 @@ function mailingListReporter (request, response) {
         requestCount++;
         if (requestCount >= urls.length + 1) {
             data.messages.total = total;
-            BuildOutput(request, response, data);
+            buildOutput(request, response, data);
         }
 
     });
@@ -80,7 +80,7 @@ function mailingListReporter (request, response) {
             requestCount++;
             if (requestCount >= urls.length + 1) {
                 data.messages.total = total;
-                BuildOutput(request, response, data);
+                buildOutput(request, response, data);
             }
 
         });
