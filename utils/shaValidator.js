@@ -57,40 +57,49 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         }
         // clone of the global validators array
         var commitValidators = validators.slice(0),
-            validationFailed = false;
+            validationFailed = false,
+            validatorsRun = [],
+            validatorsSkipped = [];
 
         function runNextValidation() {
             var validator;
             if (validationFailed) return;
             validator = commitValidators.shift();
+
             if (validator) {
-                console.log('Running commit validator: ' + validator.name);
-                validator.validate(sha, githubUser, statusHistory, repoClient, function(err, result) {
-                    if (err) {
-                        console.error('Error running commit validator "' + validator.name + '"');
-                        console.error(err);
-                        return callback(sha, {
-                            state: 'error',
-                            description: 'Error running commit validator "' + validator.name + '": ' + err.message 
-                        }, repoClient);
-                    }
-                    console.log(validator.name + ' result was ' + coloredStatus(result.state));
-                    if (result.state !== 'success') {
-                        // Upon failure, we set a flag that will skip the 
-                        // remaining validators and post a failure status.
-                        validationFailed = true;
-                        callback(sha, result, repoClient);
-                    }
-                    console.log(validator.name + ' complete.');
+                if (repoClient.hasOwnProperty('validators') && repoClient.validators.hasOwnProperty('excludes') && repoClient.validators.excludes.indexOf(validator.name) !== -1)   {
+                    validatorsSkipped.push(validator);
                     runNextValidation();
-                });
-            } else {
+                } else {
+                    console.log('Running commit validator: ' + validator.name);
+                    validatorsRun.push(validator);
+                    validator.validate(sha, githubUser, statusHistory, repoClient, function(err, result) {
+                        if (err) {
+                            console.error('Error running commit validator "' + validator.name + '"');
+                            console.error(err);
+                            return callback(sha, {
+                                state: 'error',
+                                description: 'Error running commit validator "' + validator.name + '": ' + err.message 
+                            }, repoClient);
+                        }
+                        console.log(validator.name + ' result was ' + coloredStatus(result.state));
+                        if (result.state !== 'success') {
+                            // Upon failure, we set a flag that will skip the 
+                            // remaining validators and post a failure status.
+                            validationFailed = true;
+                            callback(sha, result, repoClient);
+                        }
+                        console.log(validator.name + ' complete.');
+                        runNextValidation();
+                    });
+                } 
+            }  else {
                 console.log('Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
                 callback(sha, {
                     state: 'success',
-                    description: 'All validations passed (' + validators.map(function(v) { return v.name; }).join(', ') + ')'
+                    description: 'All validations passed (' + validatorsRun.map(function(v) { return v.name; }).join(', ') + ' [' + validatorsSkipped.length + ' skipped])'
                 }, repoClient);
             }
         }
