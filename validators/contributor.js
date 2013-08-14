@@ -20,7 +20,7 @@ function validator(sha, githubUser, _, githubClient, callback) {
         if (! isContributor(githubUser, contributors)) {
             response.state = 'failure';
             response.description = githubUser + ' has not signed the Numenta Contributor License';
-            response.target_url = 'http://numenta.com/licenses/cl/';
+            response.target_url = 'http://numenta.org/licenses/cl/';
         }
         callback(null, response);
     });
