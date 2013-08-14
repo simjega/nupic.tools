@@ -39,7 +39,7 @@ describe('contributor validator', function() {
             assert(status.state, 'no status state returned');
             assert.equal(status.state, 'failure', 'wrong status state');
             assert.equal(status.description, 'NOPE has not signed the Numenta Contributor License');
-            assert.equal(status.target_url, 'http://numenta.com/licenses/cl/')
+            assert.equal(status.target_url, 'http://numenta.org/licenses/cl/')
             done();
         });
     });
