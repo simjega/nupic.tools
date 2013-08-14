@@ -25,14 +25,6 @@ var assert = require('assert'),
     // to this web server.
     HANDLER_DIR = './handlers';
 
-/* Logs error and exits. */
-function die(err) {
-    console.error(err);
-    process.exit(-1);
-}
-
-
-
 console.log('nupic.tools server starting...'.green);
 console.log('nupic.tools will use the following configuration:');
 console.log(JSON.stringify(utils.sterilizeConfig(cfg), null, 2).yellow);

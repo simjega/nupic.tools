@@ -1,6 +1,12 @@
 var fs = require('fs'),
     RepositoryClient = require('./repoClient');
 
+/* Logs error and exits. */
+function die(err) {
+    console.error(err);
+    process.exit(-1);
+}
+
 /**
  * Reads all the JavaScript files within a directory, assuming they are all 
  * proper node.js modules, and loads them. 
