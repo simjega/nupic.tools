@@ -58,11 +58,12 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         // clone of the global validators array
         var commitValidators = validators.slice(0),
             validationFailed = false,
-            target_url = -1,
-            highest_priority = -1;
+            target_url,
+            highestPriority = -1;
 
         function runNextValidation() {
-            var validator;
+            var validator,
+                priority;
             if (validationFailed) return;
             validator = commitValidators.shift();
             if (validator) {
@@ -83,8 +84,13 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                         validationFailed = true;
                         callback(sha, result, repoClient);
                     }
-                    if (validator.priority >= highest_priority) {
-                        highest_priority = validator.priority;
+                    if (validator.hasOwnProperty('priority')) {
+                        priority = validator.priority;
+                    } else {
+                        priority = 0;
+                    }
+                    if (priority >= highestPriority) {
+                        highestPriority = priority;
                         if (result.hasOwnProperty('target_url')) {
                             target_url = result.target_url;
                         }
@@ -96,14 +102,11 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                 console.log('Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
-                var callback_data = {
+                callback(sha, {
                     state: 'success',
-                    description: 'All validations passed (' + validators.map(function(v) { return v.name; }).join(', ') + ')'
-                };
-                if (target_url != -1) {
-                    callback_data.target_url = target_url;
-                };
-                callback(sha, callback_data, repoClient);
+                    description: 'All validations passed (' + validators.map(function(v) { return v.name; }).join(', ') + ')',
+                    target_url: target_url
+                }, repoClient);
             }
         }
 
