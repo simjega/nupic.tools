@@ -19,3 +19,4 @@ function validator(sha, githubUser, statusHistory, githubClient, callback) {
 
 module.exports.validate = validator;
 module.exports.name = 'Fast-Forward Validator';
+module.exports.priority = 0;

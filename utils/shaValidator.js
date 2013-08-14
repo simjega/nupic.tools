@@ -57,7 +57,9 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         }
         // clone of the global validators array
         var commitValidators = validators.slice(0),
-            validationFailed = false;
+            validationFailed = false,
+            target_url = -1,
+            highest_priority = -1;
 
         function runNextValidation() {
             var validator;
@@ -81,6 +83,12 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                         validationFailed = true;
                         callback(sha, result, repoClient);
                     }
+                    if (validator.priority >= highest_priority) {
+                        highest_priority = validator.priority;
+                        if (result.hasOwnProperty('target_url')) {
+                            target_url = result.target_url;
+                        }
+                    };
                     console.log(validator.name + ' complete.');
                     runNextValidation();
                 });
@@ -88,10 +96,14 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                 console.log('Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
-                callback(sha, {
+                var callback_data = {
                     state: 'success',
                     description: 'All validations passed (' + validators.map(function(v) { return v.name; }).join(', ') + ')'
-                }, repoClient);
+                };
+                if (target_url != -1) {
+                    callback_data.target_url = target_url;
+                };
+                callback(sha, callback_data, repoClient);
             }
         }
 

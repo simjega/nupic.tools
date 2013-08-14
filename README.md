@@ -45,6 +45,8 @@ Validators are modules stored in the `validators` directory, which follow the sa
 
 Each validator also exports a `name` so it can be identified for logging.
 
+Additionally, each validator must export a `priority`. This should be a number which must be bigger or equal to 0. A higher number means a higher priority. This validator with the highest priority is used to set the `target_url` attribute of the object passed to the callback function.
+
 You can add as many validators in the `validator` directory, and they will automatically be used. The current validators are:
 
 - *travis*: Ensures the last travis status was 'success'

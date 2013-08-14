@@ -28,3 +28,4 @@ function validator(sha, githubUser, _, githubClient, callback) {
 
 module.exports.validate = validator;
 module.exports.name = 'Contributor Validator';
+module.exports.priority = 0;
