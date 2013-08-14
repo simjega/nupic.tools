@@ -18,7 +18,6 @@ function RepositoryClient(config) {
     if (config.hasOwnProperty('validators'))    {
         this.validators = {};
         if (config.validators.hasOwnProperty('excludes'))   {
-            this.validators.excludes = [];
             this.validators.excludes = config.validators.excludes;
         }
     }
