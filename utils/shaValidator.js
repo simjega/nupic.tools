@@ -58,14 +58,16 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         // clone of the global validators array
         var commitValidators = validators.slice(0),
             validationFailed = false,
+            target_url,
+            highestPriority = -1,
             validatorsRun = [],
             validatorsSkipped = [];
 
         function runNextValidation() {
-            var validator;
+            var validator,
+                priority;
             if (validationFailed) return;
             validator = commitValidators.shift();
-
             if (validator) {
                 if (repoClient.hasOwnProperty('validators') && repoClient.validators.hasOwnProperty('excludes') && repoClient.validators.excludes.indexOf(validator.name) !== -1)   {
                     validatorsSkipped.push(validator);
@@ -89,17 +91,29 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                             validationFailed = true;
                             callback(sha, result, repoClient);
                         }
+                        if (validator.hasOwnProperty('priority')) {
+                            priority = validator.priority;
+                        } else {
+                        priority = 0;
+                        }
+                        if (priority >= highestPriority) {
+                            highestPriority = priority;
+                            if (result.hasOwnProperty('target_url')) {
+                                target_url = result.target_url;
+                            }
+                        };
                         console.log(validator.name + ' complete.');
                         runNextValidation();
                     });
-                } 
-            }  else {
+                }
+            } else {
                 console.log('Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
                 callback(sha, {
                     state: 'success',
-                    description: 'All validations passed (' + validatorsRun.map(function(v) { return v.name; }).join(', ') + ' [' + validatorsSkipped.length + ' skipped])'
+                    description: 'All validations passed (' + validatorsRun.map(function(v) { return v.name; }).join(', ') + ' [' + validatorsSkipped.length + ' skipped])',
+                    target_url: target_url
                 }, repoClient);
             }
         }
