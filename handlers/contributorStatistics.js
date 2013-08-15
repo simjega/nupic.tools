@@ -2,91 +2,92 @@ var jsonUtils = require('../utils/json');
 var nodeURL = require("url");
 var repoClients;
 
+function getContributorsFor(repoClient, callback) {
+    repoClient.getContributors(function(err, contributors) {
+        var contributorsOut;
+        if (err) {
+            return callback(err);
+        }
+        contributorsOut = contributors.map(function(nextContrib){
+            return {
+                "login": nextContrib.login, 
+                "contributions": nextContrib.contributions
+            };
+        });
+        callback(null, contributorsOut);
+    });
+}
 
+function extractContributorsFromRepositoryClients(clients, callback) {
+    var repoNames = Object.keys(clients),
+        contributorsOut = {},
+        errors = [],
+        responseCount = 0;
+        
+    repoNames.forEach(function(repoName) {
+        getContributorsFor(repoClients[repoName], function(err, contributors) {
+            responseCount++;
+            if (err) {
+                errors.push(err);
+            } else {
+                contributorsOut[repoName] = contributors;
+            }
+            if (responseCount == repoNames.length) {
+                callback(errors, contributorsOut);
+            }
+        });
+    });
+}
+
+function writeResponse(response, errors, dataOut, jsonpCallback) {
+    // Write out response
+    if (errors.length) {
+        jsonUtils.renderErrors(errors, response, jsonpCallback);
+    } else {
+        jsonUtils.render(dataOut, response, jsonpCallback)
+    }
+}
 
 function contributorStatistics (request, response)    {
 
     var dataOut = {},
-        responseCount,
+        repoNames = Object.keys(repoClients),
+        errors = [],
         urlQuery = nodeURL.parse(request.url, true).query,
-        repo = urlQuery.repo || "all";
+        jsonpCallback = urlQuery.callback,
+        repo = urlQuery.repo || "all",
+        repoClient;
 
-    if(repo != "all")   {
-        // A single repository was specified
-        if (repoClients[urlQuery.repo]) {
+    if(repo == "all")   {
+        // Report on all repositories
 
-            repoClients[urlQuery.repo].github.repos.getContributors({
-                "user": urlQuery.repo.split("/").shift(),
-                "repo": urlQuery.repo.split("/").pop(),
-                "anon": false
-            }, function(errors, contribs){
-                if (errors == null) {
-
-                    dataOut[urlQuery.repo] = contribs.map(function(nextContrib){
-
-                        return {
-                            "login": nextContrib.login, 
-                            "contributions": nextContrib.contributions
-                        };
-
-                    });
-
-                    jsonUtils.render(dataOut, response, urlQuery.callback);
-
+        extractContributorsFromRepositoryClients(repoClients, 
+            function(errs, contributors) {
+                if (errors) {
+                    errors = errors.concat(errs);
                 }
-            });
-
-        } else {
-
-            jsonUtils.renderErrors(
-                [new Error("Not monitoring this repository '" + repo + "'")], 
-                response, urlQuery.callback
-            );
-
-        }
+                writeResponse(response, errors, contributors, jsonpCallback);
+            }
+        );
 
     } else {
-        // Report on all repositories
-        responseCount = 0;
+        // A single repository was specified
 
-        Object.keys(repoClients).forEach(function (nextRepo) {
+        if (repoClients[repo]) {
+            repoClient = repoClients[repo];
 
-            repoClients[nextRepo].github.repos.getContributors({
-                "user": repoClients[nextRepo].toString().split("/").shift(),
-                "repo": repoClients[nextRepo].toString().split("/").pop(),
-                "anon": false
-            }, function(errors, contribs){
-
-                if (errors == null) {
-
-                    dataOut[nextRepo] = contribs.map(function(nextContrib){
-
-                        return {
-                            "login": nextContrib.login, 
-                            "contributions": nextContrib.contributions
-                        };
-
-                    });
-
-                    responseCount++;
-
-                    if (responseCount >= Object.keys(repoClients).length)    {
-
-                        jsonUtils.render(dataOut, response, urlQuery.callback);
-
-                    }
-
+            getContributorsFor(repoClient, function(err, contributors) {
+                if (err) {
+                    errors.push(err);
                 } else {
-
-                    jsonUtils.renderErrors(
-                        [new Error(errors)], response, urlQuery.callback
-                    );
-
+                    dataOut[repo] = contributors;
                 }
-
+                writeResponse(response, errors, dataOut, jsonpCallback);
             });
-
-        });
+        } else {
+            errors.push(new Error("Not monitoring this repository '" + repo + "'"));
+            writeResponse(response, errors, dataOut, jsonpCallback);
+        }
 
     }
 
