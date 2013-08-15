@@ -15,8 +15,6 @@ function contributorStatistics (request, response)    {
         // A single repository was specified
         if (repoClients[urlQuery.repo]) {
 
-            dataOut[urlQuery.repo] = [];
-
             repoClients[urlQuery.repo].github.repos.getContributors({
                 "user": urlQuery.repo.split("/").shift(),
                 "repo": urlQuery.repo.split("/").pop(),
@@ -52,8 +50,6 @@ function contributorStatistics (request, response)    {
         responseCount = 0;
 
         Object.keys(repoClients).forEach(function (nextRepo) {
-
-            dataOut[nextRepo] = [];
 
             repoClients[nextRepo].github.repos.getContributors({
                 "user": repoClients[nextRepo].toString().split("/").shift(),
