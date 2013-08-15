@@ -8,10 +8,11 @@ function contributorStatistics (request, response)    {
 
     var dataOut = {},
         responseCount,
-        urlQuery = nodeURL.parse(request.url, true).query;
+        urlQuery = nodeURL.parse(request.url, true).query,
+        repo = urlQuery.repo || "all";
 
-    if(nodeURL.parse(request.url).query !== null && urlQuery.repo != "all")   {
-
+    if(repo != "all")   {
+        // A single repository was specified
         if (repoClients[urlQuery.repo]) {
 
             dataOut[urlQuery.repo] = [];
@@ -40,7 +41,7 @@ function contributorStatistics (request, response)    {
         } else {
 
             jsonUtils.renderErrors(
-                [new Error("Not monitoring this repository!")], 
+                [new Error("Not monitoring this repository '" + repo + "'")], 
                 response, urlQuery.callback
             );
 
