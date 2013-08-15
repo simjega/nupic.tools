@@ -48,7 +48,7 @@ function contributorStatistics (request, response)    {
         }
 
     } else {
-
+        // Report on all repositories
         responseCount = 0;
 
         Object.keys(repoClients).forEach(function (nextRepo) {
