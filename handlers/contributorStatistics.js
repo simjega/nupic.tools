@@ -25,12 +25,12 @@ function contributorStatistics (request, response)    {
 
                     dataOut[urlQuery.repo] = contribs.map(function(nextContrib){
 
-					    return {
-					        "login": nextContrib.login, 
-					        "contributions": nextContrib.contributions
-					    };
+                        return {
+                            "login": nextContrib.login, 
+                            "contributions": nextContrib.contributions
+                        };
 
-					});
+                    });
 
                     jsonUtils.render(dataOut, response, urlQuery.callback);
 
