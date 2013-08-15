@@ -1,103 +1,102 @@
-var GitHubApi = require("github");
 var jsonUtils = require('../utils/json');
 var nodeURL = require("url");
 var repoClients;
 
 
 
-function contributorStatistics (request, response)	{
+function contributorStatistics (request, response)    {
 
-	var data_out = {},
-		responseCount;
+    var dataOut = {},
+        responseCount,
+        urlQuery = nodeURL.parse(request.url, true).query;
 
-	if(nodeURL.parse(request.url).query !== null && nodeURL.parse(request.url, true).query.repo != "all")   {
+    if(nodeURL.parse(request.url).query !== null && urlQuery.repo != "all")   {
 
-		if (repoClients[nodeURL.parse(request.url, true).query.repo]) {
+        if (repoClients[urlQuery.repo]) {
 
-			data_out[nodeURL.parse(request.url, true).query.repo] = [];
+            dataOut[urlQuery.repo] = [];
 
-			repoClients[nodeURL.parse(request.url, true).query.repo].github.repos.getContributors({"user": nodeURL.parse(request.url, true).query.repo.split("/").shift(), "repo": nodeURL.parse(request.url, true).query.repo.split("/").pop(), "anon": false}, function(errors, contribs){
-				if (errors == null) {
+            repoClients[urlQuery.repo].github.repos.getContributors({
+                "user": urlQuery.repo.split("/").shift(),
+                "repo": urlQuery.repo.split("/").pop(),
+                "anon": false
+            }, function(errors, contribs){
+                if (errors == null) {
 
-					contribs.forEach(function(nextContrib){
+                    dataOut[urlQuery.repo] = contribs.map(function(nextContrib){
 
-						(data_out[nodeURL.parse(request.url, true).query.repo]).push({"login": nextContrib.login, "contributions": nextContrib.contributions});
-					
+					    return {
+					        "login": nextContrib.login, 
+					        "contributions": nextContrib.contributions
+					    };
+
 					});
 
-					if (nodeURL.parse(request.url, true).query.hasOwnProperty('callback'))	{
+                    jsonUtils.render(dataOut, response, urlQuery.callback);
 
-						jsonUtils.renderJsonp(data_out, nodeURL.parse(request.url, true).query.callback, response);
+                }
+            });
 
-					} else {
+        } else {
 
-						jsonUtils.render(data_out, response);
+            jsonUtils.renderErrors([new Error("Not monitoring this repository!")], response, urlQuery.callback);
 
-					}
+        }
 
-				}
-			});
+    } else {
 
-		} else {
+        responseCount = 0;
 
-			jsonUtils.renderErrors([new Error("Not monitoring this repository!")], response, nodeURL.parse(request.url).query.callback);
+        Object.keys(repoClients).forEach(function (nextRepo) {
 
-		}
+            dataOut[nextRepo] = [];
 
-	} else {
+            repoClients[nextRepo].github.repos.getContributors({
+            	"user": repoClients[nextRepo].toString().split("/").shift(),
+            	"repo": repoClients[nextRepo].toString().split("/").pop(),
+            	"anon": false
+            }, function(errors, contribs){
 
-		responseCount = 0;
+                if (errors == null) {
 
-		Object.keys(repoClients).forEach(function (nextRepo) {
+                    dataOut[nextRepo] = contribs.map(function(nextContrib){
 
-			data_out[nextRepo] = [];
+					    return {
+					        "login": nextContrib.login, 
+					        "contributions": nextContrib.contributions
+					    };
 
-			repoClients[nextRepo].github.repos.getContributors({"user": repoClients[nextRepo].toString().split("/").shift(), "repo": repoClients[nextRepo].toString().split("/").pop(), "anon": false}, function(errors, contribs){
-				if (errors == null) {
-
-					contribs.forEach(function(nextContrib){
-
-						(data_out[nextRepo]).push({"login": nextContrib.login, "contributions": nextContrib.contributions});
-					
 					});
 
-					responseCount++;
+                    responseCount++;
 
-					if (responseCount >= Object.keys(repoClients).length)	{
-						
-						if (nodeURL.parse(request.url, true).query.hasOwnProperty('callback'))	{
+                    if (responseCount >= Object.keys(repoClients).length)    {
 
-							jsonUtils.renderJsonp(data_out, nodeURL.parse(request.url, true).query.callback, response);
+                        jsonUtils.render(dataOut, response, urlQuery.callback);
 
-						} else {
+                    }
 
-							jsonUtils.render(data_out, response);
+                } else {
 
-						}
+                    jsonUtils.renderErrors([new Error(errors)], response, urlQuery.callback);
 
-					}
+                }
 
-				} else {
+            });
 
-					jsonUtils.renderErrors([new Error(errors)], response, nodeURL.parse(request.url).query.callback);
+        });
 
-				}
-
-			});
-
-		});
-
-	}
+    }
 
 }
 
 
 contributorStatistics.name = "Contribution Reporter";
-contributorStatistics.description = "Generates JSON/JSONP with all contributors and how many contributions they made for all repos or the repo specified.";
+contributorStatistics.description = "Generates JSON/JSONP with all contributors and how many contributions they made for all repositorys or the repository specified in a 'repo' parameter. For JSONP add a 'callback' parameter.";
 
 module.exports = {
     '/contribStats': function(_repoClients) {
-    	repoClients = _repoClients;
+        repoClients = _repoClients;
         return contributorStatistics;
     }
 };
