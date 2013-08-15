@@ -39,7 +39,10 @@ function contributorStatistics (request, response)    {
 
         } else {
 
-            jsonUtils.renderErrors([new Error("Not monitoring this repository!")], response, urlQuery.callback);
+            jsonUtils.renderErrors(
+                [new Error("Not monitoring this repository!")], 
+                response, urlQuery.callback
+            );
 
         }
 
@@ -78,7 +81,9 @@ function contributorStatistics (request, response)    {
 
                 } else {
 
-                    jsonUtils.renderErrors([new Error(errors)], response, urlQuery.callback);
+                    jsonUtils.renderErrors(
+                        [new Error(errors)], response, urlQuery.callback
+                    );
 
                 }
 
@@ -92,7 +97,10 @@ function contributorStatistics (request, response)    {
 
 
 contributorStatistics.name = "Contribution Reporter";
-contributorStatistics.description = "Generates JSON/JSONP with all contributors and how many contributions they made for all repositorys or the repository specified in a 'repo' parameter. For JSONP add a 'callback' parameter.";
+contributorStatistics.description = "Generates JSON/JSONP with all contributors "
+    + "and how many contributions they made for all repositorys or the "
+    + "repository specified in a 'repo' parameter. For JSONP add a 'callback' "
+    + "parameter.";
 
 module.exports = {
     '/contribStats': function(_repoClients) {
