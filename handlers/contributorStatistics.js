@@ -52,21 +52,21 @@ function contributorStatistics (request, response)    {
             dataOut[nextRepo] = [];
 
             repoClients[nextRepo].github.repos.getContributors({
-            	"user": repoClients[nextRepo].toString().split("/").shift(),
-            	"repo": repoClients[nextRepo].toString().split("/").pop(),
-            	"anon": false
+                "user": repoClients[nextRepo].toString().split("/").shift(),
+                "repo": repoClients[nextRepo].toString().split("/").pop(),
+                "anon": false
             }, function(errors, contribs){
 
                 if (errors == null) {
 
                     dataOut[nextRepo] = contribs.map(function(nextContrib){
 
-					    return {
-					        "login": nextContrib.login, 
-					        "contributions": nextContrib.contributions
-					    };
+                        return {
+                            "login": nextContrib.login, 
+                            "contributions": nextContrib.contributions
+                        };
 
-					});
+                    });
 
                     responseCount++;
 
