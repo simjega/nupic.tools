@@ -9,19 +9,17 @@ env:
   - ARTIFACTS_AWS_REGION=us-west-2
   - ARTIFACTS_S3_BUCKET=artifacts.numenta.org
   - secure: |-
-      ZPIQWiFsOU1y+jh21yid7/mbM7EFO0gbRJfA3LPRgA5EF5sJkrLz2/J2kTRP
-      gh6c1ItUzI4Cf7elq6U/uNTaFbDDY97s8ANFrVPJHPtK0eWotUFelNSfftVn
-      WBg+iOpgW65W5QkToZgsLV//9ERRHCL1wl6DowlurCu0Q25SBqs=
+      HO+e7xtHYXsffjQF9Rl2xPHzzjTrGevJvrPwNIYHUfYXxg7t+df0fWJvLsAw
+      2LscVgLW0SfABWWHLeFiNmlXEDX38BKPiXpfP2hk9bKt518aSznh8Ghfjv5c
+      nK5Nn3Bwsk6Is1W5AtLOnwYkJnCO8wBXus407oLLviC1IdlMDZg=
   - secure: |-
-      hUehM+WQGo8Oihm2eNGsiXMOZ58GhB6AAv6DxLoNJnxzmdUfjg07W91bHY4b
-      YhWCKK2ysT7J+J4tMdAUoCx2mvOrPl3AQFhl/qTNliA9ZXiZEQPgKL97QJYK
-      Pk9mHq/Veuyv6Pcnqfb9eOtnBlAmvIAt5cWWFKcCFnDiQ38lqvQ=
+      bQP6qx0abCx9kB4pnXday6BwtrQbyTvcYJbio4EMsvk3vEXSu5ron1IpeP1I
+      rjsNAox5/THW63sNMTAqem+0fYFBhlze3CxV3EbGD/aBz2C7alzEhhEnbQ/v
+      gzqa02skTGytE5xbYb2+l8kc6Pijfwd6GhQux3Ex3kzUNlzKuBw=
 
-before_script:
-- "git remote -v"
-- "git branch -v"
-- "gem install travis-artifacts"
-after_script:
-- "travis-artifacts upload --path coverage --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID"
-- "travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH"
-- "echo \"Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/lcov-report/index.html\""
+before_script: 
+- gem install travis-artifacts
+after_script: 
+- travis-artifacts upload --path coverage --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
+- travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH
+- echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/lcov-report/index.html"
