@@ -18,6 +18,7 @@ env:
       gzqa02skTGytE5xbYb2+l8kc6Pijfwd6GhQux3Ex3kzUNlzKuBw=
 
 before_script: 
+- git branch -v
 - gem install travis-artifacts
 after_script: 
 - travis-artifacts upload --path coverage --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
