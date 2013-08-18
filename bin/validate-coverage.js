@@ -12,11 +12,39 @@ var fs = require('fs'),
 require('colors');
 
 function getCurrentGitBranch(callback) {
-    exec('git branch', function(err, stdout) {
-        var branch = stdout.split('\n').filter(function(line) {
-            return line.indexOf('*') == 0;
-        }).shift();
-        callback(branch.split(' ').pop());
+    exec('git branch -v', function(err, stdout) {
+        var branches = stdout.split('\n').map(function(line) {
+            var active = line.indexOf('*') == 0,
+                parts, branchName, sha, message, detached;
+            line = line.substr(2).trim();
+            parts = line.split(/\s+/);
+            if (parts[0] == '(detached') {
+                detached = true;
+                branchName = parts.slice(0, 3).join(' ');
+                sha = parts[3];
+                message = parts.slice(4, parts.length - 1).join(' ');
+            } else {
+                branchName = parts[0];
+                sha = parts[1];
+                message = parts.slice(2, parts.length - 1).join(' ');
+            }
+            return {
+                active: active,
+                name: branchName,
+                sha: sha,
+                message: message,
+                detached: detached
+            };
+        });
+        var activeBranch = branches.filter(function(branch) {
+            return branch.active;
+        }).pop();
+        if (activeBranch.detached) {
+            activeBranch = branches.filter(function(branch) {
+                return ! branch.active && branch.sha == activeBranch.sha;
+            }).pop();
+        }
+        callback(activeBranch.name);
     });
 }
 
@@ -42,7 +70,7 @@ function getCoverageMap(summaryText) {
 
 function compareLocalReportWithRemote(localReport, repoSlug, branch) {
     var remoteSummaryUrl = S3_URL + S3_BUCKET + '/artifacts/' 
-                           + repoSlug + '/artifacts/coverage/summary.txt';
+                           + repoSlug + '/' + branch + '/coverage/summary.txt';
     console.info('Fetching last coverage report from ' + remoteSummaryUrl);
     request.get(remoteSummaryUrl, function(err, resp, body) {
         var remoteReport;
@@ -80,6 +108,7 @@ function compareLocalReportWithRemote(localReport, repoSlug, branch) {
     var localReport = getCoverageMap(localSummaryText);
 
     getCurrentGitBranch(function(branch) {
+        console.info('Running on branch "' + branch + '"');
         getRepoSlug(function(slug) {
             compareLocalReportWithRemote(localReport, slug, branch);
         });
