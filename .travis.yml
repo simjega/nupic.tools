@@ -19,5 +19,5 @@ env:
 
 before_script:
    - "gem install travis-artifacts"
-after_test:
+after_script:
   - "travis-artifacts upload --path coverage --target-path artifacts/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID"
