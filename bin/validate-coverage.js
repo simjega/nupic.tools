@@ -4,7 +4,8 @@ var fs = require('fs'),
 
     S3_URL = 'https://s3-us-west-2.amazonaws.com/',
     S3_BUCKET = 'artifacts.numenta.org',
-    LOCAL_SUMMARY_PATH = 'coverage/summary.txt',
+    COVERAGE_DIR = 'artifacts/coverage',
+    SUMMARY_PATH = 'coverage/summary.txt',
     MASTER = 'master',
     COMPARATOR = 'Statements';
 
@@ -40,8 +41,9 @@ function getCoverageMap(summaryText) {
 }
 
 function compareLocalReportWithRemote(localReport, repoSlug, branch) {
-    var remoteSummaryUrl = S3_URL + S3_BUCKET + repoSlug 
-        + '/' + branch + '/coverage/summary.txt';
+    var remoteSummaryUrl = S3_URL + S3_BUCKET + '/artifacts/' 
+                           + repoSlug + '/artifacts/coverage/summary.txt';
+    console.info('Fetching last coverage report from ' + remoteSummaryUrl);
     request.get(remoteSummaryUrl, function(err, resp, body) {
         var remoteReport;
         if (resp.statusCode !== 200) {
@@ -74,7 +76,7 @@ function compareLocalReportWithRemote(localReport, repoSlug, branch) {
 
 (function() {
     console.log('\nComparing local code coverage to last known coverage...');
-    var localSummaryText = fs.readFileSync(LOCAL_SUMMARY_PATH, 'utf-8');
+    var localSummaryText = fs.readFileSync(SUMMARY_PATH, 'utf-8');
     var localReport = getCoverageMap(localSummaryText);
 
     getCurrentGitBranch(function(branch) {
