@@ -36,6 +36,7 @@ function getCurrentGitBranch(callback) {
                 detached: detached
             };
         });
+        console.log(branches);
         var activeBranch = branches.filter(function(branch) {
             return branch.active;
         }).pop();
