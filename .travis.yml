@@ -1,4 +1,17 @@
+--- 
+node_js: 
+- "0.11"
+- "0.10"
+env: 
+  global: 
+  - ARTIFACTS_AWS_REGION=us-west-2
+  - ARTIFACTS_S3_BUCKET=artifacts.numenta.org
+  - secure: |-
+      ZPIQWiFsOU1y+jh21yid7/mbM7EFO0gbRJfA3LPRgA5EF5sJkrLz2/J2kTRP
+      gh6c1ItUzI4Cf7elq6U/uNTaFbDDY97s8ANFrVPJHPtK0eWotUFelNSfftVn
+      WBg+iOpgW65W5QkToZgsLV//9ERRHCL1wl6DowlurCu0Q25SBqs=
+  - secure: |-
+      hUehM+WQGo8Oihm2eNGsiXMOZ58GhB6AAv6DxLoNJnxzmdUfjg07W91bHY4b
+      YhWCKK2ysT7J+J4tMdAUoCx2mvOrPl3AQFhl/qTNliA9ZXiZEQPgKL97QJYK
+      Pk9mHq/Veuyv6Pcnqfb9eOtnBlAmvIAt5cWWFKcCFnDiQ38lqvQ=
 language: node_js
-node_js:
-  - "0.11"
-  - "0.10"
