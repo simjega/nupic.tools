@@ -1,7 +1,9 @@
 --- 
+language: node_js
 node_js: 
 - "0.11"
 - "0.10"
+
 env: 
   global: 
   - ARTIFACTS_AWS_REGION=us-west-2
@@ -14,4 +16,8 @@ env:
       hUehM+WQGo8Oihm2eNGsiXMOZ58GhB6AAv6DxLoNJnxzmdUfjg07W91bHY4b
       YhWCKK2ysT7J+J4tMdAUoCx2mvOrPl3AQFhl/qTNliA9ZXiZEQPgKL97QJYK
       Pk9mHq/Veuyv6Pcnqfb9eOtnBlAmvIAt5cWWFKcCFnDiQ38lqvQ=
-language: node_js
+
+before_script:
+   - "gem install travis-artifacts"
+after_test:
+  - "travis-artifacts upload --path coverage --target-path artifacts/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID"
