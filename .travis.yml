@@ -20,6 +20,6 @@ env:
 before_script:
    - "gem install travis-artifacts"
 after_script:
-  - "travis-artifacts upload --path coverage --target-path artifacts/nupic.tools/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID"
-  - "travis-artifacts upload --path coverage/summary.txt --target-path artifacts/nupic.tools/$TRAVIS_BRANCH"
-  - "echo \"Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/nupic.tools/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/lcov-report/index.html\""
+  - "travis-artifacts upload --path coverage --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID"
+  - "travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH"
+  - "echo \"Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/lcov-report/index.html\""

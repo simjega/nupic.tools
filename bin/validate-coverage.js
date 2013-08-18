@@ -4,9 +4,7 @@ var fs = require('fs'),
 
     S3_URL = 'https://s3-us-west-2.amazonaws.com/',
     S3_BUCKET = 'artifacts.numenta.org',
-    PROJECT_LOCATION = '/artifacts/nupic.tools/',
     LOCAL_SUMMARY_PATH = 'coverage/summary.txt',
-
     MASTER = 'master',
     COMPARATOR = 'Statements';
 
@@ -18,6 +16,13 @@ function getCurrentGitBranch(callback) {
             return line.indexOf('*') == 0;
         }).shift();
         callback(branch.split(' ').pop());
+    });
+}
+
+function getRepoSlug(callback) {
+    exec('git remote show origin', function(err, stdout) {
+        var endOfFetchUrl = stdout.split('\n')[1].split(':').pop();
+        callback(endOfFetchUrl.substr(0, endOfFetchUrl.length - 4));
     });
 }
 
@@ -34,8 +39,9 @@ function getCoverageMap(summaryText) {
     return dataOut;
 }
 
-function compareLocalReportWithRemote(localReport, branch) {
-    var remoteSummaryUrl = S3_URL + S3_BUCKET + PROJECT_LOCATION + branch + '/coverage/summary.txt';
+function compareLocalReportWithRemote(localReport, repoSlug, branch) {
+    var remoteSummaryUrl = S3_URL + S3_BUCKET + repoSlug 
+        + '/' + branch + '/coverage/summary.txt';
     request.get(remoteSummaryUrl, function(err, resp, body) {
         var remoteReport;
         if (resp.statusCode !== 200) {
@@ -47,7 +53,7 @@ function compareLocalReportWithRemote(localReport, branch) {
                 console.log('Coverage validation passed.'.green);
             } else {
                 console.log('Re-running against remote coverage summary from "master" branch.');
-                compareLocalReportWithRemote(localReport, MASTER);
+                compareLocalReportWithRemote(localReport, repoSlug, MASTER);
             }
         } else {
             remoteReport = getCoverageMap(body);
@@ -72,6 +78,8 @@ function compareLocalReportWithRemote(localReport, branch) {
     var localReport = getCoverageMap(localSummaryText);
 
     getCurrentGitBranch(function(branch) {
-        compareLocalReportWithRemote(localReport, branch);
+        getRepoSlug(function(slug) {
+            compareLocalReportWithRemote(localReport, slug, branch);
+        });
     });
 }());
