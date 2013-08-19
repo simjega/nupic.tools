@@ -19,6 +19,7 @@ env:
 
 before_script: 
 - git branch -v
+- git remote show origin
 - git remote -v
 - gem install travis-artifacts
 after_script: 
