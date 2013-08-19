@@ -7,7 +7,9 @@ var fs = require('fs'),
     COVERAGE_DIR = 'artifacts/coverage',
     SUMMARY_PATH = 'coverage/summary.txt',
     MASTER = 'master',
-    COMPARATOR = 'Statements';
+    COMPARATOR = 'Statements',
+
+    ORG_REPO_REGEX = /.+[:|\/](.+\/.+).git/;
 
 require('colors');
 
@@ -59,8 +61,8 @@ function getCurrentGitBranch(callback) {
 
 function getRepoSlug(callback) {
     exec('git remote show origin', function(err, stdout) {
-        var endOfFetchUrl = stdout.split('\n')[1].split(':').pop();
-        callback(endOfFetchUrl.substr(0, endOfFetchUrl.length - 4));
+        var match = stdout.split('\n')[1].match(ORG_REPO_REGEX);
+        callback(match[1]);
     });
 }
 
