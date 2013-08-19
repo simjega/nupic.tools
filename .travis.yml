@@ -1,8 +1,9 @@
 --- 
-after_script: 
-- travis-artifacts upload --path coverage --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
-- travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH
-- echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/lcov-report/index.html"
+node_js: 
+- "0.10"
+- "0.11"
+language: node_js
+
 env: 
   global: 
   - ARTIFACTS_AWS_REGION=us-west-2
@@ -15,12 +16,14 @@ env:
       lwl7bFPU6dIGWLJfDbnna3OQveRJOhbHKpL58XB3ld2qHQqpTWyYHyMaYHIe
       7ZP7GMJ/lPZyQOq9yWw6/lGEYT6TWEzgTxXH3wV6K+6zTkiCxno0aXMXk4f2
       Z8XjidLTydaxypFf3S05StGkmsb6e7dkvxOcu18khTP1dvV3Gd8=
-node_js: 
-- "0.10"
-- "0.11"
+
 before_script: 
 - git branch -v
 - git remote show origin
 - git remote -v
-- gem install travis-artifacts
-language: node_js
+- test ${TRAVIS_BRANCH} = master && gem install travis-artifacts
+
+after_script: 
+- test ${TRAVIS_BRANCH} = master && travis-artifacts upload --path coverage --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
+- test ${TRAVIS_BRANCH} = master && travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH
+- test ${TRAVIS_BRANCH} = master && echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/lcov-report/index.html"
