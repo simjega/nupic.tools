@@ -1,5 +1,4 @@
 var jsonUtils = require('../utils/json');
-var RepositoryClient = require('../utils/repoClient');
 var nodeURL = require("url");
 var repoClients;
 
