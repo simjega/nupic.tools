@@ -13,8 +13,12 @@ require('colors');
 
 function getCurrentGitBranch(callback) {
     exec('git branch -v', function(err, stdout) {
+        var stdout = 
+"* (detached from FETCH_HEAD) 0f52785 Merge 4e05ac33ec200206d2bfa71be430bc73570559c2 into 972385710f691873f0e3fb0ff521edd7378f5341\n" +
+"  master                     9723857 Merge pull request #15 from carlfriess/ContribStats";
         console.log(stdout);
-        var branches = stdout.split('\n').map(function(line) {
+        var branches, activeBranch, activeBranchName;
+        branches = stdout.trim().split('\n').map(function(line) {
             var active = line.indexOf('*') == 0,
                 parts, branchName, sha, message, detached;
             line = line.substr(2).trim();
@@ -38,15 +42,18 @@ function getCurrentGitBranch(callback) {
             };
         });
         console.log(branches);
-        var activeBranch = branches.filter(function(branch) {
+        activeBranch = branches.filter(function(branch) {
             return branch.active;
         }).pop();
+        console.log('\n');
         if (activeBranch.detached) {
-            activeBranch = branches.filter(function(branch) {
-                return ! branch.active && branch.sha == activeBranch.sha;
-            }).pop();
+            activeBranchName = activeBranch.name.split(' ').pop();
+            activeBranchName = activeBranchName.substr(0, activeBranchName.length - 1);
+        } else {
+            activeBranchName = activeBranch.name;
         }
-        callback(activeBranch.name);
+        console.log(activeBranch);
+        callback(activeBranchName);
     });
 }
 
