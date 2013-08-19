@@ -13,6 +13,7 @@ require('colors');
 
 function getCurrentGitBranch(callback) {
     exec('git branch -v', function(err, stdout) {
+        console.log(stdout);
         var branches = stdout.split('\n').map(function(line) {
             var active = line.indexOf('*') == 0,
                 parts, branchName, sha, message, detached;
