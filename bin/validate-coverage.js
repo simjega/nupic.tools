@@ -7,18 +7,12 @@ var fs = require('fs'),
     COVERAGE_DIR = 'artifacts/coverage',
     SUMMARY_PATH = 'coverage/summary.txt',
     MASTER = 'master',
-    COMPARATOR = 'Statements',
-
-    ORG_REPO_REGEX = /.+[:|\/](.+\/.+).git/;
+    COMPARATOR = 'Statements';
 
 require('colors');
 
 function getCurrentGitBranch(callback) {
     exec('git branch -v', function(err, stdout) {
-        var stdout = 
-"* (detached from FETCH_HEAD) 0f52785 Merge 4e05ac33ec200206d2bfa71be430bc73570559c2 into 972385710f691873f0e3fb0ff521edd7378f5341\n" +
-"  master                     9723857 Merge pull request #15 from carlfriess/ContribStats";
-        console.log(stdout);
         var branches, activeBranch, activeBranchName;
         branches = stdout.trim().split('\n').map(function(line) {
             var active = line.indexOf('*') == 0,
@@ -43,27 +37,21 @@ function getCurrentGitBranch(callback) {
                 detached: detached
             };
         });
-        console.log(branches);
         activeBranch = branches.filter(function(branch) {
             return branch.active;
         }).pop();
-        console.log('\n');
         if (activeBranch.detached) {
             activeBranchName = activeBranch.name.split(' ').pop();
             activeBranchName = activeBranchName.substr(0, activeBranchName.length - 1);
         } else {
             activeBranchName = activeBranch.name;
         }
-        console.log(activeBranch);
         callback(activeBranchName);
     });
 }
 
 function getRepoSlug(callback) {
-    exec('git remote show origin', function(err, stdout) {
-        var match = stdout.split('\n')[1].match(ORG_REPO_REGEX);
-        callback(match[1]);
-    });
+    callback('numenta/nupic.tools');
 }
 
 function getCoverageMap(summaryText) {
@@ -82,7 +70,7 @@ function getCoverageMap(summaryText) {
 function compareLocalReportWithRemote(localReport, repoSlug, branch) {
     var remoteSummaryUrl = S3_URL + S3_BUCKET + '/artifacts/' 
                            + repoSlug + '/' + branch + '/coverage/summary.txt';
-    console.info('Fetching last coverage report from ' + remoteSummaryUrl);
+    console.info('Fetching last coverage report from \n' + remoteSummaryUrl);
     request.get(remoteSummaryUrl, function(err, resp, body) {
         var remoteReport;
         if (resp.statusCode !== 200) {
