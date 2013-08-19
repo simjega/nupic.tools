@@ -61,7 +61,8 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
             target_url,
             highestPriority = -1,
             validatorsRun = [],
-            validatorsSkipped = [];
+            validatorsSkipped = [],
+            skippedMSG;
 
         function runNextValidation() {
             var validator,
@@ -110,9 +111,14 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                 console.log('Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
+                if (validatorsSkipped.length > 0) {
+                    skippedMSG = ' [' + validatorsSkipped.length + ' skipped])';
+                } else {
+                    skippedMSG = ')';
+                }
                 callback(sha, {
                     state: 'success',
-                    description: 'All validations passed (' + validatorsRun.map(function(v) { return v.name; }).join(', ') + ' [' + validatorsSkipped.length + ' skipped])',
+                    description: 'All validations passed (' + validatorsRun.map(function(v) { return v.name; }).join(', ') + skippedMSG,
                     target_url: target_url
                 }, repoClient);
             }
