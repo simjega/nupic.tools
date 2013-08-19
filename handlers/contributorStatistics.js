@@ -1,20 +1,59 @@
 var jsonUtils = require('../utils/json');
+var RepositoryClient = require('../utils/repoClient');
 var nodeURL = require("url");
 var repoClients;
 
+function getRemainingPages(repoClient, lastData, callback, allData_old) {
+    var allData = [];
+    if (allData_old) {
+        allData = allData.concat(allData_old);
+    }
+    allData = allData.concat(lastData);
+    repoClient.github.getNextPage(lastData, function(error,newData){
+        if (error) {
+            callback(null, allData);
+        } else {
+            getRemainingPages(repoClient, newData, callback, allData)
+        }
+    });
+}
+
 function getContributorsFor(repoClient, callback) {
     repoClient.getContributors(function(err, contributors) {
-        var contributorsOut;
-        if (err) {
-            return callback(err);
-        }
-        contributorsOut = contributors.map(function(nextContrib){
-            return {
-                "login": nextContrib.login, 
-                "contributions": nextContrib.contributions
-            };
+        getRemainingPages(repoClient, contributors, function(error, allContributors){
+            var contributorsOut;
+            if (err) {
+                return callback(err);
+            }
+            repoClient.github.repos.getCommits({"user": repoClient.org, "repo": repoClient.repo, "per_page": 100}, function(error, data){
+                getRemainingPages(repoClient, data, function(error, allCommits){
+                    var commitsPerPerson = {};
+                    allCommits.forEach(function(nextCommit){
+                        if (nextCommit.committer) {
+                            if (!commitsPerPerson[nextCommit.committer.login]) {
+                                commitsPerPerson[nextCommit.committer.login] = 0;
+                            }
+                            commitsPerPerson[nextCommit.committer.login]++;
+                        }
+                    });
+                    contributorsOut = allContributors.map(function(nextContrib){
+                        var commits = 0;
+                        if (commitsPerPerson[nextContrib.login]) {
+                            commits = commitsPerPerson[nextContrib.login];
+                        }
+                        return {
+                            "login": nextContrib.login, 
+                            "contributions": nextContrib.contributions,
+                            "commits": commits
+                        };
+                    });
+                    callback(null, contributorsOut);
+
+
+
+                });
+            });
         });
-        callback(null, contributorsOut);
     });
 }
 
