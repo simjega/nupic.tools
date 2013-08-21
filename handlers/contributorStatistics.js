@@ -1,20 +1,36 @@
 var jsonUtils = require('../utils/json');
-var nodeURL = require("url");
+var nodeURL = require('url');
 var repoClients;
 
 function getContributorsFor(repoClient, callback) {
-    repoClient.getContributors(function(err, contributors) {
+    repoClient.getContributors(function(err, allContributors) {
         var contributorsOut;
         if (err) {
             return callback(err);
         }
-        contributorsOut = contributors.map(function(nextContrib){
-            return {
-                "login": nextContrib.login, 
-                "contributions": nextContrib.contributions
-            };
+        repoClient.getCommits(function(error, allCommits){
+            var commitsPerPerson = {};
+            allCommits.forEach(function(nextCommit){
+                if (nextCommit.committer) {
+                    if (!commitsPerPerson[nextCommit.committer.login]) {
+                        commitsPerPerson[nextCommit.committer.login] = 0;
+                    }
+                    commitsPerPerson[nextCommit.committer.login]++;
+                }
+            });
+            contributorsOut = allContributors.map(function(nextContrib){
+                var commits = 0;
+                if (commitsPerPerson[nextContrib.login]) {
+                    commits = commitsPerPerson[nextContrib.login];
+                }
+                return {
+                    "login": nextContrib.login, 
+                    "contributions": nextContrib.contributions,
+                    "commits": commits
+                };
+            });
+            callback(null, contributorsOut);
         });
-        callback(null, contributorsOut);
     });
 }
 
@@ -49,7 +65,6 @@ function writeResponse(response, errors, dataOut, jsonpCallback) {
 }
 
 function contributorStatistics (request, response)    {
-
     var dataOut = {},
         repoNames = Object.keys(repoClients),
         errors = [],
@@ -94,15 +109,18 @@ function contributorStatistics (request, response)    {
 }
 
 
-contributorStatistics.name = "Contribution Reporter";
+contributorStatistics.title = "Contribution Reporter";
 contributorStatistics.description = "Generates JSON/JSONP with all contributors "
-    + "and how many contributions they made for all repositorys or the "
+    + "and how many contributions they made for all repositories or the "
     + "repository specified in a 'repo' parameter. For JSONP add a 'callback' "
     + "parameter.";
 
 module.exports = {
     '/contribStats': function(_repoClients) {
+        if (! _repoClients) {
+            throw new Error('Cannot initialize handler without RepositoryClient objects');
+        }
         repoClients = _repoClients;
-        return contributorStatistics;
+            return contributorStatistics;
     }
 };
