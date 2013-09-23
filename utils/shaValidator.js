@@ -49,7 +49,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         };
     }
 
-    console.log(('\nVALIDATING ' + sha).cyan);
+    console.log(('VALIDATING ' + sha).cyan);
 
     repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
         if (err) {

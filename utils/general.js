@@ -77,6 +77,20 @@ function constructRepoClients(prWebhookUrl, config, callback) {
     });
 }
 
+/* Sorts github statuses by created_at time */
+function sortStatuses(statuses) {
+    return statuses.sort(function(a, b) {
+        var aDate = new Date(a.created_at),
+            bDate = new Date(b.created_at);
+        if (aDate > bDate) {
+            return -1;
+        } else if (aDate < bDate) {
+            return 1;
+        }
+        return 0;
+    });
+}
+
 /* Removes the passwords from the config for logging. */
 function sterilizeConfig(config) {
     var out = JSON.parse(JSON.stringify(config));
@@ -88,8 +102,28 @@ function sterilizeConfig(config) {
     return out;
 }
 
+/* Dumb function for output formatting to console. */
+function padInt(n) {
+    if (n < 10) {
+        return '0' + n;
+    }
+    return n;
+}
+/* Dumb function for output formatting to console. */
+function padDecimal(n) {
+    if (n < 10) {
+        return n + '00';
+    } else if (n < 100) {
+        return n + '0';
+    }
+    return n;
+}
+
 module.exports = {
     initializeModulesWithin: initializeModulesWithin,
     constructRepoClients: constructRepoClients,
-    sterilizeConfig: sterilizeConfig
+    sterilizeConfig: sterilizeConfig,
+    sortStatuses: sortStatuses,
+    padInt: padInt,
+    padDecimal: padDecimal
 };

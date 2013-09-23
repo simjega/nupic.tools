@@ -32,8 +32,23 @@ console.log(JSON.stringify(utils.sterilizeConfig(cfg), null, 2).yellow);
 utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
     var dynamicHttpHandlerModules,
         // The Connect JS application
-        app = connect();
+        app = connect(),
+        padInt = utils.padInt,
+        padDecimal = utils.padDecimal;
 
+    // Print the time of the request to the millisecond.
+    app.use(function(req, res, next) {
+        var now = new Date(),
+            dateString = now.getFullYear() + '/' + 
+                padInt(now.getMonth() + 1) + '/' + 
+                padInt(now.getDate()) + ' ' +  
+                padInt(now.getHours()) + ':' + 
+                padInt(now.getMinutes()) + ':' + 
+                padInt(now.getSeconds()) + '.' +
+                padDecimal(now.getMilliseconds());
+        console.log('\n' + dateString + ' | Request received');
+        next();
+    });
     // Enable a log of logging.
     app.use(connect.logger('dev'))
        // Auto body parsing is nice.

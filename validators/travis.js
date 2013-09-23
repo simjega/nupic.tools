@@ -4,7 +4,7 @@ var TRAVIS_DESC_TOKEN = 'The Travis CI build',
 function getLatestTravisStatus(list) {
     var i = 0;
     for (; i<list.length; i++) {
-        if (list[i].description.indexOf(TRAVIS_DESC_TOKEN) == 0) {
+        if (list[i].description.indexOf(TRAVIS_DESC_TOKEN) >= 0) {
             return list[i];
         }
     }

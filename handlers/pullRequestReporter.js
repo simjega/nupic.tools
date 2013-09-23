@@ -1,5 +1,6 @@
 var url = require('url'),
     qs = require('querystring'),
+    utils = require('../utils/general'),
     jsonUtils = require('../utils/json'),
     repoClients;
 
@@ -16,7 +17,7 @@ function getPullRequestsFrom(ghClient, callback) {
             } else {
                 ghClient.getAllStatusesFor(pr.head.sha, function(err, statuses) {
                     if (err) return callback(err);
-                    pr.statuses = statuses;
+                    pr.statuses = utils.sortStatuses(statuses);
                     out.push(pr);
                     addNextPullRequestStatuses();
                 });
