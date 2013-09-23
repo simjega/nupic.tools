@@ -8,10 +8,10 @@ var assert = require('assert'),
         '../utils/json': jsonMock
     });
 
-function resetJsonMock() {
-    jsonMock.render = undefined;
-    jsonMock.renderErrors = undefined;
-}
+// function resetJsonMock() {
+//     jsonMock.render = undefined;
+//     jsonMock.renderErrors = undefined;
+// }
 
 describe('pull request report handler url mapping', function() {
     it('has an entry for the /prStatus URL', function() {
@@ -62,23 +62,12 @@ describe('/prStatus URL handler', function() {
                 }
             };
 
-            jsonMock.render = function(data) {
-                console.log('++++++=======+++++++++========++++++++=======++++++++');
-                console.log(data);
-                assert.equal(data.repoOne.length, 1, 'wrong length of output data array');
-                assert.equal(data.repoOne[0].login, 'dummy', 'wrong login name for committer');
-                assert.equal(data.repoOne[0].contributions, 666, 'wrong contribution number');
-                assert.equal(data.repoOne[0].commits, 1, 'wrong commit count');
-            };
-
             mockRepos.repoOne = repoApi;
             mockRepos.repoTwo = repoApi;
 
             handler(requestStub);
 
             assert.equal(prFetchCount, 2, 'wrong number of repos queried for default params');
-
-            resetJsonMock();
 
         });
     });
