@@ -1,5 +1,6 @@
 var url = require('url'),
     qs = require('querystring'),
+    utils = require('../utils/general'),
     jsonUtils = require('../utils/json'),
     repoClients;
 
@@ -27,7 +28,7 @@ function shaReporter(req, res) {
         repo: repoClient.repo,
         sha: sha
     }, function(err, statuses) {
-        jsonUtils.render(statuses, res, jsonPCallback);
+        jsonUtils.render(utils.sortStatuses(statuses), res, jsonPCallback);
     });
 }
 

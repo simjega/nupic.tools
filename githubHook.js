@@ -15,7 +15,7 @@ var fs = require('fs'),
  * RepositoryClient object, this function either validates the PR, re-validates 
  * all other open PRs (if the PR merged), or ignores it if not against 'master'.
  */
-function handlePullRequest(payload, repoClient) {
+function handlePullRequest(payload, repoClient, cb) {
     var action = payload.action,
         githubUser = payload.pull_request.user.login,
         head = payload.pull_request.head,
@@ -29,15 +29,18 @@ function handlePullRequest(payload, repoClient) {
         if (payload.pull_request.merged) {
             console.log('A PR just merged. Re-validating open pull requests...');
             contributors.getAll(repoClient.contributorsUrl, function(err, contributors) {
-                shaValidator.revalidateAllOpenPullRequests(contributors, repoClient, dynamicValidatorModules);
+                shaValidator.revalidateAllOpenPullRequests(contributors, repoClient, dynamicValidatorModules, cb);
             });
+        } else {
+            if (cb) { cb(); }
         }
     } else {
         // Only process PRs against the master branch.
         if (payload.pull_request.base.ref == 'master') {
-            shaValidator.performCompleteValidation(head.sha, githubUser, repoClient, dynamicValidatorModules, true);
+            shaValidator.performCompleteValidation(head.sha, githubUser, repoClient, dynamicValidatorModules, true, cb);
         } else {
             console.log(('Ignoring pull request against ' + payload.pull_request.base.label).yellow);
+            if (cb) { cb(); }
         }
     }
 }
@@ -48,21 +51,23 @@ function handlePullRequest(payload, repoClient) {
  * assures that this status did not originate from this server (nupic.tools), then
  * performs a complete validation of the repository.
  */
-function handleStateChange(payload, repoClient) {
-    console.log('State of ' + payload.sha + ' updated to ' + payload.state);
+function handleStateChange(payload, repoClient, cb) {
+    console.log('State of ' + payload.sha + ' has changed to "' + payload.state + '".');
     // Ignore state changes on closed pull requests
     if (payload.pull_request && payload.pull_request.state == 'closed') {
         console.log(('Ignoring status of closed pull request (' + payload.sha + ')').yellow);
+        if (cb) { cb(); }
         return;
     }
     // Get statuses and check the latest one
     repoClient.getAllStatusesFor(payload.sha, function(err, statusHistory) {
-        var latestStatus = statusHistory[0];
+        var latestStatus = utils.sortStatuses(statusHistory).shift();
         if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
             // ignore statuses that were created by this server
             console.log(('Ignoring "' + payload.state + '" status created by nupic.tools.').yellow);
+            if (cb) { cb(); }
         } else {
-            shaValidator.performCompleteValidation(payload.sha, payload.sender.login, repoClient, dynamicValidatorModules, true);
+            shaValidator.performCompleteValidation(payload.sha, payload.sender.login, repoClient, dynamicValidatorModules, true, cb);
         }
     });
 }
@@ -86,19 +91,18 @@ module.exports = function(clients) {
             return res.end();
         }
         
-        console.log(repoClient.toString().magenta);
+        console.log("Github hook executing for " + repoClient.toString().magenta);
+
+        function whenDone() {
+            res.end();
+        }
 
         // If the payload has a 'state', that means this is a state change.
         if (payload.state) {
-            handleStateChange(payload, repoClient);
+            handleStateChange(payload, repoClient, whenDone);
         } else {
-            handlePullRequest(payload, repoClient);
+            handlePullRequest(payload, repoClient, whenDone);
         }
-
-        // We do not need to wait for any of the processing above to occur before
-        // closing the response. Github doesn't pay any attention to HTTP 
-        // responses, so there is no need to do anything but close it.
-        res.end();
 
     };
 };
