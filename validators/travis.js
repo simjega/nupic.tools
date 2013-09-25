@@ -1,5 +1,6 @@
 var TRAVIS_DESC_TOKEN = 'The Travis CI build',
-    TRAVIS_THRESHOLD = 12; // hours
+    TRAVIS_THRESHOLD = 12, // hours
+    utils = require('../utils/general');
 
 function getLatestTravisStatus(list) {
     var i = 0;
@@ -11,7 +12,8 @@ function getLatestTravisStatus(list) {
 }
 
 function validator(sha, githubUser, statusHistory, githubClient, callback) {
-    var tstatus = getLatestTravisStatus(statusHistory),
+    var sortedStatuses = utils.sortStatuses(statusHistory),
+        tstatus = getLatestTravisStatus(statusHistory),
         lastUpdated,
         timestampDiff,
         hoursSinceLastUpdated;
