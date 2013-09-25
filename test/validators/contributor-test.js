@@ -2,7 +2,8 @@ var assert = require('assert'),
     proxyquire = require('proxyquire'),
     contribStub = {},
     githubClientStub = {
-        contributorsUrl: 'contribUrl'
+        contributorsUrl: 'contribUrl',
+        user: 'foo'
     },
     contributor = proxyquire('../../validators/contributor', 
                     {'../utils/contributors': contribStub});
@@ -43,4 +44,13 @@ describe('contributor validator', function() {
             done();
         });
     });
+    it('returns success state is same as github client user', function(done) {
+        contributor.validate('sha', 'foo', null, githubClientStub, function(err, status) {
+            assert.ifError(err, 'error thrown during validation');
+            assert(status.state, 'no status state returned');
+            assert.equal(status.state, 'success', 'wrong status state');
+            done();
+        });
+    });
+    
 });
