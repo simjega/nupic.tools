@@ -12,11 +12,18 @@ function die(err) {
  * proper node.js modules, and loads them. 
  * @return {Array} Modules loaded.
  */
-function initializeModulesWithin(dir) {
+function initializeModulesWithin(dir, exclusions) {
     var output = [];
     fs.readdirSync(dir).forEach(function(fileName) {
-        if(fileName.charAt(0) != "." && fileName.substr(fileName.length - 3) == ".js")   {
-            output.push(require('../' + dir + '/' + fileName.split('.').shift()));
+        var moduleName = fileName.split('.').shift(),
+            excluded = false;
+        if (exclusions != undefined && exclusions.indexOf(moduleName) > -1) {
+            excluded = true;
+        }
+        if(! excluded && 
+                fileName.charAt(0) != "." 
+                && fileName.substr(fileName.length - 3) == ".js")   {
+            output.push(require('../' + dir + '/' + moduleName));
         }
     });
     return output;
@@ -125,5 +132,6 @@ module.exports = {
     sterilizeConfig: sterilizeConfig,
     sortStatuses: sortStatuses,
     padInt: padInt,
-    padDecimal: padDecimal
+    padDecimal: padDecimal,
+    __module: module // for unit testing and mocking require()
 };

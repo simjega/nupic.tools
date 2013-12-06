@@ -1,5 +1,4 @@
 var assert = require('assert'),
-    proxyquire = require('proxyquire'),
     shaValidator = require('./../utils/shaValidator.js')
     repoClientStub = {
         'getAllStatusesFor': function(sha, callback) { callback(null, 'fakeStatusHistory'); },
