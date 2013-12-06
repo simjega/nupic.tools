@@ -75,9 +75,13 @@ function handleStateChange(payload, repoClient, cb) {
 // Given all the RepositoryClient objects, this module initializes all the dynamic
 // validators and returns a request handler function to handle all Github web hook
 // requests, including status updates and pull request notifications.
-module.exports = function(clients) {
+function initializer(clients, config) {
+    var validatorExclusions = [];
     repoClients = clients;
-    dynamicValidatorModules = utils.initializeModulesWithin(VALIDATOR_DIR);
+    if (config.validators && config.validators.exclude) {
+        validatorExclusions = config.validators.exclude;
+    }
+    dynamicValidatorModules = utils.initializeModulesWithin(VALIDATOR_DIR, validatorExclusions);
     return function(req, res) {
         // Get what repository Github is telling us about
         var payload = JSON.parse(req.body.payload),
@@ -103,6 +107,14 @@ module.exports = function(clients) {
         } else {
             handlePullRequest(payload, repoClient, whenDone);
         }
-
     };
+}
+
+module.exports = {
+    initializer: initializer,
+    getValidators: function() {
+        return dynamicValidatorModules.map(function(v) {
+            return v.name;
+        });
+    }
 };

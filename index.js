@@ -54,19 +54,25 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
        // Auto body parsing is nice.
        .use(connect.bodyParser())
        // This puts the Github webhook handler into place
-       .use(githubHookPath, githubHookHandler(repoClients));
+       .use(githubHookPath, githubHookHandler.initializer(repoClients, cfg));
+
+    console.log('The following validators are active:'.cyan);
+    githubHookHandler.getValidators().forEach(function(v) {
+        console.log(('\t==> ' + v).cyan);
+    });
 
     dynamicHttpHandlerModules = utils.initializeModulesWithin(HANDLER_DIR);
 
     // Loads all the modules within the handlers directory, and registers the URLs
     // the declared, linked to their request handler functions.
+    console.log('The following URL handlers are active:'.cyan);
     dynamicHttpHandlerModules.forEach(function(handlerConfig) {
         var urls = Object.keys(handlerConfig);
         urls.forEach(function(url) {
             var handler = handlerConfig[url](repoClients, dynamicHttpHandlerModules, cfg),
                 name = handler.title,
                 desc = handler.description,
-                msg = '==> ' + name + ' listening for url pattern: ' + url;
+                msg = '\t==> ' + name + ' listening for url pattern: ' + url;
             if (! handler.disabled) {
                 console.log(msg.cyan);
                 app.use(url, handler);
