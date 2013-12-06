@@ -24,7 +24,7 @@ function read(configFile) {
 
     userConfig = readConfigFileIntoObject(userFile);
     if (userConfig) {
-        ['host', 'port', 'logDirectory'].forEach(function(key) {
+        ['host', 'port', 'logDirectory', 'validators'].forEach(function(key) {
             if (userConfig[key] !== undefined) {
                 config[key] = userConfig[key];
             }
