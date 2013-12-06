@@ -62,7 +62,7 @@ function constructRepoClients(prWebhookUrl, config, callback) {
             + monitorConfig.username.magenta + ' on ' 
             + repoClient.toString().magenta);
 
-        repoClient.confirmWebhookExists(prWebhookUrl, ['pull_request', 'status'], function(err, hook) {
+        repoClient.confirmWebhookExists(prWebhookUrl, ['push', 'pull_request', 'status'], function(err, hook) {
             if (err) {
                 console.error(('Error during webhook confirmation for ' + repoClient.toString()).red);
                 die(err);

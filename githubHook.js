@@ -47,7 +47,7 @@ function handlePullRequest(payload, repoClient, cb) {
 
 /**
  * Given a request payload from Github, and the RepositoryClient object associated
- * with this repo, this function retrieves all the known statues for the repo, 
+ * with this repo, this function retrieves all the known statuses for the repo, 
  * assures that this status did not originate from this server (nupic.tools), then
  * performs a complete validation of the repository.
  */
