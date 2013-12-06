@@ -85,8 +85,21 @@ function initializer(clients, config) {
     return function(req, res) {
         // Get what repository Github is telling us about
         var payload = JSON.parse(req.body.payload),
-            repoName = payload.name || payload.repository.full_name,
-            repoClient = repoClients[repoName];
+            repoName, repoClient;
+
+        if (payload.name) {
+            repoName = payload.name;
+        } else if (payload.repository.full_name) {
+            repoName = payload.repository.full_name;
+        } else if (payload.repository) {
+            // Probably a push event.
+            repoName = payload.repository.owner.name + '/' + payload.repository.name;
+        } else {
+            console.log('Cannot understand github payload!\n'.red + req.body.payload.yellow);
+            return res.end();
+        }
+
+        repoClient = repoClients[repoName];
 
         // If this application is not monitoring the repo Github is telling us 
         // about, just ignore it.
@@ -104,9 +117,12 @@ function initializer(clients, config) {
         // If the payload has a 'state', that means this is a state change.
         if (payload.state) {
             handleStateChange(payload, repoClient, whenDone);
-        } else {
+        } else if (payload.pull_request) {
             handlePullRequest(payload, repoClient, whenDone);
-        }
+        } else {
+			console.log('Should handle push event here'.yellow);
+			console.log(payload);
+		}
     };
 }
 
