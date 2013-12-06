@@ -34,4 +34,20 @@ describe('general utilities', function() {
             assert.equal(initialized[2], 'd-mod', 'wrong modules returned');
         });
     });
+
+    it('prevents passwords from showing up in sterilized configs', function() {
+        var general = proxyquire('./../../utils/general', {
+            'fs': {},
+            './repoClient': {}
+        });
+        var config = {
+            "monitors": {
+                "project": {
+                    "password": "tijj3UikYB9vmx"
+                }
+            }
+        };
+        var sterilized = general.sterilizeConfig(config);
+        assert.equal('<hidden>', sterilized.monitors.project.password);
+    });
 });
