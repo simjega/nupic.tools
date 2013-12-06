@@ -31,6 +31,7 @@ console.log(JSON.stringify(utils.sterilizeConfig(cfg), null, 2).yellow);
 
 utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
     var dynamicHttpHandlerModules,
+        activeValidators,
         // The Connect JS application
         app = connect(),
         padInt = utils.padInt,
@@ -57,7 +58,8 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
        .use(githubHookPath, githubHookHandler.initializer(repoClients, cfg));
 
     console.log('The following validators are active:'.cyan);
-    githubHookHandler.getValidators().forEach(function(v) {
+    activeValidators = githubHookHandler.getValidators();
+    activeValidators.forEach(function(v) {
         console.log(('\t==> ' + v).cyan);
     });
 
@@ -69,7 +71,7 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
     dynamicHttpHandlerModules.forEach(function(handlerConfig) {
         var urls = Object.keys(handlerConfig);
         urls.forEach(function(url) {
-            var handler = handlerConfig[url](repoClients, dynamicHttpHandlerModules, cfg),
+            var handler = handlerConfig[url](repoClients, dynamicHttpHandlerModules, cfg, activeValidators),
                 name = handler.title,
                 desc = handler.description,
                 msg = '\t==> ' + name + ' listening for url pattern: ' + url;
