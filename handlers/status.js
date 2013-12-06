@@ -50,7 +50,6 @@ statusReporter.description = 'Reports the repositories this tools server is moni
 
 module.exports = {
     '/status': function(_repoClients, _httpHandlers, _config, activeValidators) {
-        console.log(_config);
         repoClients = _repoClients;
         httpHandlers = _httpHandlers;
         config = _config;
