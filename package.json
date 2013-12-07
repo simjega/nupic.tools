@@ -10,7 +10,7 @@
         "name": "Carl Friess",
         "email": "carl.friess@me.com"
     }],
-    "main": "index.js",
+    "main": "program.js",
     "scripts": {
         "test": "istanbul cover _mocha -- --recursive -R spec; istanbul report text-summary > coverage/summary.txt; node bin/validate-coverage.js"
     },
