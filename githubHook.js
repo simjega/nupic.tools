@@ -77,16 +77,17 @@ function handlePushEvent(payload, config) {
     var repoSlug = payload.repository.organization 
         + '/' + payload.repository.name,
         monitorConfig = config.monitors[repoSlug],
+        branch = payload.ref.split('/').pop(),
         command;
-    console.log('Push event');
-    console.log(payload);
-    if (monitorConfig && monitorConfig.hooks && monitorConfig.hooks.push) {
+    console.log('Github push event on ' + repoSlug + '/' + branch);
+    // Only process pushes to master, and only when there is a push hook defined.
+    if (branch == 'master' && 
+            monitorConfig && monitorConfig.hooks && monitorConfig.hooks.push) {
         command = monitorConfig.hooks.push;
         child = exec(command, function (error, stdout, stderr) {
-            console.log('stdout: ' + stdout);
-            console.log('stderr: ' + stderr);
+            console.log(stdout.yellow);
             if (error !== null) {
-                console.log('exec error: ' + error);
+                console.log(('hook command execution error: ' + error).red);
             }
         });
     }
