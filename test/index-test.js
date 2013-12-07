@@ -1,4 +1,5 @@
 var assert = require('assert'),
+    path = require('path'),
     proxyquire = require('proxyquire'),
     connectStub = {},
     utilStub,
@@ -21,7 +22,7 @@ describe('main program', function() {
             proxyquire('./../program', {
                 './utils/general': utilStub,
                 './utils/configReader': {read: function(configPath) {
-                    assert.equal(configPath, './conf/config.json', 'Wrong default configuration path.');
+                    assert.equal(configPath, path.join(__dirname, '..', 'conf/config.json'), 'Wrong default configuration path.');
                     return {host: 'host', port: 666};
                 }},
             });
