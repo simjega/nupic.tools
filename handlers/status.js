@@ -7,7 +7,7 @@ function createHandlerReport(handlers, config) {
     var itemHtml = handlers.map(function(handlerConfig) {
         var urls = Object.keys(handlerConfig);
         return urls.map(function(url) {
-            var handler = handlerConfig[url](repoClients, handlers, config),
+            var handler = handlerConfig[url](repoClients, handlers, config, validators),
                 name = handler.title,
                 desc = handler.description;
                 htmlOut = '<a target="_blank" href="' + url + '">' + name + '</a>: ' + desc;
