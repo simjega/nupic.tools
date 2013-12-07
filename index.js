@@ -23,7 +23,7 @@ var assert = require('assert'),
     // This directory contains all the additional service
     // handlers that will be loaded dynamically and attached
     // to this web server.
-    HANDLER_DIR = './handlers';
+    HANDLER_DIR = 'handlers';
 
 console.log('nupic.tools server starting...'.green);
 console.log('nupic.tools will use the following configuration:');
