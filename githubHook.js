@@ -4,6 +4,7 @@ var fs = require('fs'),
     utils = require('./utils/general'),
     contributors = require('./utils/contributors'),
     shaValidator = require('./utils/shaValidator'),
+    exec = require('child_process').exec,
     NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     VALIDATOR_DIR = './validators',
     // All the validator modules
@@ -72,6 +73,25 @@ function handleStateChange(payload, repoClient, cb) {
     });
 }
 
+function handlePushEvent(payload, config) {
+    var repoSlug = payload.repository.organization 
+        + '/' + payload.repository.name,
+        monitorConfig = config.monitors[repoSlug],
+        command;
+    console.log('Push event');
+    console.log(payload);
+    if (monitorConfig && monitorConfig.hooks && monitorConfig.hooks.push) {
+        command = monitorConfig.hooks.push;
+        child = exec(command, function (error, stdout, stderr) {
+            console.log('stdout: ' + stdout);
+            console.log('stderr: ' + stderr);
+            if (error !== null) {
+                console.log('exec error: ' + error);
+            }
+        });
+    }
+}
+
 // Given all the RepositoryClient objects, this module initializes all the dynamic
 // validators and returns a request handler function to handle all Github web hook
 // requests, including status updates and pull request notifications.
@@ -120,9 +140,8 @@ function initializer(clients, config) {
         } else if (payload.pull_request) {
             handlePullRequest(payload, repoClient, whenDone);
         } else {
-			console.log('Should handle push event here'.yellow);
-			console.log(payload);
-		}
+            handlePushEvent(payload, config);
+        }
     };
 }
 
