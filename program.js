@@ -3,6 +3,7 @@
 // global libs
 var assert = require('assert'),
     fs = require('fs'),
+    path = require('path'),
     connect = require('connect'),
     colors = require('colors'),
     // local libs
@@ -10,7 +11,7 @@ var assert = require('assert'),
     githubHookHandler = require('./githubHook'),
     // The configReader reads the given file, and merges it with any existing user
     // configuration file.
-    cfg = require('./utils/configReader').read('./conf/config.json'),
+    cfg = require('./utils/configReader').read(path.join(__dirname, 'conf/config.json')),
 
     HOST = cfg.host,
     PORT = cfg.port || 8081,

@@ -1,16 +1,18 @@
 var fs = require('fs'),
+    path = require('path'),
     url = require('url'),
     qs = require('querystring'),
     shaValidator = require('../utils/shaValidator'),
     contributors = require('../utils/contributors'),
     jsonUtils = require('../utils/json'),
-    VALIDATOR_DIR = './validators',
+    VALIDATOR_DIR = 'validators',
     validators = [],
     repoClients;
 
 function initializeValidators(dir) {
-    fs.readdirSync(dir).forEach(function(validator) {
-        validators.push(require('.' + dir + '/' + validator.split('.').shift()));
+    var fullDir = path.join(__dirname, '..', dir);
+    fs.readdirSync(fullDir).forEach(function(validator) {
+        validators.push(require('./../' + dir + '/' + validator.split('.').shift()));
     });
 }
 

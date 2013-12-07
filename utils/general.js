@@ -1,4 +1,5 @@
 var fs = require('fs'),
+    path = require('path'),
     RepositoryClient = require('./repoClient');
 
 /* Logs error and exits. */
@@ -14,7 +15,8 @@ function die(err) {
  */
 function initializeModulesWithin(dir, exclusions) {
     var output = [];
-    fs.readdirSync(dir).forEach(function(fileName) {
+    var fullDir = path.join(__dirname, '..', dir);
+    fs.readdirSync(fullDir).forEach(function(fileName) {
         var moduleName = fileName.split('.').shift(),
             excluded = false;
         if (exclusions != undefined && exclusions.indexOf(moduleName) > -1) {
