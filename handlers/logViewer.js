@@ -31,7 +31,9 @@ function getLatestModifiedFileIn(dir, filePaths, callback) {
 
 function logViewer(req, res) {
     fs.readdir(logDirectory, function(err, files) {
-        if (err) throw err;
+        if (err) {
+            return res.end(err.toString());
+        };
         // console.log(files);
         getLatestModifiedFileIn(logDirectory, files, function(err, latestLogFilePath) {
             if (err) throw err;

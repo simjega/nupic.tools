@@ -6,7 +6,7 @@ var fs = require('fs'),
     shaValidator = require('./utils/shaValidator'),
     exec = require('child_process').exec,
     NUPIC_STATUS_PREFIX = 'NuPIC Status:',
-    VALIDATOR_DIR = './validators',
+    VALIDATOR_DIR = 'validators',
     // All the validator modules
     dynamicValidatorModules = [],
     repoClients;
