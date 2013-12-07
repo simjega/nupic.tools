@@ -28,7 +28,11 @@ function createMonitorReport(clients) {
 }
 
 function createValidatorReport(validators) {
-    return  '<ul>\n<li>' + validators.join('</li><li>') + '</li>\n</ul>\n';
+    if (validators) {
+        return  '<ul>\n<li>' + validators.join('</li><li>') + '</li>\n</ul>\n';
+    } else {
+        return '';
+    }
 }
 
 function statusReporter(req, res) {
