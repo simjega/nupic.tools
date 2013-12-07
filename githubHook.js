@@ -4,6 +4,7 @@ var fs = require('fs'),
     utils = require('./utils/general'),
     contributors = require('./utils/contributors'),
     shaValidator = require('./utils/shaValidator'),
+    exec = require('child_process').exec,
     NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     VALIDATOR_DIR = './validators',
     // All the validator modules
@@ -47,7 +48,7 @@ function handlePullRequest(payload, repoClient, cb) {
 
 /**
  * Given a request payload from Github, and the RepositoryClient object associated
- * with this repo, this function retrieves all the known statues for the repo, 
+ * with this repo, this function retrieves all the known statuses for the repo, 
  * assures that this status did not originate from this server (nupic.tools), then
  * performs a complete validation of the repository.
  */
@@ -72,6 +73,26 @@ function handleStateChange(payload, repoClient, cb) {
     });
 }
 
+function handlePushEvent(payload, config) {
+    var repoSlug = payload.repository.organization 
+        + '/' + payload.repository.name,
+        monitorConfig = config.monitors[repoSlug],
+        branch = payload.ref.split('/').pop(),
+        command;
+    console.log('Github push event on ' + repoSlug + '/' + branch);
+    // Only process pushes to master, and only when there is a push hook defined.
+    if (branch == 'master' && 
+            monitorConfig && monitorConfig.hooks && monitorConfig.hooks.push) {
+        command = monitorConfig.hooks.push;
+        child = exec(command, function (error, stdout, stderr) {
+            console.log(stdout.yellow);
+            if (error !== null) {
+                console.log(('hook command execution error: ' + error).red);
+            }
+        });
+    }
+}
+
 // Given all the RepositoryClient objects, this module initializes all the dynamic
 // validators and returns a request handler function to handle all Github web hook
 // requests, including status updates and pull request notifications.
@@ -85,8 +106,21 @@ function initializer(clients, config) {
     return function(req, res) {
         // Get what repository Github is telling us about
         var payload = JSON.parse(req.body.payload),
-            repoName = payload.name || payload.repository.full_name,
-            repoClient = repoClients[repoName];
+            repoName, repoClient;
+
+        if (payload.name) {
+            repoName = payload.name;
+        } else if (payload.repository.full_name) {
+            repoName = payload.repository.full_name;
+        } else if (payload.repository) {
+            // Probably a push event.
+            repoName = payload.repository.owner.name + '/' + payload.repository.name;
+        } else {
+            console.log('Cannot understand github payload!\n'.red + req.body.payload.yellow);
+            return res.end();
+        }
+
+        repoClient = repoClients[repoName];
 
         // If this application is not monitoring the repo Github is telling us 
         // about, just ignore it.
@@ -104,8 +138,10 @@ function initializer(clients, config) {
         // If the payload has a 'state', that means this is a state change.
         if (payload.state) {
             handleStateChange(payload, repoClient, whenDone);
-        } else {
+        } else if (payload.pull_request) {
             handlePullRequest(payload, repoClient, whenDone);
+        } else {
+            handlePushEvent(payload, config);
         }
     };
 }
