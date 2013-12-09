@@ -29,7 +29,7 @@ The github username and password required in your configuration is used to acces
 
 ### Start the server:
 
-    node index.js
+    node program.js
 
 Now hit http://localhost:8081 (or whatever port you specified in the configuration file) and you should see a status page reporting what repositories are being monitored, as well as what extra services are provided by [HTTP Handlers](#http_handler_addons).
 
@@ -57,12 +57,22 @@ You can add as many validators in the `validator` directory, and they will autom
 
 It's easy to create additional HTTP handlers for different URL patterns. Just create a module within the `handlers` directory that exports an object keyed by the URL pattern it should handle. The value for each key should be a function that returns a request handler function. This function will be given access to all repository clients for the monitors specified in the configuration, as well as all the other HTTP handlers within the application. The actual request handler function returned by this function will be given an HTTP Request and HTTP response object, node.js style.
 
+## Running shell commands in response to Github hooks
+
+For each `monitor` defined within the configuration file(s), you can provide a list of `hooks`, allowing you to run shell commands in response to Github hook events. For example:
+
+    "monitors": {
+        "organization/repository": {
+            "hooks": [{
+                "push": "/path/to/command.sh"
+            }]
+        }
+    }
+
+In this example, whenever `nupic.tools` gets a Github webhook for a `push` event against the `organization/repository` repo, the shell script `/path/to/command.sh` will be executed. Currently, no details about the event are passed into the shell script.
+
+The NuPIC project uses this functionality to run a script that generates API documentation and publish it to the web (see `bin/generate_nupic_docs.sh`).
+
 ## Make sure it stays running!
 
-So you really should make sure that your server stays running, so do this:
-
-    sudo npm install forever -g
-
-This will install the [`forever`](https://npmjs.org/package/forever) npm module, which will keep the process running if it fails for some reason. The best way to start it is like this:
-
-    forever start index.js
+Installing this package will also install the [forever](https://npmjs.org/package/forever) module globally. Scripts are provided within `./bin` to start, stop, and restart this program as a forever application.
