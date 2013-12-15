@@ -13,6 +13,8 @@ First, install nodejs and npm. Checkout this codebase and change into the `nupic
 
     npm install .
 
+> *NOTE*: You may need to use `sudo` for the above command, because the `forever` npm module is installed globally.
+
 ## Running it
 
 ### Configuration
