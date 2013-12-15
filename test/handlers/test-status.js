@@ -55,6 +55,9 @@ describe('status reporter', function() {
         var requestHandler = urlMap['/status'](
             mockRepoClients, mockHttpHandlers, mockConfig, mockValidators
         );
+        var mockRequest = {
+            url: '/bluah/bluah/status'
+        };
         var mockResponse = {
             setHeader: function() {},
             end: function(htmlOut) {
@@ -62,7 +65,7 @@ describe('status reporter', function() {
                 assert.equal(expectedHtml, htmlOut);
             }
         };
-        requestHandler(null, mockResponse);
+        requestHandler(mockRequest, mockResponse);
         assert(endCalled, 'response was not closed');
     });
 });
