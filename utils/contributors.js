@@ -1,6 +1,4 @@
 var request = require('request'),
-    url = require('url'),
-    qs = require('querystring'),
     monitors;
 
 function csvToJson(csv) {
@@ -28,6 +26,6 @@ module.exports.getAll = function(csvUrl, callback) {
         if (err) {
             return callback(err);
         }
-        callback(null, JSON.parse(csvToJson(body)).contributors);
+        callback(null, JSON.parse(csvToJson(body.trim())).contributors);
     });
 };

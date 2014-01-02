@@ -1,4 +1,4 @@
-var contributors = require('../utils/contributors');
+var contribUtil = require('../utils/contributors');
 
 function isContributor(name, roster) {
     if (name == null || name == undefined) return false;
@@ -16,7 +16,7 @@ function validator(sha, githubUser, _, githubClient, callback) {
         // The Github user assigned as the API client whould always pass validation.
         callback(null, {state: 'success'})
     } else {
-        contributors.getAll(githubClient.contributorsUrl, function(err, contributors) {
+        contribUtil.getAll(githubClient.contributorsUrl, function(err, contributors) {
             var response = {
                 state: 'success',
             };
