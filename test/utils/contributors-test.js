@@ -91,7 +91,6 @@ describe('contributors utilities', function() {
             });
             contributorsUtils.getAll('url-to-csv', function(err, contributors) {
                 assert(err == undefined, 'received error from csv reader');
-                console.log(contributors);
                 assert.equal(75, contributors.length, 'Bad length of contributors listing');
                 var subutai = contributors[3];
                 var ian = contributors[7];
