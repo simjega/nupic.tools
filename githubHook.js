@@ -60,16 +60,19 @@ function handleStateChange(payload, repoClient, cb) {
         if (cb) { cb(); }
         return;
     }
-    // Get statuses and check the latest one
-    repoClient.getAllStatusesFor(payload.sha, function(err, statusHistory) {
-        var latestStatus = utils.sortStatuses(statusHistory).shift();
-        if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
-            // ignore statuses that were created by this server
-            console.log(('Ignoring "' + payload.state + '" status created by nupic.tools.').yellow);
-            if (cb) { cb(); }
-        } else {
-            shaValidator.performCompleteValidation(payload.sha, payload.sender.login, repoClient, dynamicValidatorModules, true, cb);
-        }
+    repoClient.getCommit(payload.sha, function(err, commit) {
+        var commitAuthor = commit.author.login;
+        // Get statuses and check the latest one
+        repoClient.getAllStatusesFor(payload.sha, function(err, statusHistory) {
+            var latestStatus = utils.sortStatuses(statusHistory).shift();
+            if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+                // ignore statuses that were created by this server
+                console.log(('Ignoring "' + payload.state + '" status created by nupic.tools.').yellow);
+                if (cb) { cb(); }
+            } else {
+                shaValidator.performCompleteValidation(payload.sha, commitAuthor, repoClient, dynamicValidatorModules, true, cb);
+            }
+        });
     });
 }
 
