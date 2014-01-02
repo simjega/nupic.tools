@@ -13,7 +13,7 @@ function isContributor(name, roster) {
 function validator(sha, githubUser, _, githubClient, callback) {
     console.log('Validating contributor "' + githubUser + '"...');
     if (githubUser == githubClient.user) {
-        // The Github user assigned as the API client whould always pass validation.
+        // The Github user assigned as the API client would always pass validation.
         callback(null, {state: 'success'})
     } else {
         contribUtil.getAll(githubClient.contributorsUrl, function(err, contributors) {
