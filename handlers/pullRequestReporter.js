@@ -50,7 +50,9 @@ function prReporter(req, res) {
         var client = repoClients[repoName];
 
         getPullRequestsFrom(client, function(err, prs) {
-            if (err) throw err;
+            if (err) {
+                return jsonUtils.renderErrors([err], res, query.callback);
+            }
             allPrs[client.toString()] = prs;
             if (Object.keys(allPrs).length == totalReposToQuery) {
                 // Done!
