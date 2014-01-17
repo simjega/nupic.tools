@@ -9,6 +9,10 @@ function getPullRequestsFrom(ghClient, callback) {
         // Attach current statuses to each request
         var out = [];
 
+        if (err) {
+            return callback(err);
+        }
+
         function addNextPullRequestStatuses() {
             var pr = prs.pop();
             if (! pr) {
