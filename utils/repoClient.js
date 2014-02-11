@@ -113,7 +113,7 @@ RepositoryClient.prototype.confirmWebhookExists = function(url, events, callback
             return callback(err);
         }
         hooks.forEach(function(hook) {
-            if (url == hook.config.url) {
+            if (hook.config && url == hook.config.url) {
                 found = true;
             }
         });
