@@ -1,12 +1,11 @@
-var jsdom = require("jsdom");
-var nodeURL = require("url");
-var jsonUtils = require('../utils/json');
-var monthNames = [ "January", "February", "March", "April", "May", "June", 
-    "July", "August", "September", "October", "November", "December"];
-var path = require('path');
-var q = require('q');
-var cfg = require('../utils/configReader').read(path.join(__dirname, '../conf/config.json'));
-var mailinglists = cfg.mailinglists;
+var jsdom = require("jsdom"),
+    nodeURL = require("url"),
+    jsonUtils = require('../utils/json'),
+    monthNames = [ "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"],
+    path = require('path'),
+    q = require('q'),
+    config;
 
 function buildUrlObjectsSince(archiveUrl, month, year) {
     var now = new Date(),
@@ -39,8 +38,7 @@ function mailingListReporter (request, response) {
         totalSubscribers : 0,
         totalMessages : 0
     };
-
-    mailinglists.forEach(function(mailingList) {
+    config.mailinglists.forEach(function(mailingList) {
         getMailingList(mailingList,screenScrapes,data.mailingLists);
     });
 
@@ -110,7 +108,7 @@ function buildOutput (request, response, data)  {
         }
     } else {
         response.write("<!DOCTYPE html><html><head><title>NuPIC Mailing List Statistics</title><link href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css' rel='stylesheet' media='screen'><link rel='shortcut icon' type='image/x-icon' href='http://status.numenta.org/favicon.ico'><meta name='viewport' content='width=device-width, initial-scale=1.0'></head><body>");
-        response.write("<div class='container-fluid'><div class='jumbotron'><div class='row'><div class='col-md-8'><h1><img src='http://numenta.org/images/numenta-icon128.png'> NuPIC Mailing List Statistics</h1></div>");
+        response.write("<div class='container-fluid'><div class='jumbotron'><div class='row'><div class='col-md-8'><h1><img style='float:left;margin:0 20px 20px 0;' alt='Numenta logo' src='http://numenta.org/images/numenta-icon128.png'> NuPIC Mailing List Statistics</h1></div>");
         response.write("<div class='col-md-4' style='padding-top:40px;'><h3>Total subscribers: "+data.totalSubscribers+"</h3><h3>Total messages: "+data.totalMessages+"</h3></div></div></div><table class='table'><tr>");
         data.mailingLists.forEach(function(ml) {
             response.write("<td>");
@@ -131,7 +129,8 @@ mailingListReporter.title = 'Mailing List Reporter';
 mailingListReporter.description = 'Provides statistics about the mailing list. (Outputs HTML or JSON depending on extention [*.html or *.json]. For JASONP add query "callback" [ex.: ...?callback=foo].)';
 
 module.exports = {
-    '/maillist': function() {
+    '/maillist': function(_repoClients, _httpHandlers, _config, activeValidators) {
+        config = _config;
         return mailingListReporter;
     }
 };
