@@ -1,5 +1,5 @@
 {
-    "host": "localhost",
+    "host": "issues.numenta.org",
     "port": 8081,
 
     "monitors": {
