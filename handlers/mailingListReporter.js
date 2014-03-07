@@ -12,7 +12,7 @@ function buildUrlObjectsSince(archiveUrl, month, year) {
         thisYear = now.getFullYear(),
         thisMonth = now.getMonth(),
         nowRounded = new Date(thisYear, thisMonth),
-        currentMonth = month,
+        currentMonth = month - 1, // we are assuming that the config file will be filled out with an integer 1-12, and not 0-11, which is what the Date object uses.
         currentYear = year,
         arrayPos = 0,
         urls = [];
@@ -41,7 +41,6 @@ function mailingListReporter (request, response) {
     config.mailinglists.forEach(function(mailingList) {
         getMailingList(mailingList,screenScrapes,data.mailingLists);
     });
-
     q.all(screenScrapes).then(function(){
         data.mailingLists.forEach(function(ml){
             data.totalSubscribers += ml.subscribers;
@@ -79,7 +78,6 @@ function getMailingList (mailingList,screenScrapes,data) {
             deferredRoster.resolve(true);
         });
         screenScrapes.push(deferredRoster.promise);
-
         urls.forEach(function(url) {
             var deferred = q.defer();
             jsdom.env(url.url,["http://code.jquery.com/jquery.js"], function (errors, window) {

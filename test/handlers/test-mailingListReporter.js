@@ -6,7 +6,8 @@ var assert = require('assert'),
     jsonMock = {},
     urlMap = proxyquire('../../handlers/mailingListReporter', {
         '../utils/json': jsonMock
-    });
+    }),
+    jsdom = require("jsdom");
 
 describe('mailing list handler url mapping', function() {
     it('has an entry for the /maillist URL', function() {
@@ -25,4 +26,32 @@ describe('/maillist URL handler', function() {
         assert(typeof handler.description, 'string', 'bad handler description string');
     });
 
+});
+
+
+describe('Build URL objects since', function() {
+    after(function () {
+        jsdom.env.restore();
+    });
+    it('should call jsdom.env at least twice', function() {
+        var mockConfig = {
+            "mailinglists": [
+                {
+                    "name": "List A",
+                    "rosterUrl": "/ListA/roster/",
+                    "archiveUrl": "/ListA/archive/",
+                    "startmonth": 1,
+                    "startyear": 2014
+                }
+            ]
+        };
+        var requestHandler = urlMap['/maillist'](
+            null, null, mockConfig
+        );
+        var mockRequest = {};
+        var mockResponse = {};
+        sinon.stub(jsdom, "env");
+        requestHandler(mockRequest, mockResponse);
+        assert(jsdom.env.callCount > 1);
+    });
 });
