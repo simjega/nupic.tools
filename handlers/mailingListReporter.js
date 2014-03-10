@@ -1,17 +1,18 @@
-var jsdom = require("jsdom");
-var nodeURL = require("url");
-var jsonUtils = require('../utils/json');
-var monthNames = [ "January", "February", "March", "April", "May", "June", 
-    "July", "August", "September", "October", "November", "December"];
-var rosterUrl = "http://lists.numenta.org/mailman/roster/nupic_lists.numenta.org";
-var archiveUrl = "http://lists.numenta.org/pipermail/nupic_lists.numenta.org/";
+var jsdom = require("jsdom"),
+    nodeURL = require("url"),
+    jsonUtils = require('../utils/json'),
+    monthNames = [ "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"],
+    path = require('path'),
+    q = require('q'),
+    config;
 
-function buildUrlObjectsSince(month, year) {
+function buildUrlObjectsSince(archiveUrl, month, year) {
     var now = new Date(),
         thisYear = now.getFullYear(),
         thisMonth = now.getMonth(),
         nowRounded = new Date(thisYear, thisMonth),
-        currentMonth = month,
+        currentMonth = month - 1, // we are assuming that the config file will be filled out with an integer 1-12, and not 0-11, which is what the Date object uses.
         currentYear = year,
         arrayPos = 0,
         urls = [];
@@ -31,54 +32,69 @@ function buildUrlObjectsSince(month, year) {
 }
 
 function mailingListReporter (request, response) {
-    var total = 0;
-    var numberSubsHTML;
-    var numberSubsNoDigest;
-    var numberSubsDigest;
-
-    var requestCount = 0;
+    var screenScrapes = [];
     var data = {
-        messages: {}
+        mailingLists: [],
+        totalSubscribers : 0,
+        totalMessages : 0
     };
-
-    // Start month is May.
-    var month = 4;
-    // Start year is 2013.
-    var year = 2013;
-    var urls = buildUrlObjectsSince(month, year);
-
-    jsdom.env(rosterUrl, ["http://code.jquery.com/jquery.js"], function (errors, window) {
-        numberSubsHTML = window.$("center b font");
-        numberSubsNoDigest = parseInt((numberSubsHTML[0]).innerHTML.split(" ").shift());
-        numberSubsDigest = parseInt((numberSubsHTML[1]).innerHTML.split(" ").shift());
-        data.subscribers = numberSubsNoDigest + numberSubsDigest;
-        requestCount++;
-        if (requestCount >= urls.length + 1) {
-            data.messages.total = total;
-            buildOutput(request, response, data);
-        }
-
+    config.mailinglists.forEach(function(mailingList) {
+        getMailingList(mailingList,screenScrapes,data.mailingLists);
     });
-
-    data.messages.byMonth = [];
-
-    urls.forEach(function(url) {
-        jsdom.env(url.url,["http://code.jquery.com/jquery.js"], function (errors, window) {
-            var temp = {};
-            temp.name = monthNames[url.month] + " " + url.year;
-            temp.month = url.month;
-            temp.year = url.year;
-            temp.number = (window.$("a").length-10)/2;
-            data.messages.byMonth[url.arrayPos] = temp;
-            total += (window.$("a").length-10)/2;
-            requestCount++;
-            if (requestCount >= urls.length + 1) {
-                data.messages.total = total;
-                buildOutput(request, response, data);
-            }
+    q.all(screenScrapes).then(function(){
+        data.mailingLists.forEach(function(ml){
+            data.totalSubscribers += ml.subscribers;
+            data.totalMessages += ml.messages.total;
         });
+        buildOutput(request, response, data);
     });
+}
 
+function getMailingList (mailingList,screenScrapes,data) {
+
+        var total = 0;
+        var numberSubsHTML;
+        var numberSubsNoDigest;
+        var numberSubsDigest;
+        var rosterUrl = mailingList.rosterUrl;
+
+        var mailingListData = {
+            name: mailingList.name,
+            messages: {
+                byMonth : [],
+                total: 0
+            }
+        };
+
+        var urls = buildUrlObjectsSince(mailingList.archiveUrl, mailingList.startmonth, mailingList.startyear);
+
+        // Get subscribers
+        var deferredRoster = q.defer();
+        jsdom.env(rosterUrl, ["http://code.jquery.com/jquery.js"], function (errors, window) {
+            numberSubsHTML = window.$("center b font");
+            numberSubsNoDigest = parseInt((numberSubsHTML[0]).innerHTML.split(" ").shift());
+            numberSubsDigest = parseInt((numberSubsHTML[1]).innerHTML.split(" ").shift());
+            mailingListData.subscribers = numberSubsNoDigest + numberSubsDigest;
+            deferredRoster.resolve(true);
+        });
+        screenScrapes.push(deferredRoster.promise);
+        urls.forEach(function(url) {
+            var deferred = q.defer();
+            jsdom.env(url.url,["http://code.jquery.com/jquery.js"], function (errors, window) {
+                var temp = {};
+                temp.name = monthNames[url.month] + " " + url.year;
+                temp.month = url.month;
+                temp.year = url.year;
+                temp.number = (window.$("a").length-10)/2;
+                temp.number = (temp.number < 0) ? 0 : temp.number;
+                mailingListData.messages.byMonth[url.arrayPos] = temp;
+                mailingListData.messages.total += (window.$("a").length-10)/2;
+                deferred.resolve(true);
+            });
+            screenScrapes.push(deferred.promise);
+        });
+
+        data.push(mailingListData);
 }
 
 function buildOutput (request, response, data)  {
@@ -89,19 +105,20 @@ function buildOutput (request, response, data)  {
             jsonUtils.render(data,response);
         }
     } else {
-        response.write("<html><head><title>Mailing List Statistics</title></head><body style='background-color: #F0F2F2;'><div style='width: 400px; margin-left: auto; margin-right: auto; margin-top: 50px; font-family: Arial; background-color: #EAEAEA; box-shadow: 1px 1px 50px 5px rgba(0, 0, 0, 0.5); -webkit-box-shadow: 1px 1px 50px 5px rgba(0, 0, 0, 0.5); padding: 25px; -webkit-border-radius: 10px; border-radius: 10px;'><center><span style='line-height: 50px;'><b style='font-size:24px;'>Mailing List Statistics</b><br />Total Subscribers: ");
-        response.write(data.subscribers.toString());
-        response.write("<br /></span><b>Number of messages by month:</b></center><table style='width: 200px; margin-left: auto; margin-right: auto;'>");
-        data.messages.byMonth.forEach(function(nextMonthData) {
-            response.write("<tr><td>");
-            response.write(nextMonthData.name);
-            response.write("</td><td style='width: 75px; text-align: right;'>");
-            response.write(nextMonthData.number.toString());
-            response.write("</td></tr>");
+        response.write("<!DOCTYPE html><html><head><title>NuPIC Mailing List Statistics</title><link href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css' rel='stylesheet' media='screen'><link rel='shortcut icon' type='image/x-icon' href='http://status.numenta.org/favicon.ico'><meta name='viewport' content='width=device-width, initial-scale=1.0'></head><body>");
+        response.write("<div class='container-fluid'><div class='jumbotron'><div class='row'><div class='col-md-8'><h1><img style='float:left;margin:0 20px 20px 0;' alt='Numenta logo' src='http://numenta.org/images/numenta-icon128.png'> NuPIC Mailing List Statistics</h1></div>");
+        response.write("<div class='col-md-4' style='padding-top:40px;'><h3>Total subscribers: "+data.totalSubscribers+"</h3><h3>Total messages: "+data.totalMessages+"</h3></div></div></div><table class='table'><tr>");
+        data.mailingLists.forEach(function(ml) {
+            response.write("<td>");
+            response.write("<h2>"+ml.name+"</h2>");
+            response.write("<h4>Total subscribers: "+ml.subscribers+"</h4>");
+            response.write("<table class='table'><tr><th>Month</th><th>Messages</th></tr>");
+            ml.messages.byMonth.forEach(function(nextMonthData) {
+                response.write("<tr><td>"+nextMonthData.name+"</td><td>"+nextMonthData.number+"</td></td>");
+            });
+            response.write("<tr><th>Total</th><td>"+ml.messages.total+"</td></tr></table></td>");
         });
-        response.write("<tr><b><td><b>TOTAL</b></td><td style='width: 75px; text-align: right;'><b>");
-        response.write(data.messages.total.toString());
-        response.write("</b></td></tr></table></div></body></html>");
+        response.write("</tr></table></div></body></html>");
         response.end();
     }
 }
@@ -110,7 +127,8 @@ mailingListReporter.title = 'Mailing List Reporter';
 mailingListReporter.description = 'Provides statistics about the mailing list. (Outputs HTML or JSON depending on extention [*.html or *.json]. For JASONP add query "callback" [ex.: ...?callback=foo].)';
 
 module.exports = {
-    '/maillist': function() {
+    '/maillist': function(_repoClients, _httpHandlers, _config, activeValidators) {
+        config = _config;
         return mailingListReporter;
     }
 };

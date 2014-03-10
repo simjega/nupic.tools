@@ -1,14 +1,19 @@
 {
     "name": "nupic.tools",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author": "Numenta.org <help@numenta.org>",
     "description": "Set of tools for integration between github, travis, and our developer workflow.",
     "contributors": [{
-        "name": "Matt Taylor",
-        "email": "matt@numenta.org"
-        },{
-        "name": "Carl Friess",
-        "email": "carl.friess@me.com"
+            "name": "Matt Taylor",
+            "email": "matt@numenta.org"
+        },
+        {
+            "name": "Carl Friess",
+            "email": "carl.friess@me.com"
+        },
+        {
+            "name": "Jeff Fohl",
+            "email": "jeff@fohl.com"
     }],
     "main": "program.js",
     "scripts": {
@@ -25,7 +30,8 @@
         "request"       : "*",
         "github"        : "*",
         "ansi-to-html"  : "*",
-        "jsdom"         : "*"
+        "jsdom"         : "*",
+        "q"             : "~1.0.0"
     },
     "devDependencies": {
         "proxyquire": "0.5.x",
