@@ -12,7 +12,9 @@ function buildUrlObjectsSince(archiveUrl, month, year) {
         thisYear = now.getFullYear(),
         thisMonth = now.getMonth(),
         nowRounded = new Date(thisYear, thisMonth),
-        currentMonth = month - 1, // we are assuming that the config file will be filled out with an integer 1-12, and not 0-11, which is what the Date object uses.
+        // we are assuming that the config file will be filled out with an 
+        // integer 1-12, and not 0-11, which is what the Date object uses.        
+        currentMonth = month - 1, 
         currentYear = year,
         arrayPos = 0,
         urls = [];
