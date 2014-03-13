@@ -59,6 +59,13 @@ describe('github hook handler', function() {
         assert.equal(validatorsUsed, 'validators to be used', 'used wrong validators');
         assert(validationPosted, 'validation status was not posted');
         assert(endCalled, 'request was not closed');
+
+        // Reset just in case further tests use them.
+        validationPerformed = undefined;
+        validatedSHA = undefined;
+        validatedUser = undefined;
+        validatorsUsed = undefined;
+        validationPosted = undefined;
     });
     
     // it('calls push handler when sent a push event', function() {});
