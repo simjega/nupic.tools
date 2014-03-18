@@ -92,7 +92,6 @@ describe('general utilities', function() {
 
             general.constructRepoClients('pr-webhook-url', mockConfig, function(clients) {
                 var clientConfig = repoClientConfigs['has-same-validator'];
-                console.log(clientConfig);
                 assert.equal(clientConfig.validators.exclude.length, 1, 
                     'global and local validator exclusions were not merged properly: ' +
                     'validator with only one global exclusion should have 1 in config');

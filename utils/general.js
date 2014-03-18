@@ -67,8 +67,6 @@ function constructRepoClients(prWebhookUrl, config, callback) {
         monitorConfig.organization = org;
         monitorConfig.repository = repo;
 
-        console.log(globalValidatorConfig);
-        
         if (! monitorConfig.validators) {
             monitorConfig.validators = {};
         }
