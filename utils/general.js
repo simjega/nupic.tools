@@ -8,6 +8,13 @@ function die(err) {
     process.exit(-1);
 }
 
+var arrayUnique = function(a) {
+    return a.reduce(function(p, c) {
+        if (p.indexOf(c) < 0) p.push(c);
+        return p;
+    }, []);
+};
+
 /**
  * Reads all the JavaScript files within a directory, assuming they are all 
  * proper node.js modules, and loads them. 
@@ -47,6 +54,7 @@ function initializeModulesWithin(dir, exclusions) {
  */
 function constructRepoClients(prWebhookUrl, config, callback) {
     var repoClients = {},
+        globalValidatorConfig = config.validators,
         count = 0;
     // Set up one github client for each repo target in config.
     Object.keys(config.monitors).forEach(function(monitorKey) {
@@ -58,6 +66,17 @@ function constructRepoClients(prWebhookUrl, config, callback) {
 
         monitorConfig.organization = org;
         monitorConfig.repository = repo;
+
+        if (! monitorConfig.validators) {
+            monitorConfig.validators = {};
+        }
+        if (! monitorConfig.validators.exclude) {
+            monitorConfig.validators.exclude = [];
+        }
+        if (globalValidatorConfig.exclude) {
+            monitorConfig.validators.exclude 
+                = arrayUnique(monitorConfig.validators.exclude.concat(globalValidatorConfig.exclude));
+        }
 
         repoClient = new RepositoryClient(monitorConfig);
         console.log('RepositoryClient created for ' 
