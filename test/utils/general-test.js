@@ -50,4 +50,78 @@ describe('general utilities', function() {
         var sterilized = general.sterilizeConfig(config);
         assert.equal('<hidden>', sterilized.monitors.project.password);
     });
+
+    describe('when creating repository clients', function() {
+
+        var mockConfig = {
+                "monitors": {
+                    "numenta/has-validator": {
+                        "username": "dummy",
+                        "validators": {
+                            "exclude": ["local-exclude"]
+                        }
+                    },
+                    "numenta/has-same-validator": {
+                        "username": "dummy",
+                        "validators": {
+                            "exclude": ["global-exclude"]
+                        }
+                    },
+                    "numenta/has-no-validator": {
+                        "username": "dummy"
+                    }
+                },
+                "validators": {
+                    "exclude": ["global-exclude"]
+                }
+            },
+            repoClientConfigs = {},
+            MockRepoClientClass = function RepoClient(config) {
+                repoClientConfigs[config.repository] = config;
+            },
+            general = proxyquire('./../../utils/general', {
+                './repoClient': MockRepoClientClass
+            });
+
+        // Mock out the webhook confirmation.
+        MockRepoClientClass.prototype.confirmWebhookExists = function(_, _, cb) {
+            cb();
+        };
+
+        it('does not duplicate validator exclusions', function() {
+
+            general.constructRepoClients('pr-webhook-url', mockConfig, function(clients) {
+                var clientConfig = repoClientConfigs['has-same-validator'];
+                console.log(clientConfig);
+                assert.equal(clientConfig.validators.exclude.length, 1, 
+                    'global and local validator exclusions were not merged properly: ' +
+                    'validator with only one global exclusion should have 1 in config');
+                assert.equal(clientConfig.validators.exclude[0], "global-exclude", 
+                    'global and local validator exclusions were not merged properly: ' +
+                    'bad value for validator exclusion');
+                
+            });
+        });
+        
+        it('includes both global and local validator exclusions', function() {
+
+            general.constructRepoClients('pr-webhook-url', mockConfig, function(clients) {
+                var clientConfig = repoClientConfigs['has-no-validator'];
+                assert.equal(clientConfig.validators.exclude.length, 1, 
+                    'global and local validator exclusions were not merged properly: ' +
+                    'validator with only one global exclusion should have 1 in config');
+                assert.equal(clientConfig.validators.exclude[0], "global-exclude", 
+                    'global and local validator exclusions were not merged properly: ' +
+                    'bad value for validator exclusion');
+                
+                clientConfig = repoClientConfigs['has-validator'];
+                assert.equal(clientConfig.validators.exclude.length, 2, 
+                    'global and local validator exclusions were not merged properly: ' +
+                    'validator with both global and local exclusion should have both included in config');
+            });
+        });
+
+
+
+    });
 });
