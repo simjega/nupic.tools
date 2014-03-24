@@ -1,4 +1,5 @@
-var log = require('./log');
+var utils = require('./general'),
+    log = require('./log');
 
 function coloredStatus(status) {
     if (status == 'success') {
