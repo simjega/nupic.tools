@@ -3,6 +3,9 @@ var assert = require('assert');
     utilStub = {
         initializeModulesWithin: function() {
             return 'validators to be used';
+        },
+        lastStatusWasExternal: function(repoClient, sha, cb) {
+            cb(true);
         }
     };
 
@@ -24,11 +27,7 @@ describe('github hook handler', function() {
                 }
             }
         }),
-        mockClients = {'foo': {
-            getAllStatusesFor: function(sha, cb) {
-                cb(undefined, []);
-            }
-        }},
+        mockClients = {'foo': true},
         handler = githubHook.initializer(mockClients, 'mockConfig');
 
     it('calls pr handler when sent a pull_request event', function() {

@@ -11,13 +11,20 @@ function coloredStatus(status) {
 }
 
 function postNewNupicStatus(sha, statusDetails, repoClient) {
-    log.info(sha + ': Posting new NuPIC Status (' + coloredStatus(statusDetails.state) + ') to github');
+    log.info(sha + ': Posting new NuPIC Status (' 
+        + coloredStatus(statusDetails.state) + ') to github');
+    // If the old status was created by nupic.tools, it will start with 
+    // "NuPIC Status:". But if it was created by Travis-CI, we want to add that
+    // little prefix to the description string. 
+    var statusDescription = utils.normalizeStatusDescription(
+        statusDetails.description
+    );
     repoClient.github.statuses.create({
         user: repoClient.org,
         repo: repoClient.repo,
         sha: sha,
         state: statusDetails.state,
-        description: 'NuPIC Status: ' + statusDetails.description,
+        description: statusDescription,
         target_url: statusDetails.target_url
     });
 }
@@ -26,7 +33,13 @@ function revalidateAllOpenPullRequests(contributors, repoClient, validators, cal
     repoClient.getAllOpenPullRequests(function(err, prs) {
         log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.head; }).forEach(function(head) {
-            performCompleteValidation(head.sha, head.user.login, repoClient, validators, true);
+            performCompleteValidation(
+                head.sha, 
+                head.user.login, 
+                repoClient, 
+                validators, 
+                true
+            );
         });
         if (callback) {
             callback(null, prs.map(function(pr) { return pr.number; }));
@@ -104,10 +117,13 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                             validationFailed = true;
                             callback(sha, result, repoClient);
                         }
+                        // This code is just allowing the different validators to 
+                        // fight over which one will provide the "Details" URL
+                        // that gets displayed on the Github PR.
                         if (validator.hasOwnProperty('priority')) {
                             priority = validator.priority;
                         } else {
-                        priority = 0;
+                            priority = 0;
                         }
                         if (priority >= highestPriority) {
                             highestPriority = priority;

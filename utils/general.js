@@ -1,6 +1,7 @@
 var fs = require('fs'),
     path = require('path'),
     RepositoryClient = require('./repoClient'),
+    NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     log = require('./log');
 
 /* Logs error and exits. */
@@ -118,6 +119,34 @@ function sortStatuses(statuses) {
         }
         return 0;
     });
+}
+
+/**
+ * Checks to see if the latest status in the history for this SHA was created by
+ * the nupic.tools server or was externally created. 
+ */
+function lastStatusWasExternal(repoClient, sha, cb) {
+    repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
+        var latestStatus = sortStatuses(statusHistory).shift();
+        if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+            if (cb) { cb(false); }
+        } else {
+            cb(true);
+        }
+    });
+}
+
+/**
+ * If status was created by nupic.tools, it will start with "NuPIC Status:". 
+ * But if it was created by Travis-CI, we want to add that little prefix to 
+ * the description string. 
+ */
+function normalizeStatusDescription(description) {
+    var output = desription;
+    if (description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+        output = NUPIC_STATUS_PREFIX + ' ' + description;
+    }
+    return output;
 }
 
 /* Removes the passwords from the config for logging. */

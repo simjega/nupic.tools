@@ -5,26 +5,10 @@ var fs = require('fs'),
     contributors = require('./utils/contributors'),
     shaValidator = require('./utils/shaValidator'),
     exec = require('child_process').exec,
-    NUPIC_STATUS_PREFIX = 'NuPIC Status:',
     VALIDATOR_DIR = 'validators',
     // All the validator modules
     dynamicValidatorModules = [],
     repoClients;
-
-/**
- * Checks to see if the latest status in the history for this SHA was created by
- * the nupic.tools server or was externally created. 
- */
-function lastStatusWasExternal(repoClient, sha, cb) {
-    repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
-        var latestStatus = utils.sortStatuses(statusHistory).shift();
-        if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
-            if (cb) { cb(false); }
-        } else {
-            cb(true);
-        }
-    });
-}
 
 /** 
  * Given the payload for a Github pull request notification and the associated
@@ -63,7 +47,7 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
             if (cb) { cb(); }
         }
     } else {
-        lastStatusWasExternal(repoClient, sha, function(external) {
+        utils.lastStatusWasExternal(repoClient, sha, function(external) {
             if (external) {
                 shaValidator.performCompleteValidation(
                     sha, 
@@ -103,7 +87,7 @@ function handleStateChange(sha, state, pullRequest, repoClient, cb) {
         return;
     }
     repoClient.getCommit(sha, function(err, commit) {
-        lastStatusWasExternal(repoClient, sha, function(external) {
+        utils.lastStatusWasExternal(repoClient, sha, function(external) {
             var commitAuthor = commit.author.login;
             if (external) {
                 shaValidator.performCompleteValidation(
@@ -186,8 +170,6 @@ function initializer(clients, config) {
         // Get what repository Github is telling us about
         var payload = JSON.parse(req.body.payload),
             repoName, repoClient, repoSlug, branch, pushHook;
-
-        log.verbose(req.body)
 
         if (payload.name) {
             repoName = payload.name;
