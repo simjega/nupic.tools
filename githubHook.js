@@ -117,7 +117,7 @@ function executeCommand(command) {
     });
 }
 
-function getPushHookForMonitor(montiorConfig) {
+function getPushHookForMonitor(monitorConfig) {
     var hook = undefined;
     if (monitorConfig && monitorConfig.hooks && monitorConfig.hooks.push) {
         hook = monitorConfig.hooks.push;
