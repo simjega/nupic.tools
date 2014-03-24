@@ -1,5 +1,5 @@
 var contribUtil = require('../utils/contributors'),
-    log = require('./log');
+    log = require('../utils/log');
 
 function isContributor(name, roster) {
     if (name == null || name == undefined) return false;

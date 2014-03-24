@@ -94,29 +94,54 @@ function handleStateChange(sha, state, pullRequest, repoClient, cb) {
     });
 }
 
+function executeCommand(command) {
+    child = exec(command, function (error, stdout, stderr) {
+        log.verbose(stdout);
+        if (stderr) { log.warn(stderr); }
+        if (error !== null) {
+            log.error('command execution error: ' + error);
+        }
+    });
+}
+
+function getPushHookForMonitor(montiorConfig) {
+    var hook = undefined;
+    if (monitorConfig && monitorConfig.hooks && monitorConfig.hooks.push) {
+        hook = monitorConfig.hooks.push;
+    }
+    return hook;
+}
+
+/**
+ * Handles an event from Github that indicates that a PR has been merged into one
+ * of the repositories. This could trigger a script to run locally in response, 
+ * called a "push hook", which are defined in the configuration of each repo as
+ * hooks.push = 'path/to/script'.
+ * @param payload {object} Full Github payload from the API.
+ * @param config {object} Application configuration (used to extract the 
+ *                        repository monitor configuration and push hook).
+ */
 function handlePushEvent(payload, config) {
     var repoSlug = payload.repository.organization 
-        + '/' + payload.repository.name,
-        monitorConfig = config.monitors[repoSlug],
+            + '/' + payload.repository.name,
         branch = payload.ref.split('/').pop(),
-        command;
+        monitorConfig = config.monitors[repoSlug],
+        pushHook = getPushHookForMonitor(monitorConfig);
     log('Github push event on ' + repoSlug + '/' + branch);
     // Only process pushes to master, and only when there is a push hook defined.
-    if (branch == 'master' && 
-            monitorConfig && monitorConfig.hooks && monitorConfig.hooks.push) {
-        command = monitorConfig.hooks.push;
-        child = exec(command, function (error, stdout, stderr) {
-            log.warn(stdout);
-            if (error !== null) {
-                log.error('hook command execution error: ' + error);
-            }
-        });
+    if (branch == 'master' && pushHook) {
+        executeCommand(pushHook)
     }
 }
 
-// Given all the RepositoryClient objects, this module initializes all the dynamic
-// validators and returns a request handler function to handle all Github web hook
-// requests, including status updates and pull request notifications.
+/**
+ * Given all the RepositoryClient objects, this module initializes all the dynamic
+ * validators and returns a request handler function to handle all Github web hook
+ * requests, including status updates and pull request notifications.
+ * @param clients {RepositoryClient[]} Every RepositoryClient for each repo 
+ *                                     being monitored.
+ * @param config {object} Application configuration.
+ */
 function initializer(clients, config) {
     var validatorExclusions = [];
     repoClients = clients;
@@ -124,10 +149,14 @@ function initializer(clients, config) {
         validatorExclusions = config.validators.exclude;
     }
     dynamicValidatorModules = utils.initializeModulesWithin(VALIDATOR_DIR, validatorExclusions);
+    /**
+     * This is the actual request handler, which is returned after the initializer
+     * is called. Handles every hook call from Github.
+     */
     return function(req, res) {
         // Get what repository Github is telling us about
         var payload = JSON.parse(req.body.payload),
-            repoName, repoClient;
+            repoName, repoClient, repoSlug, branch, pushHook;
 
         if (payload.name) {
             repoName = payload.name;
@@ -147,11 +176,11 @@ function initializer(clients, config) {
         // If this application is not monitoring the repo Github is telling us 
         // about, just ignore it.
         if (! repoClient) {
-            log.error('No repository client available for ' + repoName);
+            log.warn('No repository client available for ' + repoName);
             return res.end();
         }
         
-        log("Github hook executing for " + repoClient.toString().magenta);
+        log.verbose("Github hook executing for " + repoClient.toString().magenta);
 
         function whenDone() {
             res.end();
@@ -159,9 +188,20 @@ function initializer(clients, config) {
 
         // If the payload has a 'state', that means this is a state change.
         if (payload.state) {
-            handleStateChange(payload.sha, payload.state, payload.pull_request, repoClient, whenDone);
+            handleStateChange(
+                payload.sha, 
+                payload.state, 
+                payload.pull_request, 
+                repoClient, 
+                whenDone
+            );
         } else if (payload.pull_request) {
-            handlePullRequest(payload.action, payload.pull_request, repoClient, whenDone);
+            handlePullRequest(
+                payload.action, 
+                payload.pull_request, 
+                repoClient, 
+                whenDone
+            );
         } else {
             handlePushEvent(payload, config);
         }
