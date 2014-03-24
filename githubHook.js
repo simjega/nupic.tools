@@ -1,6 +1,6 @@
 // This module provides a request handler for HTTP calls from Github web hooks.
 var fs = require('fs'),
-    colors = require('colors'),
+    log = require('./utils/log'),
     utils = require('./utils/general'),
     contributors = require('./utils/contributors'),
     shaValidator = require('./utils/shaValidator'),
@@ -15,28 +15,46 @@ var fs = require('fs'),
  * Given the payload for a Github pull request notification and the associated
  * RepositoryClient object, this function either validates the PR, re-validates 
  * all other open PRs (if the PR merged), or ignores it if not against 'master'.
+ * @param action {string} Whether PR was opened, closed, etc.
+ * @param pullRequest {object} the PR payload from Github.
+ * @param repoClient {RepositoryClient} Repo client associated with this repo this
+ *                                      PR was created against.
+ * @param cb {function} Will be called when PR has been handled.
  */
-function handlePullRequest(payload, repoClient, cb) {
-    var action = payload.action,
-        githubUser = payload.pull_request.user.login,
-        head = payload.pull_request.head,
-        base = payload.pull_request.base;
+function handlePullRequest(action, pullRequest, repoClient, cb) {
+    var githubUser = pullRequest.user.login,
+        head = pullRequest.head,
+        base = pullRequest.base;
 
-    console.log('Received pull request "' + action + '" from ' + githubUser);
+    log('Received pull request "' + action + '" from ' + githubUser);
 
     if (action == 'closed') {
         // if this pull request just got merged, we need to re-validate the
         // fast-forward status of all the other open pull requests
-        if (payload.pull_request.merged) {
-            console.log('A PR just merged. Re-validating open pull requests...');
-            contributors.getAll(repoClient.contributorsUrl, function(err, contributors) {
-                shaValidator.revalidateAllOpenPullRequests(contributors, repoClient, dynamicValidatorModules, cb);
-            });
+        if (pullRequest.merged) {
+            log('A PR just merged. Re-validating open pull requests...');
+            contributors.getAll(repoClient.contributorsUrl, 
+                function(err, contributors) {
+                    shaValidator.revalidateAllOpenPullRequests(
+                        contributors, 
+                        repoClient, 
+                        dynamicValidatorModules, 
+                        cb
+                    );
+                }
+            );
         } else {
             if (cb) { cb(); }
         }
     } else {
-        shaValidator.performCompleteValidation(head.sha, githubUser, repoClient, dynamicValidatorModules, true, cb);
+        shaValidator.performCompleteValidation(
+            head.sha, 
+            githubUser, 
+            repoClient, 
+            dynamicValidatorModules, 
+            true, 
+            cb
+        );
     }
 }
 
@@ -45,26 +63,32 @@ function handlePullRequest(payload, repoClient, cb) {
  * with this repo, this function retrieves all the known statuses for the repo, 
  * assures that this status did not originate from this server (nupic.tools), then
  * performs a complete validation of the repository.
+ * @param sha {string} SHA of the tip of the PR.
+ * @state {string} State of the PR (opened, closed, merged, etc)
+ * @param pullRequest {object} the PR payload from Github.
+ * @param repoClient {RepositoryClient} Repo client associated with this repo this
+ *                                      PR was created against.
+ * @param cb {function} Will be called when PR has been handled.
  */
-function handleStateChange(payload, repoClient, cb) {
-    console.log('State of ' + payload.sha + ' has changed to "' + payload.state + '".');
+function handleStateChange(sha, state, pullRequest, repoClient, cb) {
+    log('State of ' + sha + ' has changed to "' + state + '".');
     // Ignore state changes on closed pull requests
-    if (payload.pull_request && payload.pull_request.state == 'closed') {
-        console.log(('Ignoring status of closed pull request (' + payload.sha + ')').yellow);
+    if (pullRequest && pullRequest.state == 'closed') {
+        log.warn('Ignoring status of closed pull request (' + sha + ')');
         if (cb) { cb(); }
         return;
     }
-    repoClient.getCommit(payload.sha, function(err, commit) {
+    repoClient.getCommit(sha, function(err, commit) {
         var commitAuthor = commit.author.login;
         // Get statuses and check the latest one
-        repoClient.getAllStatusesFor(payload.sha, function(err, statusHistory) {
+        repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
             var latestStatus = utils.sortStatuses(statusHistory).shift();
             if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
                 // ignore statuses that were created by this server
-                console.log(('Ignoring "' + payload.state + '" status created by nupic.tools.').yellow);
+                log.warn('Ignoring "' + state + '" status created by nupic.tools.');
                 if (cb) { cb(); }
             } else {
-                shaValidator.performCompleteValidation(payload.sha, commitAuthor, repoClient, dynamicValidatorModules, true, cb);
+                shaValidator.performCompleteValidation(sha, commitAuthor, repoClient, dynamicValidatorModules, true, cb);
             }
         });
     });
@@ -76,15 +100,15 @@ function handlePushEvent(payload, config) {
         monitorConfig = config.monitors[repoSlug],
         branch = payload.ref.split('/').pop(),
         command;
-    console.log('Github push event on ' + repoSlug + '/' + branch);
+    log('Github push event on ' + repoSlug + '/' + branch);
     // Only process pushes to master, and only when there is a push hook defined.
     if (branch == 'master' && 
             monitorConfig && monitorConfig.hooks && monitorConfig.hooks.push) {
         command = monitorConfig.hooks.push;
         child = exec(command, function (error, stdout, stderr) {
-            console.log(stdout.yellow);
+            log.warn(stdout);
             if (error !== null) {
-                console.log(('hook command execution error: ' + error).red);
+                log.error('hook command execution error: ' + error);
             }
         });
     }
@@ -113,7 +137,8 @@ function initializer(clients, config) {
             // Probably a push event.
             repoName = payload.repository.owner.name + '/' + payload.repository.name;
         } else {
-            console.log('Cannot understand github payload!\n'.red + req.body.payload.yellow);
+            log.error('Cannot understand github payload!\n')
+            log.warn(req.body.payload);
             return res.end();
         }
 
@@ -122,11 +147,11 @@ function initializer(clients, config) {
         // If this application is not monitoring the repo Github is telling us 
         // about, just ignore it.
         if (! repoClient) {
-            console.log(('No repository client available for ' + repoName).red);
+            log.error('No repository client available for ' + repoName);
             return res.end();
         }
         
-        console.log("Github hook executing for " + repoClient.toString().magenta);
+        log("Github hook executing for " + repoClient.toString().magenta);
 
         function whenDone() {
             res.end();
@@ -134,9 +159,9 @@ function initializer(clients, config) {
 
         // If the payload has a 'state', that means this is a state change.
         if (payload.state) {
-            handleStateChange(payload, repoClient, whenDone);
+            handleStateChange(payload.sha, payload.state, payload.pull_request, repoClient, whenDone);
         } else if (payload.pull_request) {
-            handlePullRequest(payload, repoClient, whenDone);
+            handlePullRequest(payload.action, payload.pull_request, repoClient, whenDone);
         } else {
             handlePushEvent(payload, config);
         }

@@ -1,10 +1,11 @@
 var fs = require('fs'),
     path = require('path'),
-    RepositoryClient = require('./repoClient');
+    RepositoryClient = require('./repoClient'),
+    log = require('./log');
 
 /* Logs error and exits. */
 function die(err) {
-    console.error(err);
+    log.error(err);
     process.exit(-1);
 }
 
@@ -79,21 +80,21 @@ function constructRepoClients(prWebhookUrl, config, callback) {
         }
 
         repoClient = new RepositoryClient(monitorConfig);
-        console.log('RepositoryClient created for ' 
+        log('RepositoryClient created for ' 
             + monitorConfig.username.magenta + ' on ' 
             + repoClient.toString().magenta);
 
         repoClient.confirmWebhookExists(prWebhookUrl, ['push', 'pull_request', 'status'], function(err, hook) {
             if (err) {
-                console.error(('Error during webhook confirmation for ' + repoClient.toString()).red);
+                log.error('Error during webhook confirmation for ' + repoClient.toString());
                 die(err);
             } else {
                 if (hook) {
-                    console.log(('Webhook created on ' + repoClient.toString() + ':\n'
+                    log.warn('Webhook created on ' + repoClient.toString() + ':\n'
                                             + '\tfor "' + hook.events.join(', ') + '"\n'
-                                            + '\ton ' + hook.config.url).yellow);
+                                            + '\ton ' + hook.config.url);
                 } else {
-                    console.log(('Webhook exists for ' + repoClient.toString()).green);
+                    log('Webhook exists for ' + repoClient.toString());
                 }
                 count++;
             }

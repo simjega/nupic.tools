@@ -77,7 +77,6 @@ function logViewer(req, res) {
             }
         );
     });
-
 }
 
 logViewer.title = 'Log Viewer';

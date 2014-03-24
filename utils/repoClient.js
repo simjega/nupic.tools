@@ -1,6 +1,10 @@
 var GitHubApi = require("github"),
+    log = require('./log'),
     RepositoryClient;
 
+/**
+ * An interface to the Github repository. Uses the Github API.
+ */
 function RepositoryClient(config) {
     this.user = config.username;
     this.org = config.organization;
@@ -24,7 +28,7 @@ function RepositoryClient(config) {
 }
 
 RepositoryClient.prototype.merge = function(head, base, callback) {
-    console.log('merging ' + head + ' into ' + base + '...');
+    log('merging ' + head + ' into ' + base + '...');
     this.github.repos.merge({
         user: this.org,
         repo: this.repo,

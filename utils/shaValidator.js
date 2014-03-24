@@ -1,3 +1,5 @@
+var log = require('./log');
+
 function coloredStatus(status) {
     if (status == 'success') {
         return status.green;
@@ -9,7 +11,7 @@ function coloredStatus(status) {
 }
 
 function postNewNupicStatus(sha, statusDetails, repoClient) {
-    console.log('Posting new NuPIC Status (' + coloredStatus(statusDetails.state) + ') to github for ' + sha);
+    log('Posting new NuPIC Status (' + coloredStatus(statusDetails.state) + ') to github for ' + sha);
     repoClient.github.statuses.create({
         user: repoClient.org,
         repo: repoClient.repo,
@@ -22,7 +24,7 @@ function postNewNupicStatus(sha, statusDetails, repoClient) {
 
 function revalidateAllOpenPullRequests(contributors, repoClient, validators, callback) {
     repoClient.getAllOpenPullRequests(function(err, prs) {
-        console.log('Found ' + prs.length + ' open pull requests...');
+        log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.head; }).forEach(function(head) {
             performCompleteValidation(head.sha, head.user.login, repoClient, validators, true);
         });
@@ -49,7 +51,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         };
     }
 
-    console.log(('VALIDATING ' + sha).cyan);
+    log.debug('VALIDATING ' + sha);
 
     repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
         if (err) {
@@ -74,7 +76,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                     validatorsSkipped.push(validator);
                     runNextValidation();
                 } else {
-                    console.log('Running commit validator: ' + validator.name);
+                    log('Running commit validator: ' + validator.name);
                     validatorsRun.push(validator);
                     validator.validate(sha, githubUser, statusHistory, repoClient, function(err, result) {
                         if (err) {
@@ -85,7 +87,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                                 description: 'Error running commit validator "' + validator.name + '": ' + err.message 
                             }, repoClient);
                         }
-                        console.log(validator.name + ' result was ' + coloredStatus(result.state));
+                        log(validator.name + ' result was ' + coloredStatus(result.state));
                         if (result.state !== 'success') {
                             // Upon failure, we set a flag that will skip the 
                             // remaining validators and post a failure status.
@@ -103,12 +105,12 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                                 target_url = result.target_url;
                             }
                         };
-                        console.log(validator.name + ' complete.');
+                        log(validator.name + ' complete.');
                         runNextValidation();
                     });
                 }
             } else {
-                console.log('Validation complete.');
+                log('Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
                 if (validatorsSkipped.length > 0) {
@@ -124,7 +126,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
             }
         }
 
-        console.log('Kicking off validation...');
+        log('Starting validation...');
         runNextValidation();
 
     });
