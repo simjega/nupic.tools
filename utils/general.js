@@ -142,7 +142,7 @@ function lastStatusWasExternal(repoClient, sha, cb) {
  * the description string. 
  */
 function normalizeStatusDescription(description) {
-    var output = desription;
+    var output = description;
     if (description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
         output = NUPIC_STATUS_PREFIX + ' ' + description;
     }
