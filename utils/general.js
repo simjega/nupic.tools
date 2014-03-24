@@ -184,5 +184,7 @@ module.exports = {
     sortStatuses: sortStatuses,
     padInt: padInt,
     padDecimal: padDecimal,
+    normalizeStatusDescription: normalizeStatusDescription,
+    lastStatusWasExternal: lastStatusWasExternal,
     __module: module // for unit testing and mocking require()
 };
