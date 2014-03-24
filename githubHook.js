@@ -11,6 +11,21 @@ var fs = require('fs'),
     dynamicValidatorModules = [],
     repoClients;
 
+/**
+ * Checks to see if the latest status in the history for this SHA was created by
+ * the nupic.tools server or was externally created. 
+ */
+function lastStatusWasExternal(repoClient, sha, cb) {
+    repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
+        var latestStatus = utils.sortStatuses(statusHistory).shift();
+        if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+            if (cb) { cb(false); }
+        } else {
+            cb(true);
+        }
+    });
+}
+
 /** 
  * Given the payload for a Github pull request notification and the associated
  * RepositoryClient object, this function either validates the PR, re-validates 
@@ -24,7 +39,8 @@ var fs = require('fs'),
 function handlePullRequest(action, pullRequest, repoClient, cb) {
     var githubUser = pullRequest.user.login,
         head = pullRequest.head,
-        base = pullRequest.base;
+        base = pullRequest.base,
+        sha = head.sha;
 
     log('Received pull request "' + action + '" from ' + githubUser);
 
@@ -47,14 +63,22 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
             if (cb) { cb(); }
         }
     } else {
-        shaValidator.performCompleteValidation(
-            head.sha, 
-            githubUser, 
-            repoClient, 
-            dynamicValidatorModules, 
-            true, 
-            cb
-        );
+        lastStatusWasExternal(repoClient, sha, function(external) {
+            if (external) {
+                shaValidator.performCompleteValidation(
+                    sha, 
+                    githubUser, 
+                    repoClient, 
+                    dynamicValidatorModules, 
+                    true, 
+                    cb
+                );
+            } else {
+                // ignore statuses that were created by this server
+                log.warn('Ignoring "' + state + '" status created by nupic.tools.');
+                if (cb) { cb(); }
+            }
+        });
     }
 }
 
@@ -79,16 +103,21 @@ function handleStateChange(sha, state, pullRequest, repoClient, cb) {
         return;
     }
     repoClient.getCommit(sha, function(err, commit) {
-        var commitAuthor = commit.author.login;
-        // Get statuses and check the latest one
-        repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
-            var latestStatus = utils.sortStatuses(statusHistory).shift();
-            if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+        lastStatusWasExternal(repoClient, sha, function(external) {
+            var commitAuthor = commit.author.login;
+            if (external) {
+                shaValidator.performCompleteValidation(
+                    sha, 
+                    commitAuthor, 
+                    repoClient, 
+                    dynamicValidatorModules, 
+                    true, 
+                    cb
+                );
+            } else {
                 // ignore statuses that were created by this server
                 log.warn('Ignoring "' + state + '" status created by nupic.tools.');
                 if (cb) { cb(); }
-            } else {
-                shaValidator.performCompleteValidation(sha, commitAuthor, repoClient, dynamicValidatorModules, true, cb);
             }
         });
     });
@@ -158,6 +187,8 @@ function initializer(clients, config) {
         var payload = JSON.parse(req.body.payload),
             repoName, repoClient, repoSlug, branch, pushHook;
 
+        log.verbose(req.body)
+
         if (payload.name) {
             repoName = payload.name;
         } else if (payload.repository.full_name) {
@@ -188,6 +219,7 @@ function initializer(clients, config) {
 
         // If the payload has a 'state', that means this is a state change.
         if (payload.state) {
+            log.debug('** Handle State Change **')
             handleStateChange(
                 payload.sha, 
                 payload.state, 
@@ -196,6 +228,7 @@ function initializer(clients, config) {
                 whenDone
             );
         } else if (payload.pull_request) {
+            log.debug('** Handle Pull Request Update **')
             handlePullRequest(
                 payload.action, 
                 payload.pull_request, 
@@ -203,6 +236,7 @@ function initializer(clients, config) {
                 whenDone
             );
         } else {
+            log.debug('** Handle Push Event **')
             handlePushEvent(payload, config);
         }
     };

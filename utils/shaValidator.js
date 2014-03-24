@@ -11,7 +11,7 @@ function coloredStatus(status) {
 }
 
 function postNewNupicStatus(sha, statusDetails, repoClient) {
-    log('Posting new NuPIC Status (' + coloredStatus(statusDetails.state) + ') to github for ' + sha);
+    log.info(sha + ': Posting new NuPIC Status (' + coloredStatus(statusDetails.state) + ') to github');
     repoClient.github.statuses.create({
         user: repoClient.org,
         repo: repoClient.repo,
@@ -57,6 +57,9 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         if (err) {
             return cb(new Error('Error communicating with Github API.'));
         }
+
+        log.verbose(statusHistory);
+        
         // clone of the global validators array
         var commitValidators = validators.slice(0),
             validationFailed = false,
@@ -66,17 +69,24 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
             validatorsSkipped = [],
             skippedMSG;
 
+        function shouldSkipValidation(repoClient, validator) {
+            return repoClient.hasOwnProperty('validators') 
+                && repoClient.validators.hasOwnProperty('excludes') 
+                && repoClient.validators.excludes.indexOf(validator.name) !== -1
+        }
+
         function runNextValidation() {
             var validator,
                 priority;
             if (validationFailed) return;
             validator = commitValidators.shift();
             if (validator) {
-                if (repoClient.hasOwnProperty('validators') && repoClient.validators.hasOwnProperty('excludes') && repoClient.validators.excludes.indexOf(validator.name) !== -1)   {
+                if (shouldSkipValidation(repoClient, validator))   {
                     validatorsSkipped.push(validator);
+                    log.debug(sha + ': Skipped validator "' + validator.name + '"');
                     runNextValidation();
                 } else {
-                    log('Running commit validator: ' + validator.name);
+                    log(sha + ': Running commit validator: ' + validator.name);
                     validatorsRun.push(validator);
                     validator.validate(sha, githubUser, statusHistory, repoClient, function(err, result) {
                         if (err) {
@@ -87,7 +97,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                                 description: 'Error running commit validator "' + validator.name + '": ' + err.message 
                             }, repoClient);
                         }
-                        log(validator.name + ' result was ' + coloredStatus(result.state));
+                        log(sha + ': ' + validator.name + ' result was ' + coloredStatus(result.state));
                         if (result.state !== 'success') {
                             // Upon failure, we set a flag that will skip the 
                             // remaining validators and post a failure status.
@@ -105,12 +115,12 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                                 target_url = result.target_url;
                             }
                         };
-                        log(validator.name + ' complete.');
+                        log(sha + ': ' + validator.name + ' complete.');
                         runNextValidation();
                     });
                 }
             } else {
-                log('Validation complete.');
+                log(sha + ': Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
                 if (validatorsSkipped.length > 0) {
@@ -126,7 +136,6 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
             }
         }
 
-        log('Starting validation...');
         runNextValidation();
 
     });

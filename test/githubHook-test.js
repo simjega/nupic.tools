@@ -24,7 +24,11 @@ describe('github hook handler', function() {
                 }
             }
         }),
-        mockClients = {'foo': true},
+        mockClients = {'foo': {
+            getAllStatusesFor: function(sha, cb) {
+                cb(undefined, []);
+            }
+        }},
         handler = githubHook.initializer(mockClients, 'mockConfig');
 
     it('calls pr handler when sent a pull_request event', function() {
