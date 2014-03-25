@@ -20,6 +20,7 @@ function postNewNupicStatus(sha, statusDetails, repoClient) {
     var statusDescription = utils.normalizeStatusDescription(
         statusDetails.description
     );
+    log.info(statusDescription);
     repoClient.github.statuses.create({
         user: repoClient.org,
         repo: repoClient.repo,
