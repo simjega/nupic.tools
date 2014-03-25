@@ -18,7 +18,8 @@
     "main": "program.js",
     "scripts": {
         "preinstall": "npm install -g forever",
-        "test": "istanbul cover _mocha -- --recursive -R spec && istanbul report text-summary > coverage/summary.txt && node bin/validate-coverage.js"
+        "test": "istanbul cover _mocha -- --recursive -R spec && istanbul report text-summary > coverage/summary.txt && node bin/validate-coverage.js",
+        "start": "node program.js"
     },
     "repository": {
         "type": "git",

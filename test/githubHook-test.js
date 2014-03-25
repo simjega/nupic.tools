@@ -3,6 +3,9 @@ var assert = require('assert');
     utilStub = {
         initializeModulesWithin: function() {
             return 'validators to be used';
+        },
+        lastStatusWasExternal: function(repoClient, sha, cb) {
+            cb(true);
         }
     };
 

@@ -5,7 +5,7 @@ var assert = require('assert'),
     fs = require('fs'),
     path = require('path'),
     connect = require('connect'),
-    colors = require('colors'),
+    log = require('./utils/log'),
     // local libs
     utils = require('./utils/general'),
     githubHookHandler = require('./githubHook'),
@@ -26,9 +26,9 @@ var assert = require('assert'),
     // to this web server.
     HANDLER_DIR = 'handlers';
 
-console.log('nupic.tools server starting...'.green);
-console.log('nupic.tools will use the following configuration:');
-console.log(JSON.stringify(utils.sterilizeConfig(cfg), null, 2).yellow);
+log.info('nupic.tools server starting...');
+log('nupic.tools will use the following configuration:');
+log.verbose(JSON.stringify(utils.sterilizeConfig(cfg), null, 2));
 
 utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
     var dynamicHttpHandlerModules,
@@ -48,7 +48,7 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
                 padInt(now.getMinutes()) + ':' + 
                 padInt(now.getSeconds()) + '.' +
                 padDecimal(now.getMilliseconds());
-        console.log('\n' + dateString + ' | Request received');
+        log('\n' + dateString + ' | Request received');
         next();
     });
     // Enable a log of logging.
@@ -58,17 +58,17 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
        // This puts the Github webhook handler into place
        .use(githubHookPath, githubHookHandler.initializer(repoClients, cfg));
 
-    console.log('The following validators are active:'.cyan);
+    log.debug('The following validators are active:');
     activeValidators = githubHookHandler.getValidators();
     activeValidators.forEach(function(v) {
-        console.log(('\t==> ' + v).cyan);
+        log.verbose('\t==> ' + v);
     });
 
     dynamicHttpHandlerModules = utils.initializeModulesWithin(HANDLER_DIR);
 
     // Loads all the modules within the handlers directory, and registers the URLs
     // the declared, linked to their request handler functions.
-    console.log('The following URL handlers are active:'.cyan);
+    log.debug('The following URL handlers are active:');
     dynamicHttpHandlerModules.forEach(function(handlerConfig) {
         var urls = Object.keys(handlerConfig);
         urls.forEach(function(url) {
@@ -77,14 +77,14 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
                 desc = handler.description,
                 msg = '\t==> ' + name + ' listening for url pattern: ' + url;
             if (! handler.disabled) {
-                console.log(msg.cyan);
+                log.verbose(msg);
                 app.use(url, handler);
             }
         });
     });
         
     app.listen(PORT, function() {
-        console.log(('\nServer running at ' + baseUrl + '\n').green);
+        log.info('\nServer running at ' + baseUrl + '\n');
     });
 
 });

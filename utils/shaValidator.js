@@ -1,3 +1,6 @@
+var utils = require('./general'),
+    log = require('./log');
+
 function coloredStatus(status) {
     if (status == 'success') {
         return status.green;
@@ -9,22 +12,36 @@ function coloredStatus(status) {
 }
 
 function postNewNupicStatus(sha, statusDetails, repoClient) {
-    console.log('Posting new NuPIC Status (' + coloredStatus(statusDetails.state) + ') to github for ' + sha);
+    log.info(sha + ': Posting new NuPIC Status (' 
+        + coloredStatus(statusDetails.state) + ') to github');
+    // If the old status was created by nupic.tools, it will start with 
+    // "NuPIC Status:". But if it was created by Travis-CI, we want to add that
+    // little prefix to the description string. 
+    var statusDescription = utils.normalizeStatusDescription(
+        statusDetails.description
+    );
+    log.info(statusDescription);
     repoClient.github.statuses.create({
         user: repoClient.org,
         repo: repoClient.repo,
         sha: sha,
         state: statusDetails.state,
-        description: 'NuPIC Status: ' + statusDetails.description,
+        description: statusDescription,
         target_url: statusDetails.target_url
     });
 }
 
 function revalidateAllOpenPullRequests(contributors, repoClient, validators, callback) {
     repoClient.getAllOpenPullRequests(function(err, prs) {
-        console.log('Found ' + prs.length + ' open pull requests...');
+        log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.head; }).forEach(function(head) {
-            performCompleteValidation(head.sha, head.user.login, repoClient, validators, true);
+            performCompleteValidation(
+                head.sha, 
+                head.user.login, 
+                repoClient, 
+                validators, 
+                true
+            );
         });
         if (callback) {
             callback(null, prs.map(function(pr) { return pr.number; }));
@@ -49,12 +66,15 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
         };
     }
 
-    console.log(('VALIDATING ' + sha).cyan);
+    log.debug('VALIDATING ' + sha);
 
     repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
         if (err) {
             return cb(new Error('Error communicating with Github API.'));
         }
+
+        log.verbose(statusHistory);
+        
         // clone of the global validators array
         var commitValidators = validators.slice(0),
             validationFailed = false,
@@ -64,17 +84,24 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
             validatorsSkipped = [],
             skippedMSG;
 
+        function shouldSkipValidation(repoClient, validator) {
+            return repoClient.hasOwnProperty('validators') 
+                && repoClient.validators.hasOwnProperty('excludes') 
+                && repoClient.validators.excludes.indexOf(validator.name) !== -1
+        }
+
         function runNextValidation() {
             var validator,
                 priority;
             if (validationFailed) return;
             validator = commitValidators.shift();
             if (validator) {
-                if (repoClient.hasOwnProperty('validators') && repoClient.validators.hasOwnProperty('excludes') && repoClient.validators.excludes.indexOf(validator.name) !== -1)   {
+                if (shouldSkipValidation(repoClient, validator))   {
                     validatorsSkipped.push(validator);
+                    log.debug(sha + ': Skipped validator "' + validator.name + '"');
                     runNextValidation();
                 } else {
-                    console.log('Running commit validator: ' + validator.name);
+                    log(sha + ': Running commit validator: ' + validator.name);
                     validatorsRun.push(validator);
                     validator.validate(sha, githubUser, statusHistory, repoClient, function(err, result) {
                         if (err) {
@@ -85,17 +112,20 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                                 description: 'Error running commit validator "' + validator.name + '": ' + err.message 
                             }, repoClient);
                         }
-                        console.log(validator.name + ' result was ' + coloredStatus(result.state));
+                        log(sha + ': ' + validator.name + ' result was ' + coloredStatus(result.state));
                         if (result.state !== 'success') {
                             // Upon failure, we set a flag that will skip the 
                             // remaining validators and post a failure status.
                             validationFailed = true;
                             callback(sha, result, repoClient);
                         }
+                        // This code is just allowing the different validators to 
+                        // fight over which one will provide the "Details" URL
+                        // that gets displayed on the Github PR.
                         if (validator.hasOwnProperty('priority')) {
                             priority = validator.priority;
                         } else {
-                        priority = 0;
+                            priority = 0;
                         }
                         if (priority >= highestPriority) {
                             highestPriority = priority;
@@ -103,12 +133,12 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                                 target_url = result.target_url;
                             }
                         };
-                        console.log(validator.name + ' complete.');
+                        log(sha + ': ' + validator.name + ' complete.');
                         runNextValidation();
                     });
                 }
             } else {
-                console.log('Validation complete.');
+                log(sha + ': Validation complete.');
                 // No more validators left in the array, so we can complete the
                 // validation successfully.
                 if (validatorsSkipped.length > 0) {
@@ -124,7 +154,6 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
             }
         }
 
-        console.log('Kicking off validation...');
         runNextValidation();
 
     });

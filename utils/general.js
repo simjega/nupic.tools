@@ -1,10 +1,12 @@
 var fs = require('fs'),
     path = require('path'),
-    RepositoryClient = require('./repoClient');
+    RepositoryClient = require('./repoClient'),
+    NUPIC_STATUS_PREFIX = 'NuPIC Status:',
+    log = require('./log');
 
 /* Logs error and exits. */
 function die(err) {
-    console.error(err);
+    log.error(err);
     process.exit(-1);
 }
 
@@ -79,21 +81,21 @@ function constructRepoClients(prWebhookUrl, config, callback) {
         }
 
         repoClient = new RepositoryClient(monitorConfig);
-        console.log('RepositoryClient created for ' 
+        log('RepositoryClient created for ' 
             + monitorConfig.username.magenta + ' on ' 
             + repoClient.toString().magenta);
 
         repoClient.confirmWebhookExists(prWebhookUrl, ['push', 'pull_request', 'status'], function(err, hook) {
             if (err) {
-                console.error(('Error during webhook confirmation for ' + repoClient.toString()).red);
+                log.error('Error during webhook confirmation for ' + repoClient.toString());
                 die(err);
             } else {
                 if (hook) {
-                    console.log(('Webhook created on ' + repoClient.toString() + ':\n'
+                    log.warn('Webhook created on ' + repoClient.toString() + ':\n'
                                             + '\tfor "' + hook.events.join(', ') + '"\n'
-                                            + '\ton ' + hook.config.url).yellow);
+                                            + '\ton ' + hook.config.url);
                 } else {
-                    console.log(('Webhook exists for ' + repoClient.toString()).green);
+                    log('Webhook exists for ' + repoClient.toString());
                 }
                 count++;
             }
@@ -117,6 +119,36 @@ function sortStatuses(statuses) {
         }
         return 0;
     });
+}
+
+/**
+ * Checks to see if the latest status in the history for this SHA was created by
+ * the nupic.tools server or was externally created. 
+ */
+function lastStatusWasExternal(repoClient, sha, cb) {
+    repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
+        var latestStatus = sortStatuses(statusHistory).shift();
+        if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+            if (cb) { cb(false); }
+        } else {
+            cb(true);
+        }
+    });
+}
+
+/** 
+ * Some old statuses have old redundant prefixes due to previous processing errors
+ * that list "Nupic Status: " multiple times before the actual status message. 
+ * This will clean those up so there is only one.
+ */
+function normalizeStatusDescription(description) {
+    var output = description;
+    // First, we'll remove any existing NuPIC Status prefixes
+    while (output.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+        output = output.substr(NUPIC_STATUS_PREFIX.length + 1);
+    }
+    // Finally, add the one true prefix.
+    return NUPIC_STATUS_PREFIX + ' ' + output;
 }
 
 /* Removes the passwords from the config for logging. */
@@ -154,5 +186,7 @@ module.exports = {
     sortStatuses: sortStatuses,
     padInt: padInt,
     padDecimal: padDecimal,
+    normalizeStatusDescription: normalizeStatusDescription,
+    lastStatusWasExternal: lastStatusWasExternal,
     __module: module // for unit testing and mocking require()
 };

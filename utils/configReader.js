@@ -1,8 +1,9 @@
-var fs = require('fs');
+var fs = require('fs'),
+    log = require('./log');
 
 function readConfigFileIntoObject(path) {
     if (! fs.existsSync(path)) {
-        console.warn('Config file "' + path + '" does not exist!');
+        log.warn('Config file "' + path + '" does not exist!');
         return;
     }
     var raw = fs.readFileSync(path, 'utf-8');
