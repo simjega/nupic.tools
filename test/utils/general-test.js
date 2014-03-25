@@ -2,6 +2,26 @@ var assert = require('assert'),
     proxyquire = require('proxyquire').noCallThru();
 
 describe('general utilities', function() {
+
+    describe('helper functions', function() {
+        describe('when status string is raw and unprocessed', function() {
+            var general = require('./../../utils/general');
+            it('adds prefix for tooling server to status description', function() {
+                var result = general.normalizeStatusDescription('wonderful status string');
+
+                assert.equal(result, 'NuPIC Status: wonderful status string', 'raw status string was not prefixed properly');
+            });
+            it('does not add duplicate NuPIC Status string when one already exists', function() {
+                var result = general.normalizeStatusDescription('NuPIC Status: wonderful status string');
+                assert.equal(result, 'NuPIC Status: wonderful status string', 'Old status was not processed properly');
+            });
+            it('cleans up old redundant status strings', function() {
+                var result = general.normalizeStatusDescription('NuPIC Status: NuPIC Status: NuPIC Status: NuPIC Status: NuPIC Status: wonderful status string');
+                assert.equal(result, 'NuPIC Status: wonderful status string', 'Old status was not processed properly');
+            });
+        });
+    });
+
     describe('when initializing dynamic modules', function() {
         var general = proxyquire('./../../utils/general', {
             '../mockDir/a': 'a-mod', 

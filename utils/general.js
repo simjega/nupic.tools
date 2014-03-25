@@ -136,17 +136,19 @@ function lastStatusWasExternal(repoClient, sha, cb) {
     });
 }
 
-/**
- * If status was created by nupic.tools, it will start with "NuPIC Status:". 
- * But if it was created by Travis-CI, we want to add that little prefix to 
- * the description string. 
+/** 
+ * Some old statuses have old redundant prefixes due to previous processing errors
+ * that list "Nupic Status: " multiple times before the actual status message. 
+ * This will clean those up so there is only one.
  */
 function normalizeStatusDescription(description) {
     var output = description;
-    if (description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
-        output = NUPIC_STATUS_PREFIX + ' ' + description;
+    // First, we'll remove any existing NuPIC Status prefixes
+    while (output.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+        output = output.substr(NUPIC_STATUS_PREFIX.length + 1);
     }
-    return output;
+    // Finally, add the one true prefix.
+    return NUPIC_STATUS_PREFIX + ' ' + output;
 }
 
 /* Removes the passwords from the config for logging. */
