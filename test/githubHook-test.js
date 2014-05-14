@@ -30,7 +30,7 @@ describe('github hook handler', function() {
         mockClients = {'foo': true},
         handler = githubHook.initializer(mockClients, 'mockConfig');
 
-    it('calls pr handler when sent a pull_request event', function() {
+    it('calls pr handler when sent a mergeable pull_request event', function() {
         var mockPayload = {
                 name: 'foo',
                 pull_request: {
@@ -38,6 +38,7 @@ describe('github hook handler', function() {
                     user: {login: 'login'},
                     head: {sha: 'sha'},
                     base: {label: 'label', ref: 'master'},
+                    // a travis passing and mergeable PR:
                     merged: false,
                     mergeable: true,
                     mergeable_state: "clean"
@@ -64,6 +65,49 @@ describe('github hook handler', function() {
         assert.equal(validatedUser, 'login', 'validated wrong user');
         assert.equal(validatorsUsed, 'validators to be used', 'used wrong validators');
         assert(validationPosted, 'validation status was not posted');
+        assert(endCalled, 'request was not closed');
+
+        // Reset just in case further tests use them.
+        validationPerformed = undefined;
+        validatedSHA = undefined;
+        validatedUser = undefined;
+        validatorsUsed = undefined;
+        validationPosted = undefined;
+    });
+
+    it('do not calls pr handler when sent a non-mergeable pull_request event', function() {
+        var mockPayload = {
+                name: 'foo',
+                pull_request: {
+                    action: 'closed',
+                    user: {login: 'login'},
+                    head: {sha: 'sha'},
+                    base: {label: 'label', ref: 'master'},
+                    // a non-mergeable PR
+                    merged: false,
+                    mergeable: false,
+                    mergeable_state: "dirty"
+                }
+            },
+            mockRequest = {
+                body: {
+                    payload: JSON.stringify(mockPayload)
+                }
+            },
+            endCalled = false,
+            mockResponse = {
+                end: function() {
+                    endCalled = true;
+                }
+            };
+
+        validationPerformed = false;
+
+        handler(mockRequest, mockResponse);
+
+        assert(!validationPerformed, 'validation against PR should not be performed');
+        // TODO post a status instead of not posting
+        assert(!validationPosted, 'validation status should not be posted');
         assert(endCalled, 'request was not closed');
 
         // Reset just in case further tests use them.
