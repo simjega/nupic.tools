@@ -37,7 +37,10 @@ describe('github hook handler', function() {
                     action: 'closed',
                     user: {login: 'login'},
                     head: {sha: 'sha'},
-                    base: {label: 'label', ref: 'master'}
+                    base: {label: 'label', ref: 'master'},
+                    merged: false,
+                    mergeable: true,
+                    mergeable_state: "clean"
                 }
             },
             mockRequest = {
