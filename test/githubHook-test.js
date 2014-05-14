@@ -75,7 +75,7 @@ describe('github hook handler', function() {
         validationPosted = undefined;
     });
 
-    it('do not calls pr handler when sent a non-mergeable pull_request event', function() {
+    it('does not call pr handler when sent a non-mergeable pull_request event', function() {
         var mockPayload = {
                 name: 'foo',
                 pull_request: {

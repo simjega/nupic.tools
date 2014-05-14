@@ -70,10 +70,10 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
         }
         else
         {
-            //Just let Github status stand, which might warn about the mergeable status
+            // Just let Github status stand, which might warn about the mergeable status
             log('The PR is not mergeable, mergeable_state: ' + pullRequest.mergeable_state);
             if (cb) { cb(); }
-            //TODO generate nupic.tools' own warning message
+            // TODO generate nupic.tools' own warning message
         }
     }
 }
