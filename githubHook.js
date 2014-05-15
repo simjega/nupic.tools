@@ -47,22 +47,34 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
             if (cb) { cb(); }
         }
     } else {
-        utils.lastStatusWasExternal(repoClient, sha, function(external) {
-            if (external) {
-                shaValidator.performCompleteValidation(
-                    sha, 
-                    githubUser, 
-                    repoClient, 
-                    dynamicValidatorModules, 
-                    true, 
-                    cb
-                );
-            } else {
-                // ignore statuses that were created by this server
-                log.warn('Ignoring "' + state + '" status created by nupic.tools.');
-                if (cb) { cb(); }
-            }
-        });
+
+        // only runs validation if the PR is mergeable, see nupic.tools#65
+        if(pullRequest.mergeable)
+        {
+            utils.lastStatusWasExternal(repoClient, sha, function(external) {
+                if (external) {
+                    shaValidator.performCompleteValidation(
+                        sha, 
+                        githubUser, 
+                        repoClient, 
+                        dynamicValidatorModules, 
+                        true, 
+                        cb
+                    );
+                } else {
+                    // ignore statuses that were created by this server
+                    log.warn('Ignoring "' + state + '" status created by nupic.tools.');
+                    if (cb) { cb(); }
+                }
+            });   
+        }
+        else
+        {
+            // Just let Github status stand, which might warn about the mergeable status
+            log('The PR is not mergeable, mergeable_state: ' + pullRequest.mergeable_state);
+            if (cb) { cb(); }
+            // TODO generate nupic.tools' own warning message
+        }
     }
 }
 
