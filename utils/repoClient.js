@@ -1,4 +1,5 @@
-var GitHubApi = require("github"),
+var GitHubApi = require('github'),
+    travisPing = require('travis-ping'),
     log = require('./log'),
     RepositoryClient;
 
@@ -7,6 +8,7 @@ var GitHubApi = require("github"),
  */
 function RepositoryClient(config) {
     this.user = config.username;
+    this.password = config.password;
     this.org = config.organization;
     this.repo = config.repository;
     this.contributorsUrl = config.contributors;
@@ -17,11 +19,11 @@ function RepositoryClient(config) {
     this.github.authenticate({
         type: 'basic',
         username: this.user,
-        password: config.password
+        password: this.password
     });
-    if (config.hasOwnProperty('validators'))    {
+    if (config.hasOwnProperty('validators')) {
         this.validators = {};
-        if (config.validators.hasOwnProperty('excludes'))   {
+        if (config.validators.hasOwnProperty('excludes')) {
             this.validators.excludes = config.validators.excludes;
         }
     }
@@ -142,6 +144,12 @@ RepositoryClient.prototype.confirmWebhookExists = function(url, events, callback
     });
 };
 
+RepositoryClient.prototype.triggerTravis = function(callback) {
+    travisPing.ping(this.user, this.password, this.getRepoSlug(), function(travisResponse) {
+        callback(null, travisResponse);
+    });
+};
+
 RepositoryClient.prototype._getRemainingPages = function(lastData, allDataOld, callback) {
     var me = this,
         allData = [];
@@ -158,8 +166,12 @@ RepositoryClient.prototype._getRemainingPages = function(lastData, allDataOld, c
     });
 }
 
-RepositoryClient.prototype.toString = function() {
+RepositoryClient.prototype.getRepoSlug = function() {
     return this.org + '/' + this.repo;
+};
+
+RepositoryClient.prototype.toString = function() {
+    return this.getRepoSlug();
 };
 
 module.exports = RepositoryClient;

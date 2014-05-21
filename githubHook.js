@@ -29,18 +29,25 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
     log('Received pull request "' + action + '" from ' + githubUser);
 
     if (action == 'closed') {
-        // if this pull request just got merged, we need to re-validate the
-        // fast-forward status of all the other open pull requests
+        // If this pull request just got merged, we need to re-trigger the
+        // Travis-CI jobs of all the other open pull requests.
         if (pullRequest.merged) {
             log('A PR just merged. Re-validating open pull requests...');
             contributors.getAll(repoClient.contributorsUrl, 
                 function(err, contributors) {
-                    shaValidator.revalidateAllOpenPullRequests(
-                        contributors, 
-                        repoClient, 
-                        dynamicValidatorModules, 
-                        cb
-                    );
+                    if (err) {
+                        return cb(err);
+                    }
+                    repoClients.forEach(function(otherRepoClient) {
+                        if (otherRepoClient !== repoClient) {
+                            repoClient.triggerTravisBuild(function(err, response) {
+                                if (err) {
+                                    return console.error(err);
+                                }
+                                log.debug(response);
+                            });
+                        }
+                    });
                 }
             );
         } else {
