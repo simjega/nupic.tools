@@ -38,7 +38,8 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
                     if (err) {
                         return cb(err);
                     }
-                    repoClients.forEach(function(otherRepoClient) {
+                    repoClients.keys().forEach(function(repoSlug) {
+                        var otherRepoClient = repoClients[repoSlug];
                         if (otherRepoClient !== repoClient) {
                             repoClient.triggerTravisBuild(function(err, response) {
                                 if (err) {
