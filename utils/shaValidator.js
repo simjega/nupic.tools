@@ -38,7 +38,7 @@ function triggerTravisBuildsOnAllOpenPullRequests(repoClient, callback) {
             errors = null;
         log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.number; }).forEach(function(pr_number) {
-            repoClient.triggerTravisForPullRequest(pr, function(err, success) {
+            repoClient.triggerTravisForPullRequest(pr_number, function(err, success) {
                 count++;
                 if (err) {
                     if (! errors) {
