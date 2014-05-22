@@ -38,17 +38,7 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
                     if (err) {
                         return cb(err);
                     }
-                    Object.keys(repoClients).forEach(function(repoSlug) {
-                        var otherRepoClient = repoClients[repoSlug];
-                        if (otherRepoClient !== repoClient) {
-                            repoClient.triggerTravisBuild(function(err, response) {
-                                if (err) {
-                                    return console.error(err);
-                                }
-                                log.debug(response);
-                            });
-                        }
-                    });
+                    
                 }
             );
         } else {

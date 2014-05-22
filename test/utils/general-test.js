@@ -38,7 +38,6 @@ describe('general utilities', function() {
         });
         it('loads all modules within directory', function() {
             var initialized = general.initializeModulesWithin('mockDir');
-            console.log(initialized);
             assert.equal(initialized.length, 5, 'excluded modules were not excluded');
             assert.equal(initialized[0], 'a-mod', 'wrong modules returned');
             assert.equal(initialized[1], 'b-mod', 'wrong modules returned');
@@ -108,7 +107,7 @@ describe('general utilities', function() {
             cb();
         };
 
-        it('does not duplicate validator exclusions', function() {
+        it('does not duplicate validator exclusions', function(done) {
 
             general.constructRepoClients('pr-webhook-url', mockConfig, function(clients) {
                 var clientConfig = repoClientConfigs['has-same-validator'];
@@ -118,11 +117,11 @@ describe('general utilities', function() {
                 assert.equal(clientConfig.validators.exclude[0], "global-exclude", 
                     'global and local validator exclusions were not merged properly: ' +
                     'bad value for validator exclusion');
-                
+                done();
             });
         });
         
-        it('includes both global and local validator exclusions', function() {
+        it('includes both global and local validator exclusions', function(done) {
 
             general.constructRepoClients('pr-webhook-url', mockConfig, function(clients) {
                 var clientConfig = repoClientConfigs['has-no-validator'];
@@ -137,6 +136,7 @@ describe('general utilities', function() {
                 assert.equal(clientConfig.validators.exclude.length, 2, 
                     'global and local validator exclusions were not merged properly: ' +
                     'validator with both global and local exclusion should have both included in config');
+                done();
             });
         });
 

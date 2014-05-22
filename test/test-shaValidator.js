@@ -42,20 +42,22 @@ var assert = require('assert'),
     ];
 
 describe('shaValidator test', function() {
-    it('Testing with two validators.', function() {
+    it('Testing with two validators.', function(done) {
         shaValidator.performCompleteValidation('testSHA', 'carlfriess', repoClientStub, validatorsStub, false, function(sha, output, repoClient) {
             assert.equal(sha, 'testSHA', 'in shaValidator.performCompleteValidation :  wrong sha in output!');
             assert.equal(output.state, 'success', 'in shaValidator.performCompleteValidation :  wrong state in output :  Not success!');
             //assert.equal(output.target_url, 'correctTargetURL', 'in shaValidator.performCompleteValidation :  wrong target_url in output!');
             assert.equal(output.description, 'All validations passed (FirstValidator, SecondValidator)', 'in shaValidator.performCompleteValidation :  wrong description in output!');
+            done();
         });
     });
-    it('Testing with two validators. One configured to be excluded.', function() {
+    it('Testing with two validators. One configured to be excluded.', function(done) {
         shaValidator.performCompleteValidation('testSHA', 'carlfriess', repoClientSecondStub, validatorsStub, false, function(sha, output, repoClient) {
             assert.equal(sha, 'testSHA', 'in shaValidator.performCompleteValidation :  wrong sha in output!');
             assert.equal(output.state, 'success', 'in shaValidator.performCompleteValidation :  wrong state in output :  Not success!');
             assert.equal(output.target_url, 'otherTargetURL', 'in shaValidator.performCompleteValidation :  wrong target_url in output!');
             assert.equal(output.description, 'All validations passed (SecondValidator [1 skipped])', 'in shaValidator.performCompleteValidation :  wrong description in output!');
+            done();
         });
     });
 });

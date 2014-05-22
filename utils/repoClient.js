@@ -1,5 +1,6 @@
 var GitHubApi = require('github'),
-    travisPing = require('travis-ping'),
+    Travis = require('travis-ci'),
+    _ = require('underscore'),
     log = require('./log'),
     RepositoryClient;
 
@@ -18,6 +19,11 @@ function RepositoryClient(config) {
     });
     this.github.authenticate({
         type: 'basic',
+        username: this.user,
+        password: this.password
+    });
+    this.travis = new Travis({ version: '2.0.0' });
+    this.travis.authenticate({
         username: this.user,
         password: this.password
     });
@@ -144,9 +150,25 @@ RepositoryClient.prototype.confirmWebhookExists = function(url, events, callback
     });
 };
 
-RepositoryClient.prototype.triggerTravis = function(callback) {
-    travisPing.ping(this.user, this.password, this.getRepoSlug(), function(travisResponse) {
-        callback(null, travisResponse);
+RepositoryClient.prototype.triggerTravisForPullRequest = function(pull_request_number, callback) {
+    var travis = this.travis;
+    log.debug('Attempting to trigger a build for' + this.toString() 
+        + ' PR#' + pull_request_number);
+    travis.builds({
+        slug: this.getRepoSlug(),
+        event_type: 'pull_request'
+    }, function(err, response) {
+        var pr = _.find(response.builds, function(build) {
+            return build.pull_request_number == pull_request_number;
+        });
+        if (! pr) {
+            return callback(new Error('No pull request with #' + pull_request_number));
+        }
+        log("Triggering build restart for PR#" + pull_request_number);
+        travis.builds.restart({ id: pr.id }, function(err, restartResp) {
+            if (err) return callback(err);
+            callback(null, restartResp.result)
+        });
     });
 };
 

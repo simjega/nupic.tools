@@ -33,7 +33,8 @@
         "ansi-to-html"  : "0.1.1",
         "jsdom"         : "0.10.5",
         "q"             : "1.0.1",
-        "travis-ping"   : "0.2.0"
+        "underscore"    : "1.6.0",
+        "travis-ci"     : "1.2.0"
     },
     "devDependencies": {
         "proxyquire": "0.5.x",
