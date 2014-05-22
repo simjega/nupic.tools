@@ -26,7 +26,7 @@ function RepositoryClient(config) {
     this.travis.authenticate({
         username: this.user,
         password: this.password
-    });
+    }, function() {});
     if (config.hasOwnProperty('validators')) {
         this.validators = {};
         if (config.validators.hasOwnProperty('excludes')) {
