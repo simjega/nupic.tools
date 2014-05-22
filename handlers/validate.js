@@ -61,53 +61,28 @@ function validateSha(req, res) {
         return jsonUtils.renderErrors(errors, res, jsonPCallback);
     }
 
-    if (repo && sha == 'all') {
-        contributors.getAll(repoClient.contributorsUrl, function(err, contributors) {
-            if (err) {
-                return jsonUtils.renderErrors([err]);
+    findClientFor(sha, function(client, payload) {
+        var committer;
+        if (! client) {
+            errors.push(new Error('No match for sha "' + sha + '" in any known repositories.'));
+            return jsonUtils.renderErrors(errors, res, jsonPCallback);
+        }
+        committer = payload.author ? payload.author.login : false;
+        shaValidator.performCompleteValidation(sha, committer, client, validators, postStatus, function (sha, statusDetails, repoClient) {
+            var htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
+            htmlOut += '<h2>' + repoClient.toString() + '</h2>\n';
+            htmlOut += '<h2>' + sha + '</h2>\n';
+            htmlOut += '<h3>' + statusDetails.state + '</h3>\n';
+            htmlOut += '<p>' + statusDetails.description + '</p>\n';
+            if (statusDetails.target_url) {
+                htmlOut += '<p><a href="' + statusDetails.target_url + '">Details</a></p>\n';
             }
-            shaValidator.revalidateAllOpenPullRequests(contributors, repoClient, validators, function(err, numbers) {
-                var htmlOut;
-                if (err) {
-                    return jsonUtils.renderErrors([err]);
-                }
-                htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
-                htmlOut += '<h2>' + repoClient.toString() + '</h2>\n';
-                htmlOut += '<h2>' + sha + '</h2>\n';
-                htmlOut += '<h3>Revalidated following prs (by id)</h3>\n';
-                htmlOut += '<ul><li>\n';
-                htmlOut += numbers.join('</li>\n<li>');
-                htmlOut += '</li></ul>\n';
-                htmlOut += '\n</body></html>';
-                res.setHeader('Content-Type', 'text/html');
-                res.setHeader('Content-Length', htmlOut.length);
-                res.end(htmlOut);
-            });
+            htmlOut += '\n</body></html>';
+            res.setHeader('Content-Type', 'text/html');
+            res.setHeader('Content-Length', htmlOut.length);
+            res.end(htmlOut);
         });
-    } else {
-        findClientFor(sha, function(client, payload) {
-            var committer;
-            if (! client) {
-                errors.push(new Error('No match for sha "' + sha + '" in any known repositories.'));
-                return jsonUtils.renderErrors(errors, res, jsonPCallback);
-            }
-            committer = payload.author ? payload.author.login : false;
-            shaValidator.performCompleteValidation(sha, committer, client, validators, postStatus, function (sha, statusDetails, repoClient) {
-                var htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
-                htmlOut += '<h2>' + repoClient.toString() + '</h2>\n';
-                htmlOut += '<h2>' + sha + '</h2>\n';
-                htmlOut += '<h3>' + statusDetails.state + '</h3>\n';
-                htmlOut += '<p>' + statusDetails.description + '</p>\n';
-                if (statusDetails.target_url) {
-                    htmlOut += '<p><a href="' + statusDetails.target_url + '">Details</a></p>\n';
-                }
-                htmlOut += '\n</body></html>';
-                res.setHeader('Content-Type', 'text/html');
-                res.setHeader('Content-Length', htmlOut.length);
-                res.end(htmlOut);
-            });
-        });
-    }
+    });
 
 }
 
@@ -116,8 +91,7 @@ initializeValidators(VALIDATOR_DIR);
 validateSha.title = 'SHA Validator';
 validateSha.description = 'Given a "sha" parameter, forces a complete ' +
     'validation and reports results. To post validation results to github, ' +
-    'specify "postStatus=1" in URL params. To force revalidation of all open ' +
-    'pull requests, specify "?sha=all&repo=<repo name>" in URL params.';
+    'specify "postStatus=1" in URL params.';
 
 module.exports = {
     '/validate': function(_repoClients) {

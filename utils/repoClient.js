@@ -1,4 +1,6 @@
-var GitHubApi = require("github"),
+var GitHubApi = require('github'),
+    Travis = require('travis-ci'),
+    _ = require('underscore'),
     log = require('./log'),
     RepositoryClient;
 
@@ -7,6 +9,7 @@ var GitHubApi = require("github"),
  */
 function RepositoryClient(config) {
     this.user = config.username;
+    this.password = config.password;
     this.org = config.organization;
     this.repo = config.repository;
     this.contributorsUrl = config.contributors;
@@ -17,11 +20,16 @@ function RepositoryClient(config) {
     this.github.authenticate({
         type: 'basic',
         username: this.user,
-        password: config.password
+        password: this.password
     });
-    if (config.hasOwnProperty('validators'))    {
+    this.travis = new Travis({ version: '2.0.0' });
+    this.travis.authenticate({
+        username: this.user,
+        password: this.password
+    }, function() {});
+    if (config.hasOwnProperty('validators')) {
         this.validators = {};
-        if (config.validators.hasOwnProperty('excludes'))   {
+        if (config.validators.hasOwnProperty('excludes')) {
             this.validators.excludes = config.validators.excludes;
         }
     }
@@ -142,6 +150,28 @@ RepositoryClient.prototype.confirmWebhookExists = function(url, events, callback
     });
 };
 
+RepositoryClient.prototype.triggerTravisForPullRequest = function(pull_request_number, callback) {
+    var travis = this.travis;
+    log.debug('Attempting to trigger a build for' + this.toString() 
+        + ' PR#' + pull_request_number);
+    travis.builds({
+        slug: this.getRepoSlug(),
+        event_type: 'pull_request'
+    }, function(err, response) {
+        var pr = _.find(response.builds, function(build) {
+            return build.pull_request_number == pull_request_number;
+        });
+        if (! pr) {
+            return callback(new Error('No pull request with #' + pull_request_number));
+        }
+        log("Triggering build restart for PR#" + pull_request_number);
+        travis.builds.restart({ id: pr.id }, function(err, restartResp) {
+            if (err) return callback(err);
+            callback(null, restartResp.result)
+        });
+    });
+};
+
 RepositoryClient.prototype._getRemainingPages = function(lastData, allDataOld, callback) {
     var me = this,
         allData = [];
@@ -158,8 +188,12 @@ RepositoryClient.prototype._getRemainingPages = function(lastData, allDataOld, c
     });
 }
 
-RepositoryClient.prototype.toString = function() {
+RepositoryClient.prototype.getRepoSlug = function() {
     return this.org + '/' + this.repo;
+};
+
+RepositoryClient.prototype.toString = function() {
+    return this.getRepoSlug();
 };
 
 module.exports = RepositoryClient;

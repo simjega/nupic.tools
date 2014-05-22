@@ -85,7 +85,7 @@ describe('contributors utilities', function() {
             assert.equal(url, 'url-to-csv', 'wrong csv url used for fetching contributors');
             cb(null, null, mockCsvRaw);
         };
-        it('returns proper data structure', function() {
+        it('returns proper data structure', function(done) {
             var contributorsUtils = proxyquire('../../utils/contributors', {
                 request: mockRequestLib
             });
@@ -105,6 +105,7 @@ describe('contributors utilities', function() {
                 assert.equal(1, subutai.Reviewer, 'Subutai should be a Reviewer');
                 assert.equal(0, ian.Committer, 'Ian should not be a Committer');
                 assert.equal(0, ian.Reviewer, 'Ian should not be a Reviewer');
+                done();
             });
         });
     });
