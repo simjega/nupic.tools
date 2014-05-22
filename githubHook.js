@@ -38,7 +38,7 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
                     if (err) {
                         return cb(err);
                     }
-                    
+                    shaValidator.triggerTravisBuildsOnAllOpenPullRequests(repoClient);
                 }
             );
         } else {

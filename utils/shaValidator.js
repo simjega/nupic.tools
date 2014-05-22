@@ -31,7 +31,7 @@ function postNewNupicStatus(sha, statusDetails, repoClient) {
     });
 }
 
-function triggerTravisBuildsOnAllOpenPullRequests(contributors, repoClient, validators, callback) {
+function triggerTravisBuildsOnAllOpenPullRequests(repoClient, callback) {
     repoClient.getAllOpenPullRequests(function(err, prs) {
         var total = prs.length,
             count = 0,
