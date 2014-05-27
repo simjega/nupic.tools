@@ -75,7 +75,7 @@ function constructRepoClients(prWebhookUrl, config, callback) {
         if (! monitorConfig.validators.exclude) {
             monitorConfig.validators.exclude = [];
         }
-        if (globalValidatorConfig.exclude) {
+        if (globalValidatorConfig && globalValidatorConfig.exclude) {
             monitorConfig.validators.exclude 
                 = arrayUnique(monitorConfig.validators.exclude.concat(globalValidatorConfig.exclude));
         }
