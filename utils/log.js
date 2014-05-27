@@ -19,6 +19,9 @@ function log(message, level) {
     if (level == undefined) {
         level = 'log';
     }
+    if (typeof(message) !== 'string') {
+        message = JSON.stringify(message);
+    }
     console.log(message[level]);
 };
 

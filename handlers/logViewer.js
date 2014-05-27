@@ -1,4 +1,6 @@
 var fs = require('fs'),
+    url = require('url'),
+    qs = require('querystring'),
     AnsiConverter = require('ansi-to-html'),
     converter = new AnsiConverter(),
     logDirectory,
@@ -58,6 +60,12 @@ function ansiToHtml(ansiOut) {
 }
 
 function logViewer(req, res) {
+    var linesToRead = 100,
+        reqUrl = url.parse(req.url),
+        query = qs.parse(reqUrl.query);
+    if (query.lines) {
+        linesToRead = query.lines;
+    }
     fs.readdir(logDirectory, function(err, files) {
         if (err) {
             return res.end(err.toString());
@@ -68,7 +76,12 @@ function logViewer(req, res) {
                 fs.readFile(logDirectory + '/' + latestLogFilePath, 'utf-8', 
                     function(err, ansiOut) {
                         if (err) throw err;
-                        var htmlOut = ansiToHtml(ansiOut);
+                        var lines = ansiOut.split('\n');
+                        if (linesToRead > lines.length) {
+                            linesToRead = lines.length;
+                        }
+                        lines = lines.slice(lines.length - linesToRead);
+                        var htmlOut = ansiToHtml(lines.join('\n'));
                         res.setHeader('Content-Type', 'text/html');
                         res.setHeader('Content-Length', htmlOut.length);
                         res.end(htmlOut);
