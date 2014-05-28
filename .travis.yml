@@ -29,6 +29,6 @@ after_success:
     # Install required ruby gem for artifact uploads to S3.
     - test "${TRAVIS_BRANCH}" = "master" && gem install travis-artifacts
     # Publish complete coverage report to S3 if this is not a pull request.
-    - test "${TRAVIS_BRANCH}" = "master" && [ ! "${TRAVIS_PULL_REQUEST}" = "false" ] && travis-artifacts upload --path coverage --target-path artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}
+    - test "${TRAVIS_BRANCH}" = "master" && test "${TRAVIS_PULL_REQUEST}" = "false" && travis-artifacts upload --path coverage --target-path artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}
     # Publish the coverage summary master branch for comparison in later builds to S3 if this is not a pull request.
-    - test "${TRAVIS_BRANCH}" = "master" && [ ! "${TRAVIS_PULL_REQUEST}" = "false" ] && travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH && echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}/lcov-report/index.html"
+    - test "${TRAVIS_BRANCH}" = "master" && test "${TRAVIS_PULL_REQUEST}" = "false" && travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH && echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}/lcov-report/index.html"
