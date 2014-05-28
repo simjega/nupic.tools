@@ -21,12 +21,14 @@ env:
         cfgr20Rz8KuuC/TZklPjVCy+0dXS3o2CL7u2b7XDGYzBYPxayjU=
 
 before_script: 
-- git branch -v
-- git remote show origin
-- git remote -v
+    - git branch -v
+    - git remote show origin
+    - git remote -v
 
 after_success: 
-- test "${TRAVIS_BRANCH}" = "master" && gem install travis-artifacts
-- test "${TRAVIS_BRANCH}" = "master" && travis-artifacts upload --path coverage --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
-- test "${TRAVIS_BRANCH}" = "master" && travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH
-- test "${TRAVIS_BRANCH}" = "master" && echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/lcov-report/index.html"
+    # Install required ruby gem for artifact uploads to S3.
+    - test "${TRAVIS_BRANCH}" = "master" && gem install travis-artifacts
+    # Publish complete coverage report to S3.
+    - test "${TRAVIS_BRANCH}" = "master" && travis-artifacts upload --path coverage --target-path artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}
+    # Publish the coverage summary master branch for comparison in later builds to S3.
+    - test "${TRAVIS_BRANCH}" = "master" && travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH && echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}/lcov-report/index.html"
