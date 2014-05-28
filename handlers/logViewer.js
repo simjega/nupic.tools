@@ -42,10 +42,13 @@ function getLatestModifiedFileIn(dir, filePaths, callback) {
     });
 }
 
-function ansiToHtml(ansiOut) {
+function ansiToHtml(ansiOut, startCount) {
     var htmlOut = '<html><head>' + style + '</head><body>\n' + title,
         lineCount = 0,
         ansiHtml = converter.toHtml(ansiOut);
+    if (startCount) {
+        lineCount = startCount;
+    }
     ansiHtml = ansiHtml.replace(/  /g, '&nbsp;&nbsp;');
     // ansiHtml = ansiHtml.replace(/\n/g, '\n</br>');
     ansiHtml = ansiHtml.replace(/\n/g, function() {
@@ -76,12 +79,13 @@ function logViewer(req, res) {
                 fs.readFile(logDirectory + '/' + latestLogFilePath, 'utf-8', 
                     function(err, ansiOut) {
                         if (err) throw err;
-                        var lines = ansiOut.split('\n');
-                        if (linesToRead > lines.length) {
-                            linesToRead = lines.length;
+                        var lines = ansiOut.split('\n'),
+                            lineCount = lines.length;
+                        if (linesToRead > lineCount) {
+                            linesToRead = lineCount;
                         }
-                        lines = lines.slice(lines.length - linesToRead);
-                        var htmlOut = ansiToHtml(lines.join('\n'));
+                        lines = lines.slice(lineCount - linesToRead);
+                        var htmlOut = ansiToHtml(lines.join('\n'), (lineCount - linesToRead));
                         res.setHeader('Content-Type', 'text/html');
                         res.setHeader('Content-Length', htmlOut.length);
                         res.end(htmlOut);
