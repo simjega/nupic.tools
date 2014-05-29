@@ -8,7 +8,7 @@ deploy:
   bucket: artifacts.numenta.org
   access_key_id: AKIAJPSYLXQB75SM44ZA
   secret_access_key:
-    secure: ga36GqaJ/87UKdwDBS+yrQOjx6UV89ID0kemTjbx2CZTsyKhTdMvfxeTJJuviQH3s7P0lOI2iNEClr01UqCYmoMHkD46My8x+OaTNG2p4P45notLpEYlp+3D8ei2uEGu7F9EEH3phBNOroYNJEYq4F00rihM6/ar4drYIerM4hk=
+    secure: SUmUe0g8sNceeWIZiMMFp7aHgV7C+SapcefcLVHmV7pWVv5XPXboYI/9AK55vNIVHhHRZQgQQxGmY41O3xXvGCzsN3D6u1QswwZ1POMZmHVe0tqMEOeGD+p2TfoTX1hipOsLxwUR6j5BSf2p2WHy7FaYVW0Nn+rT1ctYrvviT9U=
   local-dir: "$TRAVIS_BUILD_DIR/coverage"
   upload-dir: numenta/nupic.tools
   skip_cleanup: true
