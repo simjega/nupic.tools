@@ -4,10 +4,10 @@ language: node_js
 
 env:
   global:
-    # AWS access key id
-    - secure: "kYVwjDqzrS6JdnRhU31T587w+DVml3+4WPDRf/FhB1eWeroYS7T8eAJVqF389EQdvtmrh47L9EdmRnN8ZLW/8/uyw+6ugf9+FxJV1KDbg1vm1IAmgr7dulFlZ7hwrbV6vgKA4OR+is+H9K6mRPr0loDQ2MyAIryngp2i+CXLZnI="
-    # AWS secret
-    - secure: "DwRI2joYj8x/dl3XMvpML6eTzWbn8NG5aJLXKqbsiwL3pjC3POsXEA2X3KFdPO1UkFrD0gKnfvXrqXuymKaYH8cmaDIRPCt1QtiBZnUtDWZu0UR/aY9xszEqvoNUPJKS+3A1qrmCe0qCfmt2aN+wNxJUB2ZP9rfd2XIk3ZDes1c="
+  # AWS access key
+  - secure: OrM/ctX2OEFmWvs4YT5dQczo7SJhAKRr1XLDX1p/Ca9UFiyY01/96FnVflWLkCQJZuKs/qFHeSYaoj5CQHOw/QlGJvDHqkW2702y0uisY+C84U3MvY4CSch1+3irGFLTnp4sZVsO9wZGKrYg3kkhn7ffHqv3vj22LjXDlssPfY0=
+  # AWS secret key
+  - secure: WcOR5Y6WWEoFkoXbxQDzZd0Gm1mlh77Qht46dXbXe9H1plGYI8YbL8T5igdVeXWMmIZQVgb1VyXb0r3GwgolvOpa0OohC48+ImAIcG1VZoMsUokWzAXXd1TflNDjld5WPTH4CvwZKkxIOkoviXE7PuwO2k8lCCKxHzhK0ybuDIg=
 
 deploy:
   provider: s3
@@ -17,17 +17,7 @@ deploy:
   upload-dir: numenta/nupic.tools
   skip_cleanup: true
 
-
 before_script:
 - git branch -v
 - git remote show origin
 - git remote -v
-
-# after_success:
-# - test "${TRAVIS_BRANCH}" = "master" && travis_retry gem install travis-artifacts
-#   > /dev/null
-# - test "${TRAVIS_BRANCH}" = "master" && test "${TRAVIS_PULL_REQUEST}" = "false" &&
-#   travis-artifacts upload --path coverage --target-path artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}
-# - test "${TRAVIS_BRANCH}" = "master" && test "${TRAVIS_PULL_REQUEST}" = "false" &&
-#   travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH
-#   && echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}/lcov-report/index.html"
