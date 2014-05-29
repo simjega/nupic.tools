@@ -10,6 +10,7 @@ deploy:
   bucket: artifacts.numenta.org
   local-dir: "$TRAVIS_BUILD_DIR/coverage"
   upload-dir: numenta/nupic.tools
+  skip_cleanup: true
 
 
 before_script:
