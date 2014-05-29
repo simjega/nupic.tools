@@ -1,34 +1,25 @@
---- 
-node_js: 
-- "0.10"
+node_js:
+- '0.10'
 language: node_js
+env:
+  global:
+  - ARTIFACTS_AWS_REGION=us-west-2
+  - ARTIFACTS_S3_BUCKET=artifacts.numenta.org
+  # ARTIFACTS_AWS_ACCESS_KEY_ID
+  - secure: SegjrtbG5RxBT0Tr732gl6qBd9UMBxJSqjkZZpc3ukWJ3Dwsj+Z2mX4iaKnx/SY57O9EPO5IT25baQPPum5WooujimgXnbGy6ofo1tVQfOOnkZpl0ePdO//42ep7hZJ4THTDXfiYW1XoI5NZ6RAYII3Jlq7Aw3UJdAhnMqtFRVQ=
+  # ARTIFACTS_AWS_SECRET_ACCESS_KEY
+  - secure: LuBBmMtZbEet7OGojaA8/K8U0DaniURWheuaNm/bth3huZSLXMGJfosSKATedI1H7rXwRd0UKuZXWIz9mW2huODucZ1Y4yakDS4R/zZ4gXHYqsm0XzKU/sp2GVoUrzI/YUkjr4PmwGCx4gdTM1TzSY8E8xAHeo1dxGEg+SGccmQ=
 
-env: 
-  global: 
-    - ARTIFACTS_AWS_REGION=us-west-2
-    - ARTIFACTS_S3_BUCKET=artifacts.numenta.org
+before_script:
+- git branch -v
+- git remote show origin
+- git remote -v
 
-    # ARTIFACTS_AWS_ACCESS_KEY_ID
-    - secure: |-
-        LryXoMT+lhDYreY0xYVBZg0HbpZHik6fUh8ZqCiOoUYrCAkoMck1NWkvWMst
-        di3ZnAyQKxnOzqNpWDiBufJnA4OXzm4SnkDj5NT2ZYZ56jRNFXveRD9bmXcz
-        PFtP88dQvesy1el66EBBGTfuPls4pI7+Juu9iaK5jo9pup22rX0=
-
-    # ARTIFACTS_AWS_SECRET_ACCESS_KEY
-    - secure: |-
-        ZDEgrBeE7f9yTjD3Va4uvkEakNcNKTgNTJ8VWT9QUZdmEvlgvGWRvCbUZHQc
-        P+tJ/UVBATmEx5RHf0NqKFyfkC/VeA8C3D4ekCnbB11WF/4i8CCGCrhui9Mx
-        cfgr20Rz8KuuC/TZklPjVCy+0dXS3o2CL7u2b7XDGYzBYPxayjU=
-
-before_script: 
-    - git branch -v
-    - git remote show origin
-    - git remote -v
-
-after_success: 
-    # Install required ruby gem for artifact uploads to S3.
-    - test "${TRAVIS_BRANCH}" = "master" && gem install travis-artifacts
-    # Publish complete coverage report to S3 if this is not a pull request.
-    - test "${TRAVIS_BRANCH}" = "master" && test "${TRAVIS_PULL_REQUEST}" = "false" && travis-artifacts upload --path coverage --target-path artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}
-    # Publish the coverage summary master branch for comparison in later builds to S3 if this is not a pull request.
-    - test "${TRAVIS_BRANCH}" = "master" && test "${TRAVIS_PULL_REQUEST}" = "false" && travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH && echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}/lcov-report/index.html"
+after_success:
+- test "${TRAVIS_BRANCH}" = "master" && travis_retry gem install travis-artifacts
+  > /dev/null
+- test "${TRAVIS_BRANCH}" = "master" && test "${TRAVIS_PULL_REQUEST}" = "false" &&
+  travis-artifacts upload --path coverage --target-path artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}
+- test "${TRAVIS_BRANCH}" = "master" && test "${TRAVIS_PULL_REQUEST}" = "false" &&
+  travis-artifacts upload --path coverage/summary.txt --target-path artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH
+  && echo "Coverage report available at https://s3-us-west-2.amazonaws.com/artifacts.numenta.org/artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BUILD_ID}/${TRAVIS_JOB_ID}/lcov-report/index.html"
