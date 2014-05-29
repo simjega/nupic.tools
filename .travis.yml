@@ -10,7 +10,7 @@ deploy:
   bucket: artifacts.numenta.org
   region: us-west-2
   local-dir: coverage
-  upload-dir: numenta/nupic.tools/coverage
+  upload-dir: "numenta/nupic.tools/${TRAVIS_BRANCH}/coverage"
   skip_cleanup: true
 
 before_script:
