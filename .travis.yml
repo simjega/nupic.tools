@@ -6,7 +6,7 @@ deploy:
   provider: s3
   access_key_id: AKIAIGHYSEHV3WFKOWNQ
   secret_access_key:
-    secure: Pl6eK+F64KW7I59oHnssRDvb5qca8BE3ad2JRHt01BWF1V/Pf0JV2X2pZfGAHaDQR+vf6rnHB6anD2+MV1d5YaybsaLJ/WT/QB04elx79P0U5HMURzypYwJHsDPdn7ckH3y4v5G3XxrGO/RqWt5YvF6IJR3m+CRtjhJaHT3CJzc=
+    secure: "GduXEExoAGIOFCpoTRiJVyy6M7Q1PtFUnkgJKGtVv5RWhQwKOW7imzTGl/K11fUcz5QFQa871glxs3qM0/c0F3X/cykwNVG7Vm5IL9C/NNIUczGHj/becPmJ/GH1Pg8Wo5sgIrhPa35LLjt28oJVCjEy3+SYSCWkv252MJzL5h8="
   bucket: artifacts.numenta.org
   region: us-west-2
   local-dir: coverage
