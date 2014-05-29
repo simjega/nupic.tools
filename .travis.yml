@@ -2,17 +2,13 @@ node_js:
 - '0.10'
 language: node_js
 
-env:
-  global:
-  # AWS access key
-  - secure: OrM/ctX2OEFmWvs4YT5dQczo7SJhAKRr1XLDX1p/Ca9UFiyY01/96FnVflWLkCQJZuKs/qFHeSYaoj5CQHOw/QlGJvDHqkW2702y0uisY+C84U3MvY4CSch1+3irGFLTnp4sZVsO9wZGKrYg3kkhn7ffHqv3vj22LjXDlssPfY0=
-  # AWS secret key
-  - secure: WcOR5Y6WWEoFkoXbxQDzZd0Gm1mlh77Qht46dXbXe9H1plGYI8YbL8T5igdVeXWMmIZQVgb1VyXb0r3GwgolvOpa0OohC48+ImAIcG1VZoMsUokWzAXXd1TflNDjld5WPTH4CvwZKkxIOkoviXE7PuwO2k8lCCKxHzhK0ybuDIg=
-
 deploy:
   provider: s3
-  region: us-west-2
+  access_key_id: AKIAIGHYSEHV3WFKOWNQ
+  secret_access_key:
+    secure: Pl6eK+F64KW7I59oHnssRDvb5qca8BE3ad2JRHt01BWF1V/Pf0JV2X2pZfGAHaDQR+vf6rnHB6anD2+MV1d5YaybsaLJ/WT/QB04elx79P0U5HMURzypYwJHsDPdn7ckH3y4v5G3XxrGO/RqWt5YvF6IJR3m+CRtjhJaHT3CJzc=
   bucket: artifacts.numenta.org
+  region: us-west-2
   local-dir: coverage
   upload-dir: numenta/nupic.tools
   skip_cleanup: true
