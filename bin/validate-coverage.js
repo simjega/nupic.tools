@@ -4,7 +4,7 @@ var fs = require('fs'),
 
     S3_URL = 'https://s3-us-west-2.amazonaws.com/',
     S3_BUCKET = 'artifacts.numenta.org',
-    COVERAGE_DIR = 'artifacts/coverage',
+    COVERAGE_DIR = 'numenta/nupic.tools/coverage',
     SUMMARY_PATH = 'coverage/summary.txt',
     MASTER = 'master',
     COMPARATOR = 'Statements';
@@ -68,8 +68,7 @@ function getCoverageMap(summaryText) {
 }
 
 function compareLocalReportWithRemote(localReport, repoSlug, branch) {
-    var remoteSummaryUrl = S3_URL + S3_BUCKET + '/artifacts/' 
-                           + repoSlug + '/' + branch + '/coverage/summary.txt';
+    var remoteSummaryUrl = S3_URL + S3_BUCKET + '/' + repoSlug + '/' + branch + '/coverage/summary.txt';
     console.info('Fetching last coverage report from \n' + remoteSummaryUrl);
     request.get(remoteSummaryUrl, function(err, resp, body) {
         var remoteReport;
@@ -95,7 +94,10 @@ function compareLocalReportWithRemote(localReport, repoSlug, branch) {
                 );
                 process.exit(-1);
             } else {
-                console.log('Coverage validation passed.'.green);
+                console.log((('Coverage validation passed with ' + COMPARATOR 
+                                                    + ' covered at ' + (localReport[COMPARATOR] + '%.')).green));
+                console.log((('(Last coverage of ' + COMPARATOR + ' was ' 
+                                                    + (localReport[COMPARATOR] + '%.)')).cyan));
             }
         }
     });
