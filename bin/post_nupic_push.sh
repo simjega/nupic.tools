@@ -95,6 +95,8 @@ cd $NUPIC
 sha=`git log -1 --pretty=oneline | sed -E "s/^([^[:space:]]+).*/\1/" | tr -d ' '`
 cd $NUPIC_REGRESSION
 echo $sha > nupic_sha.txt
+git fetch origin
+git merge origin/master --no-edit
 git add nupic_sha.txt
 git commit -m "Automated update of nupic master sha to ${sha}."
 git push origin master
