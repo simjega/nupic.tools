@@ -27,11 +27,18 @@ function RepositoryClient(config) {
         username: this.user,
         password: this.password
     }, function() {});
+    // Store configured validators.
     if (config.hasOwnProperty('validators')) {
         this.validators = {};
         if (config.validators.hasOwnProperty('excludes')) {
             this.validators.excludes = config.validators.excludes;
         }
+    }
+    // Store configured hooks.
+    if (config.hasOwnProperty('hooks')) {
+        this.hooks = config.hooks;
+    } else {
+        this.hooks = {};
     }
 }
 

@@ -66,7 +66,11 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
     // status posting logic
     if (postStatus) {
         callback = function() {
-            postNewNupicStatus.apply(this, arguments);
+            var args = Array.prototype.slice.call(arguments),
+                err = args.pop();
+            if (! err) {
+                postNewNupicStatus.apply(this, args);
+            }
             if (cb) {
                 cb.apply(this, arguments);
             }
@@ -80,8 +84,6 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
             return cb(new Error('Error communicating with Github API.'));
         }
 
-        log.verbose(statusHistory);
-        
         // clone of the global validators array
         var commitValidators = validators.slice(0),
             validationFailed = false,
@@ -114,7 +116,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                         if (err) {
                             console.error('Error running commit validator "' + validator.name + '"');
                             console.error(err);
-                            return callback(sha, {
+                            return callback(null, sha, {
                                 state: 'error',
                                 description: 'Error running commit validator "' + validator.name + '": ' + err.message 
                             }, repoClient);
@@ -124,7 +126,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                             // Upon failure, we set a flag that will skip the 
                             // remaining validators and post a failure status.
                             validationFailed = true;
-                            callback(sha, result, repoClient);
+                            callback(null, sha, result, repoClient);
                         }
                         // This code is just allowing the different validators to 
                         // fight over which one will provide the "Details" URL
@@ -153,7 +155,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
                 } else {
                     skippedMSG = ')';
                 }
-                callback(sha, {
+                callback(null, sha, {
                     state: 'success',
                     description: 'All validations passed (' + validatorsRun.map(function(v) { return v.name; }).join(', ') + skippedMSG,
                     target_url: target_url
