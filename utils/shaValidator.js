@@ -80,8 +80,6 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
             return cb(new Error('Error communicating with Github API.'));
         }
 
-        log.verbose(statusHistory);
-        
         // clone of the global validators array
         var commitValidators = validators.slice(0),
             validationFailed = false,

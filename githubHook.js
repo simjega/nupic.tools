@@ -149,6 +149,14 @@ function getPushHookForMonitor(monitorConfig) {
     return hook;
 }
 
+function getBuildHookForMonitor(monitorConfig) {
+    var hook = undefined;
+    if (monitorConfig && monitorConfig.hooks && monitorConfig.hooks.build) {
+        hook = monitorConfig.hooks.build;
+    }
+    return hook;
+}
+
 /**
  * Handles an event from Github that indicates that a PR has been merged into one
  * of the repositories. This could trigger a script to run locally in response, 
@@ -167,7 +175,7 @@ function handlePushEvent(payload, config) {
     log('Github push event on ' + repoSlug + '/' + branch);
     // Only process pushes to master, and only when there is a push hook defined.
     if (branch == 'master' && pushHook) {
-        executeCommand(pushHook)
+        executeCommand(pushHook);
     }
 }
 
