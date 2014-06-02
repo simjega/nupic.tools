@@ -1,5 +1,6 @@
 // This module provides a request handler for HTTP calls from Github web hooks.
 var fs = require('fs'),
+    _ = require('underscore'),
     log = require('./utils/log'),
     utils = require('./utils/general'),
     contributors = require('./utils/contributors'),
@@ -83,52 +84,58 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
  * performs a complete validation of the repository.
  * @param sha {string} SHA of the tip of the PR.
  * @state {string} State of the PR (opened, closed, merged, etc)
- * @param pullRequest {object} the PR payload from Github.
+ * @branches {Object[]} List of branches that came with the state change
  * @param repoClient {RepositoryClient} Repo client associated with this repo this
  *                                      PR was created against.
  * @param cb {function} Will be called when PR has been handled.
  */
-function handleStateChange(sha, state, pullRequest, repoClient, cb) {
+function handleStateChange(sha, state, branches, repoClient, cb) {
+    var isMaster = false,
+        buildHook = undefined;
     log('State of ' + sha + ' has changed to "' + state + '".');
-    // Ignore state changes on closed pull requests
-    if (pullRequest && pullRequest.state == 'closed') {
-        log.warn('Ignoring status of closed pull request (' + sha + ')');
-        if (cb) { cb(); }
-        return;
-    }
-    repoClient.getCommit(sha, function(err, commit) {
-        utils.lastStatusWasExternal(repoClient, sha, function(external) {
-            var commitAuthor = undefined;
-            // This is a temporary block until I figure out what is going on here.
-            if (! commit.author) {
-                log.warn('PR has no author!');
-                console.log('--------------------------');
-                console.log(sha);
-                console.log('--------------------------');
-                console.log(state);
-                console.log('--------------------------');
-                console.log(pullRequest);
-                console.log('--------------------------');
-                if (cb) { cb(); }
-                return;
-            }
-            commitAuthor = commit.author.login;
-            if (external) {
-                shaValidator.performCompleteValidation(
-                    sha, 
-                    commitAuthor, 
-                    repoClient, 
-                    dynamicValidatorModules, 
-                    true, 
-                    cb
-                );
-            } else {
-                // ignore statuses that were created by this server
-                log.warn('Ignoring "' + state + '" status created by nupic.tools.');
-                if (cb) { cb(); }
-            }
-        });
+    // A "success" state means that a build passed. If the build passed on the
+    // master branch, we need to trigger a "build" hook, which might execute a
+    // script to run in the /bin directory.
+    isMaster = _.some(branches, function(branch) {
+        return branch.name == 'master';
     });
+    // If this was a successful build of the master branch, we want to trigger the
+    // build success hook.
+    if (state == 'success' && isMaster) {
+        log('Github build success event on ' + repoSlug + '/');
+        // Only process when there is a build hook defined.
+        if (repoClient.hooks.build) {
+            executeCommand(repoClient.hooks.build);
+        }
+    }
+    // Otherwise we process this as any other state change.
+    else {
+        repoClient.getCommit(sha, function(err, commit) {
+            utils.lastStatusWasExternal(repoClient, sha, function(external) {
+                var commitAuthor = undefined;
+                // This is a temporary block until I figure out what is going on here.
+                if (! commit.author) {
+                    if (cb) { cb(new Error('PR has no author!')); }
+                    return;
+                }
+                commitAuthor = commit.author.login;
+                if (external) {
+                    shaValidator.performCompleteValidation(
+                        sha, 
+                        commitAuthor, 
+                        repoClient, 
+                        dynamicValidatorModules, 
+                        true, 
+                        cb
+                    );
+                } else {
+                    // ignore statuses that were created by this server
+                    log.warn('Ignoring "' + state + '" status created by nupic.tools.');
+                    if (cb) { cb(); }
+                }
+            });
+        });
+    }
 }
 
 function executeCommand(command) {
@@ -201,7 +208,7 @@ function initializer(clients, config) {
     return function(req, res) {
         // Get what repository Github is telling us about
         var payload = JSON.parse(req.body.payload),
-            repoName, repoClient, repoSlug, branch, pushHook;
+            sha, repoName, repoClient, repoSlug, branch, pushHook;
 
         if (payload.name) {
             repoName = payload.name;
@@ -227,21 +234,31 @@ function initializer(clients, config) {
         
         log.verbose("Github hook executing for " + repoClient.toString().magenta);
 
-        function whenDone() {
+        function whenDone(err) {
+            if (err) {
+                log.error(err);
+                log(payload);
+            }
             res.end();
         }
 
         // If the payload has a 'state', that means this is a state change.
         if (payload.state) {
+            sha = payload.sha;
             log.debug('** Handle State Change **');
-            handleStateChange(
-                payload.sha, 
-                payload.state, 
-                payload.pull_request, 
-                repoClient, 
-                whenDone
-            );
-        } else if (payload.pull_request) {
+            // Ignore state changes on closed pull requests
+            if (payload.pullRequest && payload.pullRequest.state == 'closed') {
+                log.warn('Ignoring status of closed pull request (' + sha + ')');
+                whenDone();
+            } else {
+                handleStateChange(
+                    sha, payload.state, payload.branches, repoClient, whenDone
+                );
+            }
+        } 
+        // If the payload has a 'pull_request', well that means this is a pull
+        // request.
+        else if (payload.pull_request) {
             log.debug('** Handle Pull Request Update **');
             handlePullRequest(
                 payload.action, 
@@ -249,7 +266,9 @@ function initializer(clients, config) {
                 repoClient, 
                 whenDone
             );
-        } else {
+        }
+        // Assuming everything else is a push event.
+        else {
             log.debug('** Handle Push Event **')
             handlePushEvent(payload, config);
         }
