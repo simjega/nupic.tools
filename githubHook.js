@@ -102,7 +102,7 @@ function handleStateChange(sha, state, branches, repoClient, cb) {
     // If this was a successful build of the master branch, we want to trigger the
     // build success hook.
     if (state == 'success' && isMaster) {
-        log('Github build success event on ' + repoSlug + '/');
+        log('Github build success event on ' + repoClient + '/');
         // Only process when there is a build hook defined.
         if (repoClient.hooks.build) {
             executeCommand(repoClient.hooks.build);

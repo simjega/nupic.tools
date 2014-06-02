@@ -12,8 +12,15 @@ var assert = require('assert');
 
 describe('github hook handler', function() {
     var validationPerformed = false,
+        lastExecutedCommand = undefined,
         validatedSHA, validatedUser, validatorsUsed, validationPosted,
         githubHook = proxyquire('./../githubHook', {
+            'child_process': {
+                exec: function(cmd, cb) {
+                    lastExecutedCommand = cmd;
+                    cb(null, 'stdout', 'stderr');
+                }
+            },
             './utils/general': utilStub,
             './utils/shaValidator': {
                 performCompleteValidation: function(sha, githubUser, _, validators, postStatus, cb) {
@@ -27,12 +34,17 @@ describe('github hook handler', function() {
                 }
             }
         }),
-        mockClients = {'foo': true},
+        mockClients = {'numenta/experiments': {
+            hooks: {
+                build: 'build hook'
+            },
+            getCommit: function() {}
+        }},
         handler = githubHook.initializer(mockClients, 'mockConfig');
 
     it('calls pr handler when sent a mergeable pull_request event', function() {
         var mockPayload = {
-                name: 'foo',
+                name: 'numenta/experiments',
                 pull_request: {
                     action: 'closed',
                     user: {login: 'login'},
@@ -75,9 +87,9 @@ describe('github hook handler', function() {
         validationPosted = undefined;
     });
 
-    it('does not call pr handler when sent a non-mergeable pull_request event', function() {
+    it('does not call pr handler when sent a non-mergeable pull_request event', function(done) {
         var mockPayload = {
-                name: 'foo',
+                name: 'numenta/experiments',
                 pull_request: {
                     action: 'closed',
                     user: {login: 'login'},
@@ -94,10 +106,19 @@ describe('github hook handler', function() {
                     payload: JSON.stringify(mockPayload)
                 }
             },
-            endCalled = false,
             mockResponse = {
                 end: function() {
-                    endCalled = true;
+                    assert(!validationPerformed, 'validation against PR should not be performed');
+                    // TODO post a status instead of not posting
+                    assert(!validationPosted, 'validation status should not be posted');
+
+                    // Reset just in case further tests use them.
+                    validationPerformed = undefined;
+                    validatedSHA = undefined;
+                    validatedUser = undefined;
+                    validatorsUsed = undefined;
+                    validationPosted = undefined;
+                    done();
                 }
             };
 
@@ -105,10 +126,47 @@ describe('github hook handler', function() {
 
         handler(mockRequest, mockResponse);
 
-        assert(!validationPerformed, 'validation against PR should not be performed');
-        // TODO post a status instead of not posting
-        assert(!validationPosted, 'validation status should not be posted');
-        assert(endCalled, 'request was not closed');
+    });
+    
+    // it('calls push handler when sent a push event', function() {});
+    
+    // it('calls status handler when sent a status event', function() {});
+
+    it('calls build hook command on master build success status event', function() {
+        var mockPayload = require('./github_payloads/status_master_build_success'),
+            mockRequest = {
+                body: {
+                    payload: JSON.stringify(mockPayload)
+                }
+            };
+
+        handler(mockRequest);
+
+        assert(!validationPerformed, 'validation against PR should not be performed on successful master build.');
+        assert(!validationPosted, 'validation status should not be posted on successful master build.');
+        assert(lastExecutedCommand, 'No hook command executed on master build success.');
+        assert.equal(lastExecutedCommand, 'build hook', 'Wrong hook command executed on master build success.');
+        // Reset just in case further tests use them.
+        validationPerformed = undefined;
+        validatedSHA = undefined;
+        validatedUser = undefined;
+        validatorsUsed = undefined;
+        validationPosted = undefined;
+        lastExecutedCommand = undefined;
+
+    });
+
+    it('does NOT call build hook command on non-master build success status event', function() {
+        var mockPayload = require('./github_payloads/status_non-master_build_success'),
+            mockRequest = {
+                body: {
+                    payload: JSON.stringify(mockPayload)
+                }
+            };
+
+        handler(mockRequest);
+
+        assert.equal(lastExecutedCommand, undefined, 'build hook should NOT have been executed for non-master build success.');
 
         // Reset just in case further tests use them.
         validationPerformed = undefined;
@@ -116,9 +174,9 @@ describe('github hook handler', function() {
         validatedUser = undefined;
         validatorsUsed = undefined;
         validationPosted = undefined;
+
     });
-    
-    // it('calls push handler when sent a push event', function() {});
-    
-    // it('calls status handler when sent a status event', function() {});
+
+
+
 });
