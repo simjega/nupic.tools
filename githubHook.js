@@ -98,7 +98,21 @@ function handleStateChange(sha, state, pullRequest, repoClient, cb) {
     }
     repoClient.getCommit(sha, function(err, commit) {
         utils.lastStatusWasExternal(repoClient, sha, function(external) {
-            var commitAuthor = commit.author.login;
+            var commitAuthor = undefined;
+            // This is a temporary block until I figure out what is going on here.
+            if (! commit.author) {
+                log.warn('PR has no author!');
+                console.log('--------------------------');
+                console.log(sha);
+                console.log('--------------------------');
+                console.log(state);
+                console.log('--------------------------');
+                console.log(pullRequest);
+                console.log('--------------------------');
+                if (cb) { cb(); }
+                return;
+            }
+            commitAuthor = commit.author.login;
             if (external) {
                 shaValidator.performCompleteValidation(
                     sha, 
@@ -211,7 +225,7 @@ function initializer(clients, config) {
 
         // If the payload has a 'state', that means this is a state change.
         if (payload.state) {
-            log.debug('** Handle State Change **')
+            log.debug('** Handle State Change **');
             handleStateChange(
                 payload.sha, 
                 payload.state, 
@@ -220,7 +234,7 @@ function initializer(clients, config) {
                 whenDone
             );
         } else if (payload.pull_request) {
-            log.debug('** Handle Pull Request Update **')
+            log.debug('** Handle Pull Request Update **');
             handlePullRequest(
                 payload.action, 
                 payload.pull_request, 
