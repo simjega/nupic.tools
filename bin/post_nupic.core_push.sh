@@ -38,13 +38,19 @@ cd ${NUPIC_CORE}
 git pull upstream master
 SHA=`git log -1 --pretty=oneline | sed -E "s/^([^[:space:]]+).*/\1/" | tr -d ' '`
 cd ${NUPIC}
+git pull upstream master
 git checkout -b core-update-${SHA}
-# Replaces existing SHA in .nupic_modules with new one.
+echo Replacing existing SHA in .nupic_modules with ${SHA}...
 sed -i -e "s#[0-9a-f]\{40\}#$SHA#g" .nupic_modules
+cat .nupic_modules
 git add .nupic_modules
+echo Committing new .nupic_modules file...
 git commit -m "Updates nupic.core to ${SHA}."
+echo Pushing to remote branch...
 git push origin core-update-${SHA}
-hub pull-request -m "Updates nupic.core to ${SHA}."
+echo Attempting pull request creation...
+hub pull-request -m "Updates nupic.core to ${SHA}." -h "numenta-ci/nupic:core-update-${SHA}" -b "numenta/nupic:master"
+echo Back to master branch.
 git checkout master
 
 echo
