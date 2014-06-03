@@ -8,11 +8,11 @@
 ## Assumptions
 #
 # - numenta/nupic is checked out somewhere within reach cloned from  
-#   git@github.com:numenta/nupic.git as `origin`.
+#   git@github.com:numenta/nupic.git as `upstream`.
 #   - $NUPIC points to the location of this checkout.
 #
 # - numenta/nupic.regression is checked out out somewhere within reach cloned from
-#   git@github.com:numenta/nupic.regression.git as `origin`.
+#   git@github.com:numenta/nupic.regression.git as `upstream`.
 #   - $NUPIC_REGRESSION points to the location of this checkout.
 
 if [ -z "$NUPIC" ]; then
@@ -33,15 +33,15 @@ echo "Updating nupic.regression with newest commit sha on master..."
 echo
 
 cd $NUPIC
-git pull origin master
+git pull upstream master
 sha=`git log -1 --pretty=oneline | sed -E "s/^([^[:space:]]+).*/\1/" | tr -d ' '`
 cd $NUPIC_REGRESSION
-git fetch origin
-git merge origin/master --no-edit
+git fetch upstream
+git merge upstream/master --no-edit
 echo $sha > nupic_sha.txt
 git add nupic_sha.txt
 git commit -m "Automated update of nupic master sha to ${sha}."
-git push origin master
+git push upstream master
 
 echo 
 echo "Done updating nupic.regression."

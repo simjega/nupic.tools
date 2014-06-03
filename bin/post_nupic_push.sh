@@ -8,15 +8,15 @@
 ## Assumptions
 #
 # - numenta/nupic is checked out somewhere within reach cloned from  
-#   git@github.com:numenta/nupic.git as `origin`.
+#   git@github.com:numenta/nupic.git as `upstream`.
 #   - $NUPIC points to the location of this checkout.
 #
 # - numenta/nupic.core is checked out out somewhere within reach cloned from
-#   git@github.com:numenta/nupic.core.git as `origin`.
+#   git@github.com:numenta/nupic.core.git as `upstream`.
 #   - $NUPIC_CORE points to the location of this checkout.
 #
 # - numenta/numenta.org repository is checked out from 
-#   https://github.com/numenta/numenta.org
+#   git@github.com:numenta/numenta.org.git as `upstream`.
 #   - $NUMENTA_ORG points to the location of this checkout
 
 if [ -z "$NUPIC" ]; then
@@ -46,7 +46,7 @@ cd $NUPIC
 echo
 echo "Checking out numenta/nupic master branch for doxygen build..."
 git checkout master
-git pull origin master
+git pull upstream master
 doxygen
 
 cwd=`pwd`
@@ -55,13 +55,13 @@ cd $NUPIC_CORE
 echo
 echo "Checking out numenta/nupic.core master branch for doxygen build..."
 git checkout master
-git pull origin master
+git pull upstream master
 doxygen
 
 echo "Checking out numenta/numenta.org gh-pages branch for documentation push..."
 cd $NUMENTA_ORG
-git fetch origin
-git merge origin/gh-pages --no-edit
+git fetch upstream
+git merge upstream/gh-pages --no-edit
 # move html directories into right place
 rm -rf docs/nupic docs/nupic.core
 mv $NUPIC/html $NUMENTA_ORG/docs/nupic
@@ -71,7 +71,7 @@ git add docs
 # commit new docs
 git commit -m "NuPIC Doxygen automated doc build."
 # push new docs
-git push origin gh-pages
+git push upstream gh-pages
 
 echo
 echo "Done building and pushing new docs."
