@@ -91,7 +91,7 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
  */
 function handleStateChange(sha, state, branches, repoClient, cb) {
     var isMaster = false,
-        buildHook = undefined;
+        buildHooks = undefined;
     log('State of ' + sha + ' has changed to "' + state + '".');
     // A "success" state means that a build passed. If the build passed on the
     // master branch, we need to trigger a "build" hook, which might execute a
@@ -102,11 +102,13 @@ function handleStateChange(sha, state, branches, repoClient, cb) {
     // If this was a successful build of the master branch, we want to trigger the
     // build success hook.
     if (state == 'success' && isMaster) {
+        buildHooks = getBuildHooksForMonitor(repoClient);
         log('Github build success event on ' + repoClient + '/');
         // Only process when there is a build hook defined.
-        if (repoClient.hooks.build) {
-            executeCommand(repoClient.hooks.build);
-        }
+
+        _.each(buildHooks, function(hookCmd) {
+            executeCommand(hookCmd);
+        });
     }
     // Otherwise we process this as any other state change.
     else {
@@ -148,20 +150,25 @@ function executeCommand(command) {
     });
 }
 
-function getPushHookForMonitor(monitorConfig) {
-    var hook = undefined;
-    if (monitorConfig && monitorConfig.hooks && monitorConfig.hooks.push) {
-        hook = monitorConfig.hooks.push;
+function getHooksForMonitorForType(type, monitorConfig) {
+    var hooks = [];
+    if (monitorConfig && monitorConfig.hooks && monitorConfig.hooks[type]) {
+        // Could be a strong or an array of strings.
+        if (typeof(monitorConfig.hooks[type]) == 'string') {
+            hooks.push(monitorConfig.hooks[type]);
+        } else {
+            hooks = monitorConfig.hooks[type];
+        }
     }
-    return hook;
+    return hooks;
 }
 
-function getBuildHookForMonitor(monitorConfig) {
-    var hook = undefined;
-    if (monitorConfig && monitorConfig.hooks && monitorConfig.hooks.build) {
-        hook = monitorConfig.hooks.build;
-    }
-    return hook;
+function getPushHooksForMonitor(monitorConfig) {
+    return getHooksForMonitorForType('push', monitorConfig);
+}
+
+function getBuildHooksForMonitor(monitorConfig) {
+    return getHooksForMonitorForType('build', monitorConfig);
 }
 
 /**
@@ -178,11 +185,13 @@ function handlePushEvent(payload, config) {
             + '/' + payload.repository.name,
         branch = payload.ref.split('/').pop(),
         monitorConfig = config.monitors[repoSlug],
-        pushHook = getPushHookForMonitor(monitorConfig);
+        pushHooks = getPushHooksForMonitor(monitorConfig);
     log('Github push event on ' + repoSlug + '/' + branch);
     // Only process pushes to master, and only when there is a push hook defined.
-    if (branch == 'master' && pushHook) {
-        executeCommand(pushHook);
+    if (branch == 'master') {
+        _.each(pushHooks, function(hookCmd) {
+            executeCommand(hookCmd);
+        });
     }
 }
 

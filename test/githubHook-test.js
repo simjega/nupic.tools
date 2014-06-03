@@ -12,12 +12,12 @@ var assert = require('assert');
 
 describe('github hook handler', function() {
     var validationPerformed = false,
-        lastExecutedCommand = undefined,
+        executedHookCommands = [],
         validatedSHA, validatedUser, validatorsUsed, validationPosted,
         githubHook = proxyquire('./../githubHook', {
             'child_process': {
                 exec: function(cmd, cb) {
-                    lastExecutedCommand = cmd;
+                    executedHookCommands.push(cmd);
                     cb(null, 'stdout', 'stderr');
                 }
             },
@@ -132,7 +132,7 @@ describe('github hook handler', function() {
     
     // it('calls status handler when sent a status event', function() {});
 
-    it('calls build hook command on master build success status event', function() {
+    it('calls one build hook command on master build success status event', function() {
         var mockPayload = require('./github_payloads/status_master_build_success'),
             mockRequest = {
                 body: {
@@ -144,19 +144,19 @@ describe('github hook handler', function() {
 
         assert(!validationPerformed, 'validation against PR should not be performed on successful master build.');
         assert(!validationPosted, 'validation status should not be posted on successful master build.');
-        assert(lastExecutedCommand, 'No hook command executed on master build success.');
-        assert.equal(lastExecutedCommand, 'build hook', 'Wrong hook command executed on master build success.');
+        assert.equal(executedHookCommands.length, 1, 'Wrong number of hook commands executed.');
+        assert.equal(executedHookCommands[0], 'build hook', 'Wrong hook command executed on master build success.');
         // Reset just in case further tests use them.
         validationPerformed = undefined;
         validatedSHA = undefined;
         validatedUser = undefined;
         validatorsUsed = undefined;
         validationPosted = undefined;
-        lastExecutedCommand = undefined;
+        executedHookCommands = [];
 
     });
 
-    it('does NOT call build hook command on non-master build success status event', function() {
+    it('does NOT call build hook commands on non-master build success status event', function() {
         var mockPayload = require('./github_payloads/status_non-master_build_success'),
             mockRequest = {
                 body: {
@@ -166,7 +166,7 @@ describe('github hook handler', function() {
 
         handler(mockRequest);
 
-        assert.equal(lastExecutedCommand, undefined, 'build hook should NOT have been executed for non-master build success.');
+        assert(executedHookCommands.length == 0, 'build hook should NOT have been executed for non-master build success.');
 
         // Reset just in case further tests use them.
         validationPerformed = undefined;
@@ -174,7 +174,38 @@ describe('github hook handler', function() {
         validatedUser = undefined;
         validatorsUsed = undefined;
         validationPosted = undefined;
+        executedHookCommands = [];
+    });
 
+    it('calls multiple hook commands on master build success status event', function() {
+        mockClients = {'numenta/experiments': {
+            hooks: {
+                build: ['build hook 1', 'build hook 2']
+            },
+            getCommit: function() {}
+        }}
+        handler = githubHook.initializer(mockClients, 'mockConfig');
+        var mockPayload = require('./github_payloads/status_master_build_success'),
+            mockRequest = {
+                body: {
+                    payload: JSON.stringify(mockPayload)
+                }
+            };
+
+        handler(mockRequest);
+
+        assert(!validationPerformed, 'validation against PR should not be performed on successful master build.');
+        assert(!validationPosted, 'validation status should not be posted on successful master build.');
+        assert.equal(executedHookCommands.length, 2, 'Wrong number of hook commands executed.');
+        assert.equal(executedHookCommands[0], 'build hook 1', 'Wrong hook command executed on master build success.');
+        assert.equal(executedHookCommands[1], 'build hook 2', 'Wrong hook command executed on master build success.');
+        // Reset just in case further tests use them.
+        validationPerformed = undefined;
+        validatedSHA = undefined;
+        validatedUser = undefined;
+        validatorsUsed = undefined;
+        validationPosted = undefined;
+        executedHookCommands = [];
     });
 
 
