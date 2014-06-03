@@ -33,6 +33,7 @@ echo "Updating nupic.regression with newest commit sha on master..."
 echo
 
 cd $NUPIC
+git pull origin master
 sha=`git log -1 --pretty=oneline | sed -E "s/^([^[:space:]]+).*/\1/" | tr -d ' '`
 cd $NUPIC_REGRESSION
 git fetch origin
