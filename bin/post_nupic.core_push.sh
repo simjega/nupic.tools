@@ -39,10 +39,13 @@ git pull upstream master
 SHA=`git log -1 --pretty=oneline | sed -E "s/^([^[:space:]]+).*/\1/" | tr -d ' '`
 cd ${NUPIC}
 git pull upstream master
+echo Deleting any existing local branch for this SHA...
+git branch -D core-update-${SHA}
 git checkout -b core-update-${SHA}
+echo Pulling changes from existing remote update branch...
+git merge origin/core-update-sha --no-edit --strategy-option theirs
 echo Replacing existing SHA in .nupic_modules with ${SHA}...
 sed -i -e "s#[0-9a-f]\{40\}#$SHA#g" .nupic_modules
-cat .nupic_modules
 git add .nupic_modules
 echo Committing new .nupic_modules file...
 git commit -m "Updates nupic.core to ${SHA}."
