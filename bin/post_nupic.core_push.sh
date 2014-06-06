@@ -1,4 +1,4 @@
-## 
+##
 # This script is to be executed by the tooling server every time there is a push
 # to nupic.core master branch. It is currently used to:
 # - Create a NuPIC PR that updates to the latest nupic.core SHA
@@ -8,7 +8,7 @@
 # - Hub is installed: https://hub.github.com. This is used to create pull
 #   requests in Github.
 #
-# - numenta/nupic is checked out somewhere within reach cloned from  
+# - numenta/nupic is checked out somewhere within reach cloned from
 #   git@github.com:numenta/nupic.git as `origin`.
 #   - $NUPIC points to the location of this checkout.
 #
@@ -47,9 +47,9 @@ git add .nupic_modules
 echo Committing new .nupic_modules file...
 git commit -m "Updates nupic.core to ${SHA}."
 echo Pushing to remote branch...
-git push origin core-update-${SHA}
+git push origin core-update-${SHA}:core-update-sha
 echo Attempting pull request creation...
-hub pull-request -m "Updates nupic.core to ${SHA}." -h "numenta-ci/nupic:core-update-${SHA}" -b "numenta/nupic:master"
+hub pull-request -m "Updates nupic.core to latest built SHA." -h "numenta-ci/nupic:core-update-sha" -b "numenta/nupic:master"
 echo Back to master branch.
 git checkout master
 
