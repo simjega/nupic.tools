@@ -93,8 +93,13 @@ describe('github hook handler', function() {
                 pull_request: {
                     action: 'closed',
                     user: {login: 'login'},
-                    head: {sha: 'sha'},
-                    base: {label: 'label', ref: 'master'},
+                    head: {sha: 'sha', label: 'head:branch'},
+                    base: {
+                        label: 'base:master', ref: 'master',
+                        repo: {
+                            html_url: 'https://github.com/numenta/experiments/'
+                        }
+                    },
                     // a non-mergeable PR
                     merged: false,
                     mergeable: false,
