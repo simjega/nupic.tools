@@ -1,5 +1,7 @@
 var fs = require('fs'),
-    log = require('./log');
+    log = require('./log'),
+    GH_USERNAME = process.env.GH_USERNAME,
+    GH_PASSWORD = process.env.GH_PASSWORD;
 
 function readConfigFileIntoObject(path) {
     if (! fs.existsSync(path)) {
@@ -30,6 +32,7 @@ function read(configFile) {
                 config[key] = userConfig[key];
             }
         });
+        // Merges monitor configurations (user-specific config overrides default config).
         Object.keys(userConfig.monitors).forEach(function(outerKey) {
             if (! config.monitors[outerKey]) {
                 config.monitors[outerKey] = userConfig.monitors[outerKey];
@@ -38,9 +41,18 @@ function read(configFile) {
                     config.monitors[outerKey][innerKey] = userConfig.monitors[outerKey][innerKey];
                 });
             }
+            // Each monitor also needs a username/password for the Github API, which we're getting from the environment.
+            config.monitors[outerKey].username = GH_USERNAME;
+            config.monitors[outerKey].password = GH_PASSWORD;
         });
     }
     return config;
+}
+
+// Fail fast.
+if (! GH_USERNAME || ! GH_PASSWORD) {
+    throw Error('Both GH_USERNAME and GH_PASSWORD environment variables are required for nupic.tools to run.' +
+        '\nThese are necessary for making Github API calls.');
 }
 
 module.exports.read = read;
