@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ##
 # This script is to be executed by the tooling server every time there is a push
 # to nupic.core master branch. It is currently used to:

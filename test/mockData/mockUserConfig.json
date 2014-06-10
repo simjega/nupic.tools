@@ -1,0 +1,18 @@
+{
+    "monitors": {
+
+        "numenta/experiments": {
+            "contributors": "http://numenta.org/resources/contributors.csv"
+        },
+
+        "numenta/nupic": {
+            "contributors": "http://numenta.org/resources/contributors.csv",
+            "hooks": {
+                "push": "~/nupic.tools/bin/post_nupic_push.sh"
+            }
+        }
+
+    },
+
+    "logDirectory": "/Users/mtaylor/.forever"
+}

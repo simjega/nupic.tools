@@ -34,7 +34,8 @@
         "jsdom"         : "0.10.5",
         "q"             : "1.0.1",
         "underscore"    : "1.6.0",
-        "travis-ci"     : "1.2.0"
+        "travis-ci"     : "1.2.0",
+        "chai"          : "1.9.x"
     },
     "devDependencies": {
         "proxyquire": "0.5.x",

@@ -4,7 +4,6 @@ var fs = require('fs'),
 
     S3_URL = 'https://s3-us-west-2.amazonaws.com/',
     S3_BUCKET = 'artifacts.numenta.org',
-    COVERAGE_DIR = 'numenta/nupic.tools/coverage',
     SUMMARY_PATH = 'coverage/summary.txt',
     MASTER = 'master',
     COMPARATOR = 'Statements';
