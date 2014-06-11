@@ -4,10 +4,37 @@
 
     "monitors": {
 
+        "numenta/nupic": {
+            "contributors": "http://numenta.org/resources/contributors.csv",
+            "hooks": {
+                "push": "~/nupic.tools/bin/post_nupic_push.sh",
+                "build": "~/nupic.tools/bin/post_nupic_build.sh"
+            }
+        },
+
+        "numenta/nupic.core": {
+            "contributors": "http://numenta.org/resources/contributors.csv",
+            "hooks": {
+                "push": "bin/post_nupic.core_push.sh"
+            }
+        },
+
+        "numenta/nupic.tools": {
+            "contributors": "http://numenta.org/resources/contributors.csv"
+        },
+
+        "numenta/numenta.org": {
+            "contributors": "http://numenta.org/resources/contributors.csv"
+        },
+
         "numenta/experiments": {
             "contributors": "http://numenta.org/resources/contributors.csv"
         }
 
+    },
+
+    "validators": {
+        "exclude": ["Fast-Forward Validator"]
     },
 
     "mailinglists": [

@@ -45,11 +45,17 @@ function validateSha(req, res) {
     var reqUrl = url.parse(req.url),
         query = qs.parse(reqUrl.query),
         sha = query.sha,
-        postStatus = query.postStatus || false,
+        postStatus,
         repo = query.repo,
         jsonPCallback = query.callback,
         repoClient = repoClients[repo],
         errors = [];
+
+    if (query.postStatus == '1' || query.postStatus.toLowerCase() == 'true') {
+        postStatus = true;
+    } else {
+        postStatus = false;
+    }
 
     if (! sha) {
         errors.push(new Error('Missing "sha" query parameter.'));
@@ -68,7 +74,7 @@ function validateSha(req, res) {
             return jsonUtils.renderErrors(errors, res, jsonPCallback);
         }
         committer = payload.author ? payload.author.login : false;
-        shaValidator.performCompleteValidation(sha, committer, client, validators, postStatus, function (sha, statusDetails, repoClient) {
+        shaValidator.performCompleteValidation(sha, committer, client, validators, postStatus, function (err, sha, statusDetails, repoClient) {
             var htmlOut = '<html><body>\n<h1>SHA Validation report</h1>\n';
             htmlOut += '<h2>' + repoClient.toString() + '</h2>\n';
             htmlOut += '<h2>' + sha + '</h2>\n';

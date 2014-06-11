@@ -9,7 +9,7 @@ var assert = require('assert'),
     repoClientSecondStub = {
         'getAllStatusesFor': function(sha, callback) { callback(null, 'fakeStatusHistory'); },
         'validators': {
-            'excludes': ['FirstValidator']
+            'exclude': ['FirstValidator']
         }
     },
     validatorsStub = [
