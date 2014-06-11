@@ -1,4 +1,5 @@
 var fs = require('fs'),
+    _ = require('underscore'),
     log = require('./log'),
     GH_USERNAME = process.env.GH_USERNAME,
     GH_PASSWORD = process.env.GH_PASSWORD;
@@ -41,9 +42,18 @@ function read(configFile) {
                     config.monitors[outerKey][innerKey] = userConfig.monitors[outerKey][innerKey];
                 });
             }
-            // Each monitor also needs a username/password for the Github API, which we're getting from the environment.
-            config.monitors[outerKey].username = GH_USERNAME;
-            config.monitors[outerKey].password = GH_PASSWORD;
+        });
+    }
+    // Each monitor also needs a username/password for the Github API, which we're getting from the environment.
+    _.each(config.monitors, function(monitorConfig, monitorName) {
+        config.monitors[monitorName].username = GH_USERNAME;
+        config.monitors[monitorName].password = GH_PASSWORD;
+    });
+
+    // Now if there are global validators defined, spread them across all monitor configs.
+    if (config.validators) {
+        _.each(config.monitors, function(monitorConfig) {
+            monitorConfig.validators = config.validators;
         });
     }
     return config;

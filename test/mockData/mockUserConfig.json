@@ -14,5 +14,9 @@
 
     },
 
+    "validators": {
+        "exclude": ["Fast-Forward Validator"]
+    },
+
     "logDirectory": "/Users/mtaylor/.forever"
 }

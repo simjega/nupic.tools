@@ -6,6 +6,10 @@
 
         "numenta/experiments": {
             "contributors": "http://numenta.org/resources/contributors.csv"
+        },
+
+        "numenta/nupic.tools": {
+            "contributors": "http://numenta.org/resources/contributors.csv"
         }
 
     },

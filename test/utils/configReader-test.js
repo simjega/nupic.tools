@@ -73,11 +73,25 @@ describe('configuration reader', function() {
         it('injects Github username/password into monitor configurations', function() {
             process.env.USER = 'testuser';
             var config = reader.read('conf/mockconfig.json');
-            expect(config.monitors).to.include.keys(['numenta/experiments', 'numenta/nupic']);
-            _.each(['numenta/experiments', 'numenta/nupic'], function(projectKey) {
+            expect(config.monitors).to.include.keys(['numenta/experiments', 'numenta/nupic', 'numenta/nupic.tools']);
+            _.each(['numenta/experiments', 'numenta/nupic', 'numenta/nupic.tools'], function(projectKey) {
                 expect(config.monitors[projectKey]).to.include.keys(['username', 'password']);
                 expect(config.monitors[projectKey].username).to.equal('mockghusername');
                 expect(config.monitors[projectKey].password).to.equal('mockghpassword');
+            });
+            process.env.USER = USER;
+        });
+
+        it('injects global validator configuration into each monitor', function() {
+            process.env.USER = 'testuser';
+            var config = reader.read('conf/mockconfig.json');
+            _.each(['numenta/experiments', 'numenta/nupic', 'numenta/nupic.tools'], function(projectKey) {
+                monitorConfig = config.monitors[projectKey];
+                expect(monitorConfig).to.include.keys('validators');
+                expect(monitorConfig.validators).to.include.keys('exclude');
+                expect(monitorConfig.validators.exclude).to.be.instanceOf(Array);
+                expect(monitorConfig.validators.exclude).to.have.length(1);
+                expect(monitorConfig.validators.exclude[0]).to.equal('Fast-Forward Validator');
             });
             process.env.USER = USER;
         });

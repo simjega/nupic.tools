@@ -33,8 +33,7 @@ function postNewNupicStatus(sha, statusDetails, repoClient) {
 
 function triggerTravisBuildsOnAllOpenPullRequests(repoClient, callback) {
     repoClient.getAllOpenPullRequests(function(err, prs) {
-        var total = prs.length,
-            count = 0,
+        var count = 0,
             errors = null;
         log('Found ' + prs.length + ' open pull requests...');
         prs.map(function(pr) { return pr.number; }).forEach(function(pr_number) {
@@ -67,7 +66,7 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
     if (postStatus) {
         callback = function() {
             var args = Array.prototype.slice.call(arguments),
-                err = args.pop();
+                err = args.shift();
             if (! err) {
                 postNewNupicStatus.apply(this, args);
             }
@@ -94,9 +93,9 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
             skippedMSG;
 
         function shouldSkipValidation(repoClient, validator) {
-            return repoClient.hasOwnProperty('validators') 
-                && repoClient.validators.hasOwnProperty('excludes') 
-                && repoClient.validators.excludes.indexOf(validator.name) !== -1
+            return repoClient.validators
+                && repoClient.validators.exclude
+                && repoClient.validators.exclude.indexOf(validator.name) !== -1
         }
 
         function runNextValidation() {
