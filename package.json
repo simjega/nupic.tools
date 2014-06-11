@@ -34,14 +34,14 @@
         "jsdom"         : "0.10.5",
         "q"             : "1.0.1",
         "underscore"    : "1.6.0",
-        "travis-ci"     : "1.2.0",
-        "chai"          : "1.9.x"
+        "travis-ci"     : "1.2.0"
     },
     "devDependencies": {
-        "proxyquire": "0.5.x",
-        "mocha": "1.12.x",
-        "istanbul": "0.1.x",
-        "sinon": "1.7.x"
+        "proxyquire"    : "0.5.x",
+        "mocha"         : "1.12.x",
+        "istanbul"      : "0.1.x",
+        "sinon"         : "1.7.x",
+        "chai"          : "1.9.x"
     },
     "license": "MIT",
     "engines": {
