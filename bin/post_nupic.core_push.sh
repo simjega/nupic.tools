@@ -44,8 +44,17 @@ git pull upstream master
 echo Deleting any existing local branch for this SHA...
 git branch -D core-update-${SHA}
 git checkout -b core-update-${SHA}
-echo Pulling changes from existing remote update branch...
-git merge origin/core-update-sha --no-edit --strategy-option theirs
+
+# I'm afraid this is not working the way I expected, because the PR created seems to 
+# contain a bunch more changes than just the SHA update
+
+# echo Pulling changes from existing remote update branch...
+# git merge origin/core-update-sha --no-edit --strategy-option theirs
+
+# Replacing previous commented-out logic with this to test it out.
+echo Deleting existing remote branch core-update-sha
+git push origin :core-update-sha
+
 echo Replacing existing SHA in .nupic_modules with ${SHA}...
 sed -i -e "s#[0-9a-f]\{40\}#$SHA#g" .nupic_modules
 git add .nupic_modules
