@@ -141,7 +141,7 @@ function handleStateChange(sha, state, branches, repoClient, cb) {
 }
 
 function executeCommand(command) {
-    child = exec(command, function (error, stdout, stderr) {
+    var child = exec(command, function (error, stdout, stderr) {
         log.verbose(stdout);
         if (stderr) { log.warn(stderr); }
         if (error !== null) {
