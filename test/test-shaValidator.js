@@ -62,4 +62,32 @@ describe('shaValidator test', function() {
             done();
         });
     });
+
+    it('Testing postNewNupicStatus', function(done) {
+        var mockSha = 'mockSha',
+        mockStatusDetails = {
+            'state': 'success',
+            'target_url': 'otherTargetURL',
+            'description': 'description'
+        },
+        statusPosted = null,
+        mockClient = {
+            github: {
+                statuses: {
+                    create: function (statusObj) {
+                        statusPosted = statusObj;
+                    }
+                }
+            }
+        };
+
+        shaValidator.postNewNupicStatus(mockSha, mockStatusDetails, mockClient);
+
+        assert(statusPosted, 'status should be posted');
+        assert.equal(statusPosted.state, mockStatusDetails.state, 'posted wrong state!');
+        assert.equal(statusPosted.target_url, mockStatusDetails.target_url, 'posted wrong target_url!');
+        assert.equal(statusPosted.description, 'NuPIC Status: ' + mockStatusDetails.description, 'posted wrong state!');
+
+        done();
+    });
 });
