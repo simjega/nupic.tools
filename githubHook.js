@@ -69,10 +69,34 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
         }
         else
         {
-            // Just let Github status stand, which might warn about the mergeable status
             log('The PR is not mergeable, mergeable_state: ' + pullRequest.mergeable_state);
+
+            var mergeableState = pullRequest.mergeable_state ? 
+                                    pullRequest.mergeable_state : 'unknown';
+
+            var headBranch = pullRequest.head.label;
+            var baseBranch = pullRequest.base.label;
+
+            // a warning message about the mergeable state of this PR                        
+            var warningMessage = 'The PR is not mergeable: "' + 
+                    mergeableState + '". Please merge `' + 
+                    baseBranch + '` into `' + headBranch +'`.'                        
+
+            // construct a url to compare what's missing in this PR
+            var targetUrl = pullRequest.base.repo.html_url + 
+                        '/compare/' + headBranch + '...' + baseBranch;
+
+            var statusDetails = {
+                state: 'error', 
+                description: warningMessage,
+                target_url: targetUrl
+            };
+
+            // post the status banner on PR
+            // https://developer.github.com/v3/repos/statuses/#create-a-status
+            shaValidator.postNewNupicStatus(sha, statusDetails, repoClient);
+
             if (cb) { cb(); }
-            // TODO generate nupic.tools' own warning message
         }
     }
 }

@@ -38,7 +38,14 @@ describe('github hook handler', function() {
             hooks: {
                 build: 'build hook'
             },
-            getCommit: function() {}
+            getCommit: function() {},
+            github: {
+                statuses: {
+                    create: function (statusObj) {
+                        validationPosted = statusObj;
+                    }
+                }
+            }
         }},
         handler = githubHook.initializer(mockClients, 'mockConfig');
 
@@ -88,19 +95,7 @@ describe('github hook handler', function() {
     });
 
     it('does not call pr handler when sent a non-mergeable pull_request event', function(done) {
-        var mockPayload = {
-                name: 'numenta/experiments',
-                pull_request: {
-                    action: 'closed',
-                    user: {login: 'login'},
-                    head: {sha: 'sha'},
-                    base: {label: 'label', ref: 'master'},
-                    // a non-mergeable PR
-                    merged: false,
-                    mergeable: false,
-                    mergeable_state: "dirty"
-                }
-            },
+        var mockPayload = require('./github_payloads/pr_non_mergeable'),
             mockRequest = {
                 body: {
                     payload: JSON.stringify(mockPayload)
@@ -109,8 +104,19 @@ describe('github hook handler', function() {
             mockResponse = {
                 end: function() {
                     assert(!validationPerformed, 'validation against PR should not be performed');
-                    // TODO post a status instead of not posting
-                    assert(!validationPosted, 'validation status should not be posted');
+
+                    assert(validationPosted, 'validation status should be posted')
+
+                    /* TODO add more detailed assertions on validationPosted
+                        {
+                            user: repoClient.org,
+                            repo: repoClient.repo,
+                            sha: sha,
+                            state: statusDetails.state,
+                            description: statusDescription,
+                            target_url: statusDetails.target_url
+                        }
+                    */
 
                     // Reset just in case further tests use them.
                     validationPerformed = undefined;
@@ -121,6 +127,8 @@ describe('github hook handler', function() {
                     done();
                 }
             };
+
+        handler = githubHook.initializer(mockClients, 'mockConfig');
 
         validationPerformed = false;
 

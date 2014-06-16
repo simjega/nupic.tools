@@ -169,5 +169,6 @@ function performCompleteValidation(sha, githubUser, repoClient, validators, post
 
 module.exports = {
     performCompleteValidation: performCompleteValidation,
-    triggerTravisBuildsOnAllOpenPullRequests: triggerTravisBuildsOnAllOpenPullRequests
+    triggerTravisBuildsOnAllOpenPullRequests: triggerTravisBuildsOnAllOpenPullRequests,
+    postNewNupicStatus: postNewNupicStatus
 };
