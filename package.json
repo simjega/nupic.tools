@@ -18,7 +18,7 @@
     "main": "program.js",
     "scripts": {
         "preinstall": "npm install -g forever",
-        "test": "istanbul cover _mocha -- --recursive -R spec && istanbul report text-summary > coverage/summary.txt && node bin/validate-coverage.js",
+        "test": "istanbul cover _mocha -- --recursive -R spec && istanbul report text-summary > coverage/summary.txt && cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && node bin/validate-coverage.js",
         "start": "node program.js"
     },
     "repository": {
@@ -41,7 +41,8 @@
         "mocha"         : "1.12.x",
         "istanbul"      : "0.1.x",
         "sinon"         : "1.7.x",
-        "chai"          : "1.9.x"
+        "chai"          : "1.9.x",
+        "coveralls"     : "2.10.0"
     },
     "license": "MIT",
     "engines": {
