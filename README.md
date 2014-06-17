@@ -1,4 +1,4 @@
-nupic-tools [![Build Status](https://travis-ci.org/numenta/nupic.tools.png?branch=master)](https://travis-ci.org/numenta/nupic.tools)
+nupic-tools [![Build Status](https://travis-ci.org/numenta/nupic.tools.png?branch=master)](https://travis-ci.org/numenta/nupic.tools) [![Coverage Status](https://coveralls.io/repos/numenta/nupic.tools/badge.png?branch=master)](https://coveralls.io/r/numenta/nupic.tools?branch=master)
 =============
 
 Server for tooling around a development process that ensures the `master` branch is always green, without the need for a development branch. This is being used to support the [development process](https://github.com/numenta/nupic/wiki/Developer-Workflow) of the [NuPIC](http://github.com/numenta/nupic) project, but it is generalized enough to be used for any project.
