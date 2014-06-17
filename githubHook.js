@@ -196,6 +196,42 @@ function getBuildHooksForMonitor(monitorConfig) {
 }
 
 /**
+ * Post status for non-mergeable pull request
+ * 
+ */
+function postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient) {
+    log('The PR is not mergeable, mergeable_state: ' + pullRequest.mergeable_state);
+
+    var mergeableState = pullRequest.mergeable_state ? 
+                            pullRequest.mergeable_state : 'unknown';
+
+    var headBranch = pullRequest.head.label;
+    var baseBranch = pullRequest.base.label;
+
+    // a warning message about the mergeable state of this PR                        
+    var warningMessage = 'The PR is not mergeable: "' + 
+            mergeableState + '". Please merge `' + 
+            baseBranch + '` into `' + headBranch + '`. ';                       
+
+    // construct a url to compare what's missing in this PR
+    var targetUrl = pullRequest.base.repo.html_url + 
+                '/compare/' + headBranch + '...' + baseBranch +
+                // jump to the commit log in the comparison,
+                // skip the creating PR part to avoid confusion
+                '#commits_bucket';
+
+    var statusDetails = {
+        state: 'error', 
+        description: warningMessage,
+        target_url: targetUrl
+    };
+
+    // post the status banner on PR
+    // https://developer.github.com/v3/repos/statuses/#create-a-status
+    shaValidator.postNewNupicStatus(sha, statusDetails, repoClient);
+}
+
+/**
  * Handles an event from Github that indicates that a PR has been merged into one
  * of the repositories. This could trigger a script to run locally in response, 
  * called a "push hook", which are defined in the configuration of each repo as
