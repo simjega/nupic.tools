@@ -126,25 +126,14 @@ function handleStateChange(sha, state, branches, repoClient, cb) {
                 commitAuthor = commit.author.login;
                 if (external) {
 
-                    // only runs validation if the PR is mergeable
-                    if(pullRequest.mergeable)
-                    {
-
-                        shaValidator.performCompleteValidation(
-                            sha, 
-                            commitAuthor, 
-                            repoClient, 
-                            dynamicValidatorModules, 
-                            true, 
-                            cb
-                        );
-                    }
-                    else
-                    {
-                        postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient);
-
-                        if (cb) { cb(); }
-                    }
+                    shaValidator.performCompleteValidation(
+                        sha, 
+                        commitAuthor, 
+                        repoClient, 
+                        dynamicValidatorModules, 
+                        true, 
+                        cb
+                    );
 
                 } else {
                     // ignore statuses that were created by this server

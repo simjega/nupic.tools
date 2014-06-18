@@ -216,40 +216,4 @@ describe('github hook handler', function() {
         executedHookCommands = [];
     });
 
-    it('post status for non-mergeable PR on status event', function() {
-        var mockPayload = require('./github_payloads/status_travis_pending'),
-            mockRequest = {
-                body: {
-                    payload: JSON.stringify(mockPayload)
-                }
-            };
-
-        handler = githubHook.initializer(mockClients, 'mockConfig');
-
-        handler(mockRequest);
-
-        assert(!validationPerformed, 'validation against PR should not be performed for non-mergeable PR.');
-        assert(validationPosted, 'validation status should be posted for non-mergeable PR.');
-
-        /* TODO add more detailed assertions on validationPosted
-            {
-                user: repoClient.org,
-                repo: repoClient.repo,
-                sha: sha,
-                state: statusDetails.state,
-                description: statusDescription,
-                target_url: statusDetails.target_url
-            }
-        */
-
-        // Reset just in case further tests use them.
-        validationPerformed = undefined;
-        validatedSHA = undefined;
-        validatedUser = undefined;
-        validatorsUsed = undefined;
-        validationPosted = undefined;
-        executedHookCommands = [];
-
-    });
-
 });
