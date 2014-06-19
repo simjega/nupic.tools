@@ -46,12 +46,14 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
             if (cb) { cb(); }
         }
     } else {
+        
+        utils.lastStatusWasExternal(repoClient, sha, function(external) {
+            
+            if (external) {
 
-        // only runs validation if the PR is mergeable, see nupic.tools#65
-        if(pullRequest.mergeable)
-        {
-            utils.lastStatusWasExternal(repoClient, sha, function(external) {
-                if (external) {
+                // only runs validation if the PR is mergeable
+                if(pullRequest.mergeable)
+                {
                     shaValidator.performCompleteValidation(
                         sha, 
                         githubUser, 
@@ -60,44 +62,21 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
                         true, 
                         cb
                     );
-                } else {
-                    // ignore statuses that were created by this server
-                    log.warn('Ignoring "' + state + '" status created by nupic.tools.');
+                }
+                else
+                {
+                    postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient);
+
                     if (cb) { cb(); }
                 }
-            });   
-        }
-        else
-        {
-            log('The PR is not mergeable, mergeable_state: ' + pullRequest.mergeable_state);
 
-            var mergeableState = pullRequest.mergeable_state ? 
-                                    pullRequest.mergeable_state : 'unknown';
+            } else {
+                // ignore statuses that were created by this server
+                log.warn('Ignoring "' + state + '" status created by nupic.tools.');
+                if (cb) { cb(); }
+            }
+        });   
 
-            var headBranch = pullRequest.head.label;
-            var baseBranch = pullRequest.base.label;
-
-            // a warning message about the mergeable state of this PR                        
-            var warningMessage = 'The PR is not mergeable: "' + 
-                    mergeableState + '". Please merge `' + 
-                    baseBranch + '` into `' + headBranch +'`.'                        
-
-            // construct a url to compare what's missing in this PR
-            var targetUrl = pullRequest.base.repo.html_url + 
-                        '/compare/' + headBranch + '...' + baseBranch;
-
-            var statusDetails = {
-                state: 'error', 
-                description: warningMessage,
-                target_url: targetUrl
-            };
-
-            // post the status banner on PR
-            // https://developer.github.com/v3/repos/statuses/#create-a-status
-            shaValidator.postNewNupicStatus(sha, statusDetails, repoClient);
-
-            if (cb) { cb(); }
-        }
     }
 }
 
@@ -146,6 +125,7 @@ function handleStateChange(sha, state, branches, repoClient, cb) {
                 }
                 commitAuthor = commit.author.login;
                 if (external) {
+
                     shaValidator.performCompleteValidation(
                         sha, 
                         commitAuthor, 
@@ -154,6 +134,7 @@ function handleStateChange(sha, state, branches, repoClient, cb) {
                         true, 
                         cb
                     );
+
                 } else {
                     // ignore statuses that were created by this server
                     log.warn('Ignoring "' + state + '" status created by nupic.tools.');
@@ -193,6 +174,42 @@ function getPushHooksForMonitor(monitorConfig) {
 
 function getBuildHooksForMonitor(monitorConfig) {
     return getHooksForMonitorForType('build', monitorConfig);
+}
+
+/**
+ * Post status for non-mergeable pull request
+ * 
+ */
+function postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient) {
+    log('The PR is not mergeable, mergeable_state: ' + pullRequest.mergeable_state);
+
+    var mergeableState = pullRequest.mergeable_state ? 
+                            pullRequest.mergeable_state : 'unknown';
+
+    var headBranch = pullRequest.head.label;
+    var baseBranch = pullRequest.base.label;
+
+    // a warning message about the mergeable state of this PR                        
+    var warningMessage = 'The PR is not mergeable: "' + 
+            mergeableState + '". Please merge `' + 
+            baseBranch + '` into `' + headBranch + '`. ';                       
+
+    // construct a url to compare what's missing in this PR
+    var targetUrl = pullRequest.base.repo.html_url + 
+                '/compare/' + headBranch + '...' + baseBranch +
+                // jump to the commit log in the comparison,
+                // skip the creating PR part to avoid confusion
+                '#commits_bucket';
+
+    var statusDetails = {
+        state: 'error', 
+        description: warningMessage,
+        target_url: targetUrl
+    };
+
+    // post the status banner on PR
+    // https://developer.github.com/v3/repos/statuses/#create-a-status
+    shaValidator.postNewNupicStatus(sha, statusDetails, repoClient);
 }
 
 /**

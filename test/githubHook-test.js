@@ -216,6 +216,4 @@ describe('github hook handler', function() {
         executedHookCommands = [];
     });
 
-
-
 });
