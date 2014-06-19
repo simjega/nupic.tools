@@ -8,17 +8,6 @@ env:
     - export GH_USERNAME=someuser
     - export GH_PASSWORD=somepass
 
-deploy:
-  provider: s3
-  access_key_id: AKIAIGHYSEHV3WFKOWNQ
-  secret_access_key:
-    secure: "GduXEExoAGIOFCpoTRiJVyy6M7Q1PtFUnkgJKGtVv5RWhQwKOW7imzTGl/K11fUcz5QFQa871glxs3qM0/c0F3X/cykwNVG7Vm5IL9C/NNIUczGHj/becPmJ/GH1Pg8Wo5sgIrhPa35LLjt28oJVCjEy3+SYSCWkv252MJzL5h8="
-  bucket: artifacts.numenta.org
-  region: us-west-2
-  local-dir: coverage
-  upload-dir: "numenta/nupic.tools/${TRAVIS_BRANCH}/coverage"
-  skip_cleanup: true
-
 before_script:
 - git branch -v
 - git remote show origin
