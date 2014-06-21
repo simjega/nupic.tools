@@ -119,14 +119,6 @@ describe('github hook handler', function() {
                         'https://github.com/numenta/experiments/compare/DR:a-feature...numenta:master#commits_bucket',
                         'PR status detail url is wrong');
 
-                    /* TODO add more detailed assertions on validationPosted
-                        {
-                            state: statusDetails.state,
-                            description: statusDescription,
-                            target_url: statusDetails.target_url
-                        }
-                    */
-
                     // Reset just in case further tests use them.
                     validationPerformed = undefined;
                     validatedSHA = undefined;
