@@ -189,7 +189,7 @@ function postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient) {
     // a warning message about the mergeable state of this PR  
     // This pull request contains merge conflicts. Please resolve them.                      
     var warningMessage = 'This pull request contains merge conflicts. Please merge `' + 
-            baseBranch + '` into `' + headBranch + '` and resolve them. '; 
+            baseBranch + '` into `' + headBranch + '` and resolve them.'; 
 
     // construct a url to compare what's missing in this PR
     var targetUrl = pullRequest.base.repo.html_url + 
