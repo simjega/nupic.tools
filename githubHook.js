@@ -183,15 +183,11 @@ function getBuildHooksForMonitor(monitorConfig) {
 function postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient) {
     log('The PR is not mergeable, mergeable_state: ' + pullRequest.mergeable_state);
 
-    var mergeableState = pullRequest.mergeable_state ? 
-                            pullRequest.mergeable_state : 'unknown';
-
     var headBranch = pullRequest.head.label;
     var baseBranch = pullRequest.base.label;
 
     // a warning message about the mergeable state of this PR                        
-    var warningMessage = 'The PR is not mergeable: "' + 
-            mergeableState + '". Please merge `' + 
+    var warningMessage = 'The PR is not mergeable. Please merge `' + 
             baseBranch + '` into `' + headBranch + '`. ';                       
 
     // construct a url to compare what's missing in this PR
