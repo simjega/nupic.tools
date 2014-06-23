@@ -105,18 +105,19 @@ describe('github hook handler', function() {
                 end: function() {
                     assert(!validationPerformed, 'validation against PR should not be performed');
 
-                    assert(validationPosted, 'validation status should be posted')
+                    assert(validationPosted, 'validation status should be posted');
 
-                    /* TODO add more detailed assertions on validationPosted
-                        {
-                            user: repoClient.org,
-                            repo: repoClient.repo,
-                            sha: sha,
-                            state: statusDetails.state,
-                            description: statusDescription,
-                            target_url: statusDetails.target_url
-                        }
-                    */
+                    assert.equal(validationPosted.state, 'error', 
+                        'PR state is wrong');
+
+                    assert.equal(validationPosted.description, 
+                        'NuPIC Status: This pull request contains merge conflicts. ' + 
+                        'Please merge `numenta:master` into `DR:a-feature` and resolve them.', 
+                        'PR status description is wrong');
+
+                    assert.equal(validationPosted.target_url, 
+                        'https://github.com/numenta/experiments/compare/DR:a-feature...numenta:master#commits_bucket',
+                        'PR status detail url is wrong');
 
                     // Reset just in case further tests use them.
                     validationPerformed = undefined;
