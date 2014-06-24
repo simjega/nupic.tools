@@ -191,6 +191,12 @@ function postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient) {
     // a warning message about the mergeable state of this PR                      
     var warningMessage = 'Please merge `' + 
             baseBranch + '` into `' + headBranch + '` and resolve merge conflicts.'; 
+    
+    // avoid "description is too long (maximum is 140 characters)"
+    if(warningMessage.length >= 140)
+    {
+        warningMessage = "Please merge master into this pull request and resolve merge conflicts.";
+    }
 
     // construct a url to compare what's missing in this PR
     var targetUrl = pullRequest.base.repo.html_url + 
