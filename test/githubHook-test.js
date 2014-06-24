@@ -111,8 +111,8 @@ describe('github hook handler', function() {
                         'PR state is wrong');
 
                     assert.equal(validationPosted.description, 
-                        'NuPIC Status: This pull request contains merge conflicts. ' + 
-                        'Please merge `numenta:master` into `DR:a-feature` and resolve them.', 
+                        'NuPIC Status: ' + 
+                        'Please merge `numenta:master` into `DR:a-feature` and resolve merge conflicts.', 
                         'PR status description is wrong');
 
                     assert.equal(validationPosted.target_url, 

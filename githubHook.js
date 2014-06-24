@@ -72,7 +72,9 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
 
             } else {
                 // ignore statuses that were created by this server
-                log.warn('Ignoring "' + state + '" status created by nupic.tools.');
+                // TODO it should never get into this branch, but it's seen in production
+                // just log it for futher investigation
+                log.warn('Ignoring status created by nupic.tools for ' + sha + '...');
                 if (cb) { cb(); }
             }
         });   
@@ -187,8 +189,14 @@ function postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient) {
     var baseBranch = pullRequest.base.label;
 
     // a warning message about the mergeable state of this PR                      
-    var warningMessage = 'This pull request contains merge conflicts. Please merge `' + 
-            baseBranch + '` into `' + headBranch + '` and resolve them.'; 
+    var warningMessage = 'Please merge `' + 
+            baseBranch + '` into `' + headBranch + '` and resolve merge conflicts.'; 
+    
+    // avoid "description is too long (maximum is 140 characters)"
+    if(warningMessage.length >= 140)
+    {
+        warningMessage = "Please merge master into this pull request and resolve merge conflicts.";
+    }
 
     // construct a url to compare what's missing in this PR
     var targetUrl = pullRequest.base.repo.html_url + 
