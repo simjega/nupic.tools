@@ -72,7 +72,9 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
 
             } else {
                 // ignore statuses that were created by this server
-                log.warn('Ignoring "' + state + '" status created by nupic.tools.');
+                // TODO it should never get into this branch, but it's seen in production
+                // just log it for futher investigation
+                log.warn('Ignoring status created by nupic.tools for ' + sha + '...');
                 if (cb) { cb(); }
             }
         });   
