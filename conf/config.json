@@ -27,6 +27,10 @@
             "contributors": "http://numenta.org/resources/contributors.csv"
         },
 
+        "numenta/nupic.fluent": {
+            "contributors": "http://numenta.org/resources/contributors.csv"
+        },
+
         "numenta/numenta.org": {
             "contributors": "http://numenta.org/resources/contributors.csv"
         },
