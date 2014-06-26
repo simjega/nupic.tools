@@ -31,6 +31,18 @@
             "contributors": "http://numenta.org/resources/contributors.csv"
         },
 
+        "numenta/nupic.fluent.server": {
+            "contributors": "http://numenta.org/resources/contributors.csv"
+        },
+
+        "numenta/nupic.cerebro2": {
+            "contributors": "http://numenta.org/resources/contributors.csv"
+        },
+
+        "numenta/nupic.cerebro2.server": {
+            "contributors": "http://numenta.org/resources/contributors.csv"
+        },
+
         "numenta/numenta.org": {
             "contributors": "http://numenta.org/resources/contributors.csv"
         },
