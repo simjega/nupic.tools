@@ -53,7 +53,14 @@ function read(configFile) {
     // Now if there are global validators defined, spread them across all monitor configs.
     if (config.validators) {
         _.each(config.monitors, function(monitorConfig) {
-            monitorConfig.validators = config.validators;
+            // We are only dealing with validators.exclude at this point. This assure that local
+            // validator.exclude configs are merged with global validator.exclude.
+            if (! monitorConfig.validators) {
+                monitorConfig.validators = {exclude: []};
+            }
+            if (config.validators.exclude) {
+                monitorConfig.validators.exclude = monitorConfig.validators.exclude.concat(config.validators.exclude);
+            }
         });
     }
     return config;
