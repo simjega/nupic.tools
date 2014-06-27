@@ -32,15 +32,24 @@
         },
 
         "numenta/nupic.fluent.server": {
-            "contributors": "http://numenta.org/resources/contributors.csv"
+            "contributors": "http://numenta.org/resources/contributors.csv",
+            "validators": {
+                "exclude": ["Travis Validator"]
+            }
         },
 
         "numenta/nupic.cerebro2": {
-            "contributors": "http://numenta.org/resources/contributors.csv"
+            "contributors": "http://numenta.org/resources/contributors.csv",
+            "validators": {
+                "exclude": ["Travis Validator"]
+            }
         },
 
         "numenta/nupic.cerebro2.server": {
-            "contributors": "http://numenta.org/resources/contributors.csv"
+            "contributors": "http://numenta.org/resources/contributors.csv",
+            "validators": {
+                "exclude": ["Travis Validator"]
+            }
         },
 
         "numenta/numenta.org": {
