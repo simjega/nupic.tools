@@ -5,6 +5,7 @@ var fs = require('fs'),
     should = require('chai').should(),
     proxyquire = require('proxyquire'),
     mockConfig,
+    mockConfigWithValidators,
     mockUserConfig,
     GH_USERNAME = process.env.GH_USERNAME,
     GH_PASSWORD = process.env.GH_PASSWORD,
@@ -12,6 +13,7 @@ var fs = require('fs'),
 
 // Prep the mock configs.
 mockConfig = fs.readFileSync('test/mockData/mockConfig.json', 'utf-8');
+mockConfigWithValidators = fs.readFileSync('test/mockData/mockConfigWithLocalValidators.json', 'utf-8');
 mockUserConfig = fs.readFileSync('test/mockData/mockUserConfig.json', 'utf-8');
 
 function clearConfigReaderRequireCache() {
@@ -50,7 +52,9 @@ describe('configuration reader', function() {
         process.env.GH_PASSWORD = 'mockghpassword';
         var mockFs = {
                 existsSync: function(path) {
-                    if (path == 'conf/mockconfig.json' || path == 'conf/mockconfig-testuser.json') {
+                    if (path == 'conf/mockconfig.json'
+                        || path == 'conf/mockConfigWithLocalValidators.json'
+                        || path.indexOf('-testuser.json') == path.length - 14) {
                         return true;
                     } else {
                         assert.fail(path, 'test config path', 'Incorrect config path.');
@@ -59,7 +63,9 @@ describe('configuration reader', function() {
                 readFileSync: function(path) {
                     if (path == 'conf/mockconfig.json') {
                         return mockConfig;
-                    } else if (path == 'conf/mockconfig-testuser.json') {
+                    } else if (path == 'conf/mockConfigWithLocalValidators.json') {
+                        return mockConfigWithValidators;
+                    } else if (path.indexOf('-testuser.json') == path.length - 14) {
                         return mockUserConfig;
                     } else {
                         assert.fail(path, 'test config path', 'Incorrect config path.');
@@ -93,6 +99,19 @@ describe('configuration reader', function() {
                 expect(monitorConfig.validators.exclude).to.have.length(1);
                 expect(monitorConfig.validators.exclude[0]).to.equal('Fast-Forward Validator');
             });
+            process.env.USER = USER;
+        });
+
+        it('injects local validator configuration into each monitor', function() {
+            process.env.USER = 'testuser';
+            var config = reader.read('conf/mockConfigWithLocalValidators.json');
+            var monitorConfig = config.monitors['numenta/nupic.tools'];
+            expect(monitorConfig).to.include.keys('validators');
+            expect(monitorConfig.validators).to.include.keys('exclude');
+            expect(monitorConfig.validators.exclude).to.be.instanceOf(Array);
+            expect(monitorConfig.validators.exclude).to.have.length(2);
+            expect(monitorConfig.validators.exclude[0]).to.equal('Mock Validator');
+            expect(monitorConfig.validators.exclude[1]).to.equal('Fast-Forward Validator');
             process.env.USER = USER;
         });
 
