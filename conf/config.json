@@ -23,6 +23,13 @@
             "contributors": "http://numenta.org/resources/contributors.csv"
         },
 
+        "numenta/nupic.wallboard": {
+            "contributors": "http://numenta.org/resources/contributors.csv",
+            "validators": {
+                "exclude": ["Travis Validator"]
+            }
+        },
+
         "numenta/pycept": {
             "contributors": "http://numenta.org/resources/contributors.csv"
         },
@@ -32,6 +39,13 @@
         },
 
         "numenta/nupic.fluent.server": {
+            "contributors": "http://numenta.org/resources/contributors.csv",
+            "validators": {
+                "exclude": ["Travis Validator"]
+            }
+        },
+
+        "numenta/NAB": {
             "contributors": "http://numenta.org/resources/contributors.csv",
             "validators": {
                 "exclude": ["Travis Validator"]
