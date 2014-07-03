@@ -67,10 +67,7 @@
         },
 
         "numenta/nupic.geospatial": {
-            "contributors": "http://numenta.org/resources/contributors.csv",
-            "validators": {
-                "exclude": ["Travis Validator"]
-            }
+            "contributors": "http://numenta.org/resources/contributors.csv"
         },
 
         "numenta/numenta.org": {
