@@ -67,7 +67,6 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
     // Enable a log of logging.
     app.use(morgan({
         format: 'dev',
-        immediate: true,
         stream: logStream
     }))
     // Auto body parsing is nice.
