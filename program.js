@@ -4,7 +4,11 @@
 var assert = require('assert'),
     fs = require('fs'),
     path = require('path'),
-    connect = require('connect'),
+    // ExpressJS and associated middleware
+    express = require('express'),
+    morgan = require('morgan'),
+    bodyParser = require('body-parser'),
+
     log = require('./utils/log'),
     // local libs
     utils = require('./utils/general'),
@@ -33,28 +37,27 @@ log.verbose(JSON.stringify(utils.sterilizeConfig(cfg), null, 2));
 utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
     var dynamicHttpHandlerModules,
         activeValidators,
-        // The Connect JS application
-        app = connect(),
+        app = express(),
         padInt = utils.padInt,
         padDecimal = utils.padDecimal;
 
     // Print the time of the request to the millisecond.
     app.use(function(req, res, next) {
         var now = new Date(),
-            dateString = now.getFullYear() + '/' + 
-                padInt(now.getMonth() + 1) + '/' + 
-                padInt(now.getDate()) + ' ' +  
-                padInt(now.getHours()) + ':' + 
-                padInt(now.getMinutes()) + ':' + 
+            dateString = now.getFullYear() + '/' +
+                padInt(now.getMonth() + 1) + '/' +
+                padInt(now.getDate()) + ' ' +
+                padInt(now.getHours()) + ':' +
+                padInt(now.getMinutes()) + ':' +
                 padInt(now.getSeconds()) + '.' +
                 padDecimal(now.getMilliseconds());
         log('\n' + dateString + ' | Request received');
         next();
     });
     // Enable a log of logging.
-    app.use(connect.logger('dev'))
+    app.use(morgan('tiny'))
        // Auto body parsing is nice.
-       .use(connect.bodyParser())
+       .use(bodyParser.json())
        // This puts the Github webhook handler into place
        .use(githubHookPath, githubHookHandler.initializer(repoClients, cfg));
 
@@ -82,7 +85,7 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
             }
         });
     });
-        
+
     app.listen(PORT, function() {
         log.info('\nServer running at ' + baseUrl + '\n');
     });

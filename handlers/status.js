@@ -82,15 +82,18 @@ function statusReporter(req, res) {
     }
 }
 
+function handler(_repoClients, _httpHandlers, _config, activeValidators) {
+    repoClients = _repoClients;
+    httpHandlers = _httpHandlers;
+    config = _config;
+    validators = activeValidators;
+    return statusReporter;
+}
+
 statusReporter.title = 'Status Reporter';
 statusReporter.description = 'Reports the repositories this tools server is monitoring.';
 
 module.exports = {
-    '/status': function(_repoClients, _httpHandlers, _config, activeValidators) {
-        repoClients = _repoClients;
-        httpHandlers = _httpHandlers;
-        config = _config;
-        validators = activeValidators;
-        return statusReporter;
-    }
+    '/status': handler,
+    '/': handler
 };

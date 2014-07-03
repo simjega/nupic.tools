@@ -34,15 +34,17 @@ function read(configFile) {
             }
         });
         // Merges monitor configurations (user-specific config overrides default config).
-        Object.keys(userConfig.monitors).forEach(function(outerKey) {
-            if (! config.monitors[outerKey]) {
-                config.monitors[outerKey] = userConfig.monitors[outerKey];
-            } else {
-                Object.keys(userConfig.monitors[outerKey]).forEach(function(innerKey) {
-                    config.monitors[outerKey][innerKey] = userConfig.monitors[outerKey][innerKey];
-                });
-            }
-        });
+        if (userConfig.monitors) {
+            Object.keys(userConfig.monitors).forEach(function(outerKey) {
+                if (! config.monitors[outerKey]) {
+                    config.monitors[outerKey] = userConfig.monitors[outerKey];
+                } else {
+                    Object.keys(userConfig.monitors[outerKey]).forEach(function(innerKey) {
+                        config.monitors[outerKey][innerKey] = userConfig.monitors[outerKey][innerKey];
+                    });
+                }
+            });        
+        }
     }
     // Each monitor also needs a username/password for the Github API, which we're getting from the environment.
     _.each(config.monitors, function(monitorConfig, monitorName) {
