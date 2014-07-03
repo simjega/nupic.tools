@@ -42,7 +42,8 @@
     "q": "1.0.1",
     "request": "2.36.0",
     "travis-ci": "1.2.0",
-    "underscore": "1.6.0"
+    "underscore": "1.6.0",
+    "winston": "^0.7.3"
   },
   "devDependencies": {
     "proxyquire": "0.5.x",

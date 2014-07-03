@@ -2,7 +2,7 @@ var fs = require('fs'),
     path = require('path'),
     RepositoryClient = require('./repoClient'),
     NUPIC_STATUS_PREFIX = 'NuPIC Status:',
-    log = require('./log');
+    log = require('./logger').logger;
 
 /* Logs error and exits. */
 function die(err) {
@@ -18,8 +18,8 @@ var arrayUnique = function(a) {
 };
 
 /**
- * Reads all the JavaScript files within a directory, assuming they are all 
- * proper node.js modules, and loads them. 
+ * Reads all the JavaScript files within a directory, assuming they are all
+ * proper node.js modules, and loads them.
  * @return {Array} Modules loaded.
  */
 function initializeModulesWithin(dir, exclusions) {
@@ -31,8 +31,8 @@ function initializeModulesWithin(dir, exclusions) {
         if (exclusions != undefined && exclusions.indexOf(moduleName) > -1) {
             excluded = true;
         }
-        if(! excluded && 
-                fileName.charAt(0) != "." 
+        if(! excluded &&
+                fileName.charAt(0) != "."
                 && fileName.substr(fileName.length - 3) == ".js")   {
             output.push(require('../' + dir + '/' + moduleName));
         }
@@ -47,11 +47,11 @@ function initializeModulesWithin(dir, exclusions) {
  *
  * If an error occurs during communication with Github, the application startup
  * will fail.
- * 
+ *
  * @param {String} Pull request web hook URL to register with Github.
  * @param {Object} Application configuration.
- * @param {Function} Callback, to be sent a map of RepositoryClient objects, 
- * constructed using the "monitors" part of the configuration, keyed by Github 
+ * @param {Function} Callback, to be sent a map of RepositoryClient objects,
+ * constructed using the "monitors" part of the configuration, keyed by Github
  * "org/repo".
  */
 function constructRepoClients(prWebhookUrl, config, callback) {
@@ -76,13 +76,13 @@ function constructRepoClients(prWebhookUrl, config, callback) {
             monitorConfig.validators.exclude = [];
         }
         if (globalValidatorConfig && globalValidatorConfig.exclude) {
-            monitorConfig.validators.exclude 
+            monitorConfig.validators.exclude
                 = arrayUnique(monitorConfig.validators.exclude.concat(globalValidatorConfig.exclude));
         }
 
         repoClient = new RepositoryClient(monitorConfig);
-        log('RepositoryClient created for ' 
-            + monitorConfig.username.magenta + ' on ' 
+        log.log('RepositoryClient created for '
+            + monitorConfig.username.magenta + ' on '
             + repoClient.toString().magenta);
 
         repoClient.confirmWebhookExists(prWebhookUrl, ['push', 'pull_request', 'status'], function(err, hook) {
@@ -95,7 +95,7 @@ function constructRepoClients(prWebhookUrl, config, callback) {
                                             + '\tfor "' + hook.events.join(', ') + '"\n'
                                             + '\ton ' + hook.config.url);
                 } else {
-                    log('Webhook exists for ' + repoClient.toString());
+                    log.log('Webhook exists for ' + repoClient.toString());
                 }
                 count++;
             }
@@ -123,7 +123,7 @@ function sortStatuses(statuses) {
 
 /**
  * Checks to see if the latest status in the history for this SHA was created by
- * the nupic.tools server or was externally created. 
+ * the nupic.tools server or was externally created.
  */
 function lastStatusWasExternal(repoClient, sha, cb) {
     repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
@@ -136,9 +136,9 @@ function lastStatusWasExternal(repoClient, sha, cb) {
     });
 }
 
-/** 
+/**
  * Some old statuses have old redundant prefixes due to previous processing errors
- * that list "Nupic Status: " multiple times before the actual status message. 
+ * that list "Nupic Status: " multiple times before the actual status message.
  * This will clean those up so there is only one.
  */
 function normalizeStatusDescription(description) {

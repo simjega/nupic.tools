@@ -1,6 +1,6 @@
 var fs = require('fs'),
     _ = require('underscore'),
-    log = require('./log'),
+    log = require('./logger').logger,
     GH_USERNAME = process.env.GH_USERNAME,
     GH_PASSWORD = process.env.GH_PASSWORD;
 
@@ -43,7 +43,7 @@ function read(configFile) {
                         config.monitors[outerKey][innerKey] = userConfig.monitors[outerKey][innerKey];
                     });
                 }
-            });        
+            });
         }
     }
     // Each monitor also needs a username/password for the Github API, which we're getting from the environment.
