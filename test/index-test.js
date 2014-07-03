@@ -1,10 +1,8 @@
 var assert = require('assert'),
     path = require('path'),
     proxyquire = require('proxyquire'),
-    connectStub = {},
     utilStub,
-    configReaderStub,
-    githubHookSub;
+    configReaderStub;
 
 utilStub = {
     sterilizeConfig: function(cfg) {

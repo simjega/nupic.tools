@@ -8,7 +8,7 @@ var assert = require('assert'),
     log = require('./utils/log'),
     // local libs
     utils = require('./utils/general'),
-    githubHookHandler = require('./githubHook'),
+    githubHookHandler = require('./github-hook'),
     // The configReader reads the given file, and merges it with any existing user
     // configuration file.
     cfg = require('./utils/configReader').read(path.join(__dirname, 'conf/config.json')),
