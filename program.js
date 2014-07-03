@@ -72,7 +72,7 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
     }))
     // Auto body parsing is nice.
     app.use(bodyParser.json())
-    app.use(bodyParser.urlencoded())
+    app.use(bodyParser.urlencoded({ extended: true }))
     // This puts the Github webhook handler into place
     app.use(githubHookPath, githubHookHandler.initializer(repoClients, cfg));
 
