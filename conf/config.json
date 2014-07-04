@@ -1,6 +1,8 @@
 {
     "host": "issues.numenta.org",
     "port": 8081,
+    "logDirectory": "logs",
+    "logLevel": "debug",
 
     "monitors": {
 

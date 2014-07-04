@@ -1,15 +1,21 @@
-var jsonUtils = require('../utils/json');
-var nodeURL = require('url');
-var repoClients;
+var jsonUtils = require('../utils/json'),
+    nodeURL = require('url'),
+    log = require('../utils/logger').logger,
+    repoClients;
 
 function getContributorsFor(repoClient, callback) {
+    var repoClientName = repoClient.toString();
+    log.verbose('Fetching contributors for %s...', repoClientName);
     repoClient.getContributors(function(err, allContributors) {
         var contributorsOut;
         if (err) {
             return callback(err);
         }
-        repoClient.getCommits(function(error, allCommits){
+        log.debug('Received %s contributors for %s.', allContributors.length, repoClientName);
+        log.verbose('Fetching commits for %s...', repoClientName)
+        repoClient.getCommits(function(error, allCommits) {
             var commitsPerPerson = {};
+            log.debug('Received %s commits for %s.', allCommits.length, repoClientName);
             allCommits.forEach(function(nextCommit){
                 if (nextCommit.committer) {
                     if (!commitsPerPerson[nextCommit.committer.login]) {
@@ -75,8 +81,7 @@ function contributorStatistics (request, response)    {
 
     if(repo == "all")   {
         // Report on all repositories
-
-        extractContributorsFromRepositoryClients(repoClients, 
+        extractContributorsFromRepositoryClients(repoClients,
             function(errs, contributors) {
                 if (errors) {
                     errors = errors.concat(errs);

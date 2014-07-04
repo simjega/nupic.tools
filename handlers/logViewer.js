@@ -1,65 +1,35 @@
 var fs = require('fs'),
     url = require('url'),
     qs = require('querystring'),
+    _ = require('underscore'),
     AnsiConverter = require('ansi-to-html'),
     converter = new AnsiConverter(),
+    log = require('../utils/logger').logger,
     logDirectory,
     style = '<style>'
           + 'body { background: black;'
           + '       color: white;'
-          + '       font: 14pt Courier;}'
-          + '.ln { float: left; width: 100px; }'
-          + '.ln a,.ln a:visited,.ln a:hover {'
-          + '    color: grey; text-decoration: none'
-          + '}'
-          + '.ln a:hover { text-decoration: underline }'
+          + '       font: 14pt Courier;'
+          + '       border-collapse: collapse}'
+          + 'table td { border: 1px solid grey; padding: 0 5px; }'
           + '</style>\n',
     title = '<h1>nupic.tools current logs:</h1>\n';
 
-function getLatestModifiedFileIn(dir, filePaths, callback) {
-    var latest = null,
-        count = 0;
-    filePaths.forEach(function(path) {
-        if (path.split('.').pop() == 'log') {
-            fs.stat(dir + '/' + path, function(err, stats) {
-                if (err) throw err;
-                if (! latest) {
-                    latest = { path: path, mtime: stats.mtime};
-                } else {
-                    if (stats.mtime > latest.mtime) {
-                        latest = { path: path, mtime: stats.mtime};
-                    }
-                }
-                if (++count == (filePaths.length - 1)) {
-                    callback(null, latest.path);
-                }
-            });
-        } else {
-            if (++count == (filePaths.length - 1)) {
-                callback(null, latest.path);
-            }
-        }
-    });
-}
-
-function ansiToHtml(ansiOut, startCount) {
-    var htmlOut = '<html><head>' + style + '</head><body>\n' + title,
-        lineCount = 0,
-        ansiHtml = converter.toHtml(ansiOut);
-    if (startCount) {
-        lineCount = startCount;
-    }
-    ansiHtml = ansiHtml.replace(/  /g, '&nbsp;&nbsp;');
-    // ansiHtml = ansiHtml.replace(/\n/g, '\n</br>');
-    ansiHtml = ansiHtml.replace(/\n/g, function() {
-        var hash = 'L' + (++lineCount),
-            anchor = '<a href="#' + hash + '">' + lineCount + '</a>',
-            target = '<div class="ln" id="' + hash + '">' + anchor + '</div>';
-        return '\n<br/>' + target;
-    });
-    htmlOut += ansiHtml;
+function wrapHtml(content) {
+    var htmlOut = '<html><head>' + style + '</head><body>\n' + title;
+    htmlOut += '<table><thead><tr><th>Time</th><th>Level</th><th>Message</th></tr></thead><tbody>\n';
+    htmlOut += content;
+    htmlOut += '</tbody></table>'
     htmlOut += '\n</body></html>';
     return htmlOut;
+}
+
+function logLineToHtml(line) {
+    return '<tr class="' + line.level + '">'
+        +  '<td class="timestamp">' + line.timestamp + '</td>'
+        +  '<td class="level">' + line.level + '</td>'
+        +  '<td>' + converter.toHtml(line.message) + '</td>'
+        +  '</tr>\n';
 }
 
 function logViewer(req, res) {
@@ -69,30 +39,18 @@ function logViewer(req, res) {
     if (query.lines) {
         linesToRead = query.lines;
     }
-    fs.readdir(logDirectory, function(err, files) {
-        if (err) {
-            return res.end(err.toString());
-        };
-        getLatestModifiedFileIn(logDirectory, files, 
-            function(err, latestLogFilePath) {
-                if (err) throw err;
-                fs.readFile(logDirectory + '/' + latestLogFilePath, 'utf-8', 
-                    function(err, ansiOut) {
-                        if (err) throw err;
-                        var lines = ansiOut.split('\n'),
-                            lineCount = lines.length;
-                        if (linesToRead > lineCount) {
-                            linesToRead = lineCount;
-                        }
-                        lines = lines.slice(lineCount - linesToRead);
-                        var htmlOut = ansiToHtml(lines.join('\n'), (lineCount - linesToRead));
-                        res.setHeader('Content-Type', 'text/html');
-                        res.setHeader('Content-Length', htmlOut.length);
-                        res.end(htmlOut);
-                    }
-                );
-            }
-        );
+    log.query({
+        limit: linesToRead,
+        order: 'asc'
+    }, function(err, results) {
+        if (err) throw err;
+        var linesOut = _.map(results.file, function(logLine) {
+            return logLineToHtml(logLine);
+        });
+        var htmlOut = wrapHtml(linesOut.join('\n'));
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Content-Length', htmlOut.length);
+        res.end(htmlOut);
     });
 }
 

@@ -14,7 +14,7 @@ describe('github hook handler', function() {
     var validationPerformed = false,
         executedHookCommands = [],
         validatedSHA, validatedUser, validatorsUsed, validationPosted,
-        githubHook = proxyquire('./../githubHook', {
+        githubHook = proxyquire('./../github-hook', {
             'child_process': {
                 exec: function(cmd, cb) {
                     executedHookCommands.push(cmd);
