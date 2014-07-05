@@ -22,7 +22,7 @@ describe('github hook handler', function() {
                 }
             },
             './utils/general': utilStub,
-            './utils/shaValidator': {
+            './utils/sha-validator': {
                 performCompleteValidation: function(sha, githubUser, _, validators, postStatus, cb) {
                     console.log(arguments);
                     validationPerformed = true;

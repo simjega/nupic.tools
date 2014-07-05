@@ -19,7 +19,7 @@ describe('main program', function() {
         it('sends the right config file to configReader', function() {
             proxyquire('./../program', {
                 './utils/general': utilStub,
-                './utils/configReader': {read: function(configPath) {
+                './utils/config-reader': {read: function(configPath) {
                     assert.equal(configPath, path.join(__dirname, '..', 'conf/config.json'), 'Wrong default configuration path.');
                     return {host: 'host', port: 666};
                 }}
@@ -31,7 +31,7 @@ describe('main program', function() {
             };
             proxyquire('./../program', {
                 './utils/general': utilStub,
-                './utils/configReader': configReaderStub
+                './utils/config-reader': configReaderStub
             });
         });
     });

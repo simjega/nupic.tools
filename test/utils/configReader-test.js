@@ -17,7 +17,7 @@ mockConfigWithValidators = fs.readFileSync('test/mockData/mockConfigWithLocalVal
 mockUserConfig = fs.readFileSync('test/mockData/mockUserConfig.json', 'utf-8');
 
 function clearConfigReaderRequireCache() {
-    delete require.cache[require.resolve('../../utils/configReader')]
+    delete require.cache[require.resolve('../../utils/config-reader')]
 }
 
 
@@ -28,7 +28,7 @@ describe('configuration reader', function() {
             clearConfigReaderRequireCache();
             delete process.env.GH_USERNAME;
             expect(function() {
-                require('../../utils/configReader');
+                require('../../utils/config-reader');
             }).to.throw('Both GH_USERNAME and GH_PASSWORD environment variables are required for nupic.tools to run.\n' +
                     'These are necessary for making Github API calls.');
             process.env.GH_USERNAME = GH_USERNAME;
@@ -38,7 +38,7 @@ describe('configuration reader', function() {
             clearConfigReaderRequireCache();
             delete process.env.GH_PASSWORD;
             expect(function() {
-                require('../../utils/configReader');
+                require('../../utils/config-reader');
             }).to.throw('Both GH_USERNAME and GH_PASSWORD environment variables are required for nupic.tools to run.\n' +
                     'These are necessary for making Github API calls.');
             process.env.GH_PASSWORD = GH_PASSWORD;
@@ -72,7 +72,7 @@ describe('configuration reader', function() {
                     }
                 }
             },
-            reader = proxyquire('../../utils/configReader', {
+            reader = proxyquire('../../utils/config-reader', {
                 fs: mockFs
             });
 

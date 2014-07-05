@@ -4,7 +4,7 @@ var fs = require('fs'),
     log = require('./utils/logger').logger,
     utils = require('./utils/general'),
     contributors = require('./utils/contributors'),
-    shaValidator = require('./utils/shaValidator'),
+    shaValidator = require('./utils/sha-validator'),
     exec = require('child_process').exec,
     VALIDATOR_DIR = 'validators',
     // All the validator modules
