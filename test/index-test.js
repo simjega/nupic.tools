@@ -20,7 +20,7 @@ describe('main program', function() {
             proxyquire('./../program', {
                 './utils/general': utilStub,
                 './utils/configReader': {read: function(configPath) {
-                    assert.equal(configPath, path.join(__dirname, '..', 'conf/config.json'), 'Wrong default configuration path.');
+                    assert.equal(configPath, path.join(__dirname, '..', 'conf/config.yml'), 'Wrong default configuration path.');
                     return {host: 'host', port: 666};
                 }}
             });
