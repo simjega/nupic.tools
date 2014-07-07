@@ -4,7 +4,7 @@ var fs = require('fs'),
     log = require('./utils/logger').logger,
     utils = require('./utils/general'),
     contributors = require('./utils/contributors'),
-    shaValidator = require('./utils/shaValidator'),
+    shaValidator = require('./utils/sha-validator'),
     exec = require('child_process').exec,
     VALIDATOR_DIR = 'validators',
     // All the validator modules
@@ -88,14 +88,14 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
  * assures that this status did not originate from this server (nupic.tools), then
  * performs a complete validation of the repository.
  * @param sha {string} SHA of the tip of the PR.
- * @state {string} State of the PR (opened, closed, merged, etc)
- * @branches {Object[]} List of branches that came with the state change
+ * @param state {string} State of the PR (opened, closed, merged, etc)
+ * @param branches {Object[]} List of branches that came with the state change
  * @param repoClient {RepositoryClient} Repo client associated with this repo this
  *                                      PR was created against.
  * @param cb {function} Will be called when PR has been handled.
  */
 function handleStateChange(sha, state, branches, repoClient, cb) {
-    var isMaster = false,
+    var isMaster,
         buildHooks = undefined;
     log.log('State of ' + sha + ' has changed to "' + state + '".');
     // A "success" state means that a build passed. If the build passed on the
@@ -148,7 +148,7 @@ function handleStateChange(sha, state, branches, repoClient, cb) {
 }
 
 function executeCommand(command) {
-    var child = exec(command, function (error, stdout, stderr) {
+    exec(command, function (error, stdout, stderr) {
         log.verbose(stdout);
         if (stderr) { log.warn(stderr); }
         if (error !== null) {
@@ -185,33 +185,33 @@ function getBuildHooksForMonitor(monitorConfig) {
 function postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient) {
     log.log('The PR is not mergeable, mergeable_state: ' + pullRequest.mergeable_state);
 
-    var headBranch = pullRequest.head.label;
-    var baseBranch = pullRequest.base.label;
+    var headBranch = pullRequest.head.label,
+        baseBranch = pullRequest.base.label,
+        warningMessage, targetUrl, statusDetails;
 
-    // a warning message about the mergeable state of this PR
-    var warningMessage = 'Please merge `' +
-            baseBranch + '` into `' + headBranch + '` and resolve merge conflicts.';
+    // A warning message about the mergeable state of this PR.
+    warningMessage = 'Please merge `' +
+        baseBranch + '` into `' + headBranch + '` and resolve merge conflicts.';
 
-    // avoid "description is too long (maximum is 140 characters)"
-    if(warningMessage.length >= 140)
-    {
+    // Avoid "description is too long (maximum is 140 characters)"
+    if (warningMessage.length >= 140) {
         warningMessage = "Please merge master into this pull request and resolve merge conflicts.";
     }
 
-    // construct a url to compare what's missing in this PR
-    var targetUrl = pullRequest.base.repo.html_url +
-                '/compare/' + headBranch + '...' + baseBranch +
-                // jump to the commit log in the comparison,
-                // skip the creating PR part to avoid confusion
-                '#commits_bucket';
+    // Construct a url to compare what's missing in this PR.
+    targetUrl = pullRequest.base.repo.html_url +
+        '/compare/' + headBranch + '...' + baseBranch +
+        // jump to the commit log in the comparison,
+        // skip the creating PR part to avoid confusion
+        '#commits_bucket';
 
-    var statusDetails = {
+    statusDetails = {
         state: 'error',
         description: warningMessage,
         target_url: targetUrl
     };
 
-    // post the status banner on PR
+    // Post the status banner on PR.
     // https://developer.github.com/v3/repos/statuses/#create-a-status
     shaValidator.postNewNupicStatus(sha, statusDetails, repoClient);
 }
