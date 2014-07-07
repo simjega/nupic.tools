@@ -51,27 +51,16 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
         padInt = utils.padInt,
         padDecimal = utils.padDecimal;
 
-    // Print the time of the request to the millisecond.
-    app.use(function(req, res, next) {
-        var now = new Date(),
-            dateString = now.getFullYear() + '/' +
-                padInt(now.getMonth() + 1) + '/' +
-                padInt(now.getDate()) + ' ' +
-                padInt(now.getHours()) + ':' +
-                padInt(now.getMinutes()) + ':' +
-                padInt(now.getSeconds()) + '.' +
-                padDecimal(now.getMilliseconds());
-        logger.log('\n' + dateString + ' | Request received');
-        next();
-    });
-    // Enable a log of logging.
+    // Enable request/response logging.
     app.use(morgan({
         format: 'dev',
         stream: logStream
-    }))
+    }));
+
     // Auto body parsing is nice.
-    app.use(bodyParser.json())
-    app.use(bodyParser.urlencoded({ extended: true }))
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: true }));
+
     // This puts the Github webhook handler into place
     app.use(githubHookPath, githubHookHandler.initializer(repoClients, cfg));
 
