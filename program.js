@@ -17,7 +17,7 @@ var assert = require('assert'),
     githubHookHandler = require('./github-hook'),
     // The configReader reads the given file, and merges it with any existing user
     // configuration file.
-    cfg = require('./utils/config-reader').read(path.join(__dirname, 'conf/config.json')),
+    cfg = require('./utils/config-reader').read(path.join(__dirname, 'conf/config.yml')),
 
     HOST = cfg.host,
     PORT = cfg.port || 8081,

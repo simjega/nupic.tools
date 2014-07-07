@@ -4,6 +4,9 @@ var fs = require('fs'),
     expect = require('chai').expect,
     should = require('chai').should(),
     proxyquire = require('proxyquire'),
+    MOCK_CONFIG = 'mock-config.yml',
+    MOCK_CONFIG_LOCAL_VALIDATORS = 'mock-config-with-local-validators.yml',
+    MOCK_USER_CONFIG = 'mock-user-config.yml',
     mockConfig,
     mockConfigWithValidators,
     mockUserConfig,
@@ -12,9 +15,9 @@ var fs = require('fs'),
     USER = process.env.USER;
 
 // Prep the mock configs.
-mockConfig = fs.readFileSync('test/mockData/mockConfig.json', 'utf-8');
-mockConfigWithValidators = fs.readFileSync('test/mockData/mockConfigWithLocalValidators.json', 'utf-8');
-mockUserConfig = fs.readFileSync('test/mockData/mockUserConfig.json', 'utf-8');
+mockConfig = fs.readFileSync('test/mockData/' + MOCK_CONFIG, 'utf-8');
+mockConfigWithValidators = fs.readFileSync('test/mockData/' + MOCK_CONFIG_LOCAL_VALIDATORS, 'utf-8');
+mockUserConfig = fs.readFileSync('test/mockData/' + MOCK_USER_CONFIG, 'utf-8');
 
 function clearConfigReaderRequireCache() {
     delete require.cache[require.resolve('../../utils/config-reader')]
@@ -50,22 +53,23 @@ describe('configuration reader', function() {
         clearConfigReaderRequireCache();
         process.env.GH_USERNAME = 'mockghusername';
         process.env.GH_PASSWORD = 'mockghpassword';
-        var mockFs = {
+        var testUserString = '-testuser.yml',
+            mockFs = {
                 existsSync: function(path) {
-                    if (path == 'conf/mockconfig.json'
-                        || path == 'conf/mockConfigWithLocalValidators.json'
-                        || path.indexOf('-testuser.json') == path.length - 14) {
+                    if (path == 'conf/' + MOCK_CONFIG
+                        || path == 'conf/' + MOCK_CONFIG_LOCAL_VALIDATORS
+                        || path.indexOf(testUserString) == path.length - testUserString.length) {
                         return true;
                     } else {
                         assert.fail(path, 'test config path', 'Incorrect config path.');
                     }
                 },
                 readFileSync: function(path) {
-                    if (path == 'conf/mockconfig.json') {
+                    if (path == 'conf/' + MOCK_CONFIG) {
                         return mockConfig;
-                    } else if (path == 'conf/mockConfigWithLocalValidators.json') {
+                    } else if (path == 'conf/' + MOCK_CONFIG_LOCAL_VALIDATORS) {
                         return mockConfigWithValidators;
-                    } else if (path.indexOf('-testuser.json') == path.length - 14) {
+                    } else if (path.indexOf(testUserString) == path.length - testUserString.length) {
                         return mockUserConfig;
                     } else {
                         assert.fail(path, 'test config path', 'Incorrect config path.');
@@ -78,7 +82,7 @@ describe('configuration reader', function() {
 
         it('injects Github username/password into monitor configurations', function() {
             process.env.USER = 'testuser';
-            var config = reader.read('conf/mockconfig.json');
+            var config = reader.read('conf/' + MOCK_CONFIG);
             expect(config.monitors).to.include.keys(['numenta/experiments', 'numenta/nupic', 'numenta/nupic.tools']);
             _.each(['numenta/experiments', 'numenta/nupic', 'numenta/nupic.tools'], function(projectKey) {
                 expect(config.monitors[projectKey]).to.include.keys(['username', 'password']);
@@ -90,7 +94,7 @@ describe('configuration reader', function() {
 
         it('injects global validator configuration into each monitor', function() {
             process.env.USER = 'testuser';
-            var config = reader.read('conf/mockconfig.json');
+            var config = reader.read('conf/' + MOCK_CONFIG);
             _.each(['numenta/experiments', 'numenta/nupic', 'numenta/nupic.tools'], function(projectKey) {
                 monitorConfig = config.monitors[projectKey];
                 expect(monitorConfig).to.include.keys('validators');
@@ -104,7 +108,7 @@ describe('configuration reader', function() {
 
         it('injects local validator configuration into each monitor', function() {
             process.env.USER = 'testuser';
-            var config = reader.read('conf/mockConfigWithLocalValidators.json');
+            var config = reader.read('conf/' + MOCK_CONFIG_LOCAL_VALIDATORS);
             var monitorConfig = config.monitors['numenta/nupic.tools'];
             expect(monitorConfig).to.include.keys('validators');
             expect(monitorConfig.validators).to.include.keys('exclude');

@@ -1,6 +1,7 @@
 var fs = require('fs'),
     _ = require('underscore'),
     log = require('./logger').logger,
+    yaml = require('js-yaml'),
     GH_USERNAME = process.env.GH_USERNAME,
     GH_PASSWORD = process.env.GH_PASSWORD;
 
@@ -12,9 +13,9 @@ function readConfigFileIntoObject(path) {
     var raw = fs.readFileSync(path, 'utf-8');
     var obj;
     try {
-        obj = JSON.parse(raw);
+        obj = yaml.safeLoad(raw);
     } catch(e) {
-        throw new Error('Config file "' + path + '" is invalid JSON!');
+        throw new Error('Config file "' + path + '" is invalid YAML!');
     }
     return obj;
 }
@@ -22,7 +23,7 @@ function readConfigFileIntoObject(path) {
 function read(configFile) {
     var username = process.env.USER.toLowerCase(),
         configSplit = configFile.split('.'),
-        userFile = configSplit.slice(0, configSplit.length - 1).join('.') + '-' + username + '.json',
+        userFile = configSplit.slice(0, configSplit.length - 1).join('.') + '-' + username + '.yml',
         config = readConfigFileIntoObject(configFile),
         userConfig = null;
 
