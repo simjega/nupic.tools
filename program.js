@@ -47,9 +47,7 @@ logStream = {
 utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
     var dynamicHttpHandlerModules,
         activeValidators,
-        app = express(),
-        padInt = utils.padInt,
-        padDecimal = utils.padDecimal;
+        app = express();
 
     // Enable request/response logging.
     app.use(morgan({
