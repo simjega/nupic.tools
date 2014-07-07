@@ -1,10 +1,10 @@
 var assert = require('assert'),
-    RepositoryClient = require('../../utils/repoClient'),
+    RepositoryClient = require('../../utils/repo-client'),
     proxyquire = require('proxyquire'),
     sinon = require('sinon'),
     jsonUtils = require('../../utils/json'),
     jsonMock = {},
-    urlMap = proxyquire('../../handlers/contributorStatistics', {
+    urlMap = proxyquire('../../handlers/contributor-statistics', {
         '../utils/json': jsonMock
     });
 
