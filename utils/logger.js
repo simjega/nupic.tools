@@ -1,6 +1,6 @@
 var fs = require('fs'),
     path = require('path'),
-    winston = require('winston')
+    winston = require('winston'),
     initialized = false;
 
 function initializeLogger(logDirectory, logLevel) {
@@ -9,6 +9,9 @@ function initializeLogger(logDirectory, logLevel) {
     if (! initialized) {
         if (! logDirectory) {
             logDirectory = path.join(__dirname, 'logs');
+        }
+        if (! logLevel) {
+            logLevel = 'debug';
         }
         logPath = path.join(logDirectory, logFileName);
         if (! fs.existsSync(logDirectory)) {

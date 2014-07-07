@@ -39,7 +39,7 @@ logger.debug('nupic.tools configuration', utils.sterilizeConfig(cfg));
 
 // enable web server logging; pipe those log messages through our logger
 logStream = {
-    write: function(message, encoding){
+    write: function(message){
         logger.info(message);
     }
 };
