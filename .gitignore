@@ -1,6 +1,6 @@
 .idea/
 logs/
-config-*.json
+config-*.yml
 node_modules
 .DS_Store
 coverage
