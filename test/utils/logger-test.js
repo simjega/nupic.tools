@@ -1,6 +1,4 @@
-var assert = require('chai').assert,
-    expect = require('chai').expect,
-    should = require('chai').should(),
+var expect = require('chai').expect,
     proxyquire = require('proxyquire'),
     tk = require('timekeeper');
 
