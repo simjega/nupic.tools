@@ -162,30 +162,11 @@ function sterilizeConfig(config) {
     return out;
 }
 
-/* Dumb function for output formatting to console. */
-function padInt(n) {
-    if (n < 10) {
-        return '0' + n;
-    }
-    return n;
-}
-/* Dumb function for output formatting to console. */
-function padDecimal(n) {
-    if (n < 10) {
-        return n + '00';
-    } else if (n < 100) {
-        return n + '0';
-    }
-    return n;
-}
-
 module.exports = {
     initializeModulesWithin: initializeModulesWithin,
     constructRepoClients: constructRepoClients,
     sterilizeConfig: sterilizeConfig,
     sortStatuses: sortStatuses,
-    padInt: padInt,
-    padDecimal: padDecimal,
     normalizeStatusDescription: normalizeStatusDescription,
     lastStatusWasExternal: lastStatusWasExternal,
     __module: module // for unit testing and mocking require()

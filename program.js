@@ -39,7 +39,7 @@ logger.debug('nupic.tools configuration', utils.sterilizeConfig(cfg));
 
 // enable web server logging; pipe those log messages through our logger
 logStream = {
-    write: function(message, encoding){
+    write: function(message){
         logger.info(message);
     }
 };
@@ -47,9 +47,7 @@ logStream = {
 utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
     var dynamicHttpHandlerModules,
         activeValidators,
-        app = express(),
-        padInt = utils.padInt,
-        padDecimal = utils.padDecimal;
+        app = express();
 
     // Enable request/response logging.
     app.use(morgan({
