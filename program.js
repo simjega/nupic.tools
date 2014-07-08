@@ -81,7 +81,7 @@ utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
                 msg = '\t==> ' + name + ' listening for url pattern: ' + url;
             if (! handler.disabled) {
                 logger.verbose(msg);
-                app.use(url, handler);
+                app.get(url, handler);
             }
         });
     });

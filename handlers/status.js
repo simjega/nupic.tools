@@ -12,7 +12,7 @@ function createHandlerReport(handlers, config) {
             var handler = handlerConfig[url],
                 name = handler.title,
                 desc = handler.description;
-                htmlOut = '<a target="_blank" href="' + url + '">' + name + '</a>: ' + desc;
+                htmlOut = '<a target="_blank" href="' + handler.url + '">' + name + '</a>: ' + desc;
             if (handler.disabled) {
                 htmlOut = '<strike>' + htmlOut + '</strike>&nbsp;&nbsp;<strong>DISABLED</strong>';
             }
@@ -44,6 +44,7 @@ function generateOutputData() {
         urls.forEach(function(url) {
             var handler = handlerConfig[url](repoClients, httpHandlers, config, validators);
             output[url] = {
+                url: handler.url,
                 title: handler.title,
                 description: handler.description,
                 disabled: handler.disabled
@@ -92,8 +93,8 @@ function handler(_repoClients, _httpHandlers, _config, activeValidators) {
 
 statusReporter.title = 'Status Reporter';
 statusReporter.description = 'Reports the repositories this tools server is monitoring.';
+statusReporter.url = '/status';
 
 module.exports = {
-    '/status': handler,
-    '/': handler
+    '/status*': handler
 };

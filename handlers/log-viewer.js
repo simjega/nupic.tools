@@ -33,9 +33,10 @@ function logViewer(req, res) {
 logViewer.title = 'Log Viewer';
 logViewer.description = 'Provides an HTML display of the nupic.tools server '
     + 'logs. Defaults to display the most recent log file.';
+logViewer.url = '/logs';
 
 module.exports = {
-    '/logs': function() {
+    '/logs*': function() {
         return logViewer;
     }
 };

@@ -98,9 +98,10 @@ validateSha.title = 'SHA Validator';
 validateSha.description = 'Given a "sha" parameter, forces a complete ' +
     'validation and reports results. To post validation results to github, ' +
     'specify "postStatus=1" in URL params.';
+validateSha.url = '/validate';
 
 module.exports = {
-    '/validate': function(_repoClients) {
+    '/validate*': function(_repoClients) {
         repoClients = _repoClients;
         return validateSha;
     }
