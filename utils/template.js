@@ -7,14 +7,14 @@ var path = require('path'),
     templateFiles,
     templates = {};
 
+// On module load, read the template files, compile them, and cache them for
+// runtime usage.
 logger.debug('Compiling templates in %s', templateDir);
-
 templateFiles = fs.readdirSync(templateDir);
-
 templateFiles.forEach(function(file) {
     var filePath = path.join(templateDir, file),
         source = fs.readFileSync(filePath, 'utf-8');
-    logger.debug(filePath);
+    logger.debug('Template: %s', filePath);
     templates[file] = {
         raw: source,
         compiled: Handlebars.compile(source)
