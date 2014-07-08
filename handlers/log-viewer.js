@@ -16,7 +16,7 @@ function logViewer(req, res) {
     }
     log.query({
         limit: linesToRead,
-        order: 'asc'
+        order: 'desc'
     }, function(err, results) {
         if (err) throw err;
         var ansiLines = _.map(results.file, function(line) {
