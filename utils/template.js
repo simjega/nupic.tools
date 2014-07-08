@@ -17,13 +17,11 @@ templateFiles.forEach(function(file) {
     logger.debug('Template: %s', filePath);
     templates[file] = {
         raw: source,
-        compiled: Handlebars.compile(source)
+        compiled: Handlebars.compile(source, {noEscape: true})
     };
     logger.debug('Compiled template for %s', file);
 });
 
 module.exports = function(name, data) {
-    logger.debug('Searching for template "%s"...', name);
-    logger.debug(data);
     return templates[name].compiled(data);
 };
