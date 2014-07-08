@@ -51,11 +51,8 @@ function validateSha(req, res) {
         repoClient = repoClients[repo],
         errors = [];
 
-    if (query.postStatus == '1' || query.postStatus.toLowerCase() == 'true') {
-        postStatus = true;
-    } else {
-        postStatus = false;
-    }
+    postStatus = query.postStatus
+        && (query.postStatus == '1' || query.postStatus.toLowerCase() == 'true');
 
     if (! sha) {
         errors.push(new Error('Missing "sha" query parameter.'));
