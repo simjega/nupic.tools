@@ -1,7 +1,7 @@
 var path = require('path'),
     fs = require('fs'),
     logger = require('./logger').logger,
-    Handlebars = require('Handlebars'),
+    Handlebars = require('handlebars'),
     TEMPLATE_DIR = '../templates',
     templateDir = path.join(__dirname, TEMPLATE_DIR),
     templateFiles,
