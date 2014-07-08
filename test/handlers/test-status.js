@@ -3,13 +3,13 @@ var assert = require('assert'),
 
 describe('status reporter url mapping', function() {
     it('has an entry for the /status URL', function() {
-        assert(Object.keys(urlMap).indexOf('/status') > -1, 
+        assert(Object.keys(urlMap).indexOf('/status*') > -1,
             'handler does not have proper url mapping');
     });
 });
 
 describe('/status URL handler', function() {
-    var initializer = urlMap['/status'];
+    var initializer = urlMap['/status*'];
 
     it('is a function with title and description', function() {
         var handler = initializer();
@@ -38,25 +38,27 @@ describe('status reporter', function() {
             "</ul>\n" +
             "</body></html>";
         var mockRepoClients = {'clientA': 0, 'clientB': 1},
-            handlerA = function() {}, 
-            handlerB = function() {}
+            handlerA = function() {},
+            handlerB = function() {},
             mockHttpHandlers = [{
-                "/handlerA": function() { return handlerA; }
-            }, {
-                "/handlerB": function() { return handlerB; }
+                    "/handlerA*": function() { return handlerA; }
+                }, {
+                    "/handlerB*": function() { return handlerB; }
             }],
             mockConfig = {},
             mockValidators = ['validatorA', 'validatorB'],
             endCalled = false;
         handlerA.title = 'handlerA';
         handlerA.description = 'handlerA-description';
+        handlerA.url = '/handlerA';
         handlerB.title = 'handlerB';
         handlerB.description = 'handlerB-description';
-        var requestHandler = urlMap['/status'](
+        handlerB.url = '/handlerB';
+        var requestHandler = urlMap['/status*'](
             mockRepoClients, mockHttpHandlers, mockConfig, mockValidators
         );
         var mockRequest = {
-            url: '/bluah/bluah/status'
+            url: '/bluah/bluah/status*'
         };
         var mockResponse = {
             setHeader: function() {},
