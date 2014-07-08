@@ -119,9 +119,10 @@ contributorStatistics.description = "Generates JSON/JSONP with all contributors 
     + "and how many contributions they made for all repositories or the "
     + "repository specified in a 'repo' parameter. For JSONP add a 'callback' "
     + "parameter.";
+contributorStatistics.url = '/contribStats';
 
 module.exports = {
-    '/contribStats': function(_repoClients) {
+    '/contribStats*': function(_repoClients) {
         if (! _repoClients) {
             throw new Error('Cannot initialize handler without RepositoryClient objects');
         }
