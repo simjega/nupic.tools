@@ -1,5 +1,6 @@
 var fs = require('fs'),
     _ = require('underscore'),
+    request = require('request'),
     log = require('./logger').logger,
     yaml = require('js-yaml'),
     GH_USERNAME = process.env.GH_USERNAME,
@@ -20,53 +21,68 @@ function readConfigFileIntoObject(path) {
     return obj;
 }
 
-function read(configFile) {
+function createMonitorConfigurations(repos, hooks, contributors) {
+    var monitors = {};
+    repos.forEach(function(repo) {
+        var monitor = {
+            username: GH_USERNAME,
+            password: GH_PASSWORD,
+            contributors: contributors
+        };
+        // Only enable the Travis Validator for repos with travis enabled.
+        if (! repo.travis) {
+            monitor.validators = {
+                exclude: ["Travis Validator"]
+            };
+        }
+        // Put hooks in place if they are defined for this repo.
+        if (hooks[repo.slug]) {
+            monitor.hooks = hooks[repo.slug];
+        }
+        monitors[repo.slug] = monitor;
+    });
+    return monitors;
+}
+
+function read(configFile, callback) {
     var username = process.env.USER.toLowerCase(),
         configSplit = configFile.split('.'),
-        userFile = configSplit.slice(0, configSplit.length - 1).join('.') + '-' + username + '.yml',
+        userFile = configSplit.slice(0, configSplit.length - 1).join('.') + '-' + username + '.yaml',
         config = readConfigFileIntoObject(configFile),
         userConfig = null;
 
     userConfig = readConfigFileIntoObject(userFile);
-    if (userConfig) {
-        ['host', 'port', 'logDirectory', 'validators'].forEach(function(key) {
-            if (userConfig[key] !== undefined) {
-                config[key] = userConfig[key];
-            }
-        });
-        // Merges monitor configurations (user-specific config overrides default config).
-        if (userConfig.monitors) {
-            Object.keys(userConfig.monitors).forEach(function(outerKey) {
-                if (! config.monitors[outerKey]) {
-                    config.monitors[outerKey] = userConfig.monitors[outerKey];
-                } else {
-                    Object.keys(userConfig.monitors[outerKey]).forEach(function(innerKey) {
-                        config.monitors[outerKey][innerKey] = userConfig.monitors[outerKey][innerKey];
-                    });
+    // Fail now if there is no repos_url.
+    if (! config.repos_url) {
+        return callback(Error('Configuration is missing "repos_url".'));
+    }
+
+    request.get(config.repos_url, function(err, resp, body) {
+        var repos;
+        if (err) {
+            return callback(err);
+        }
+
+        repos = yaml.safeLoad("---\n" + body).repos;
+        config.repos = repos;
+
+        if (userConfig) {
+            ['host', 'port', 'logDirectory'].forEach(function(key) {
+                if (userConfig[key] !== undefined) {
+                    config[key] = userConfig[key];
                 }
             });
+            // If user specifies their own repos, use them instead of the global ones.
+            if (userConfig.repos) {
+                config.repos = userConfig.repos;
+            }
         }
-    }
-    // Each monitor also needs a username/password for the Github API, which we're getting from the environment.
-    _.each(config.monitors, function(monitorConfig, monitorName) {
-        config.monitors[monitorName].username = GH_USERNAME;
-        config.monitors[monitorName].password = GH_PASSWORD;
-    });
 
-    // Now if there are global validators defined, spread them across all monitor configs.
-    if (config.validators) {
-        _.each(config.monitors, function(monitorConfig) {
-            // We are only dealing with validators.exclude at this point. This assure that local
-            // validator.exclude configs are merged with global validator.exclude.
-            if (! monitorConfig.validators) {
-                monitorConfig.validators = {exclude: []};
-            }
-            if (config.validators.exclude) {
-                monitorConfig.validators.exclude = monitorConfig.validators.exclude.concat(config.validators.exclude);
-            }
-        });
-    }
-    return config;
+        config.monitors = createMonitorConfigurations(config.repos,
+            config.hooks, config.contributors);
+
+        callback(null, config);
+    });
 }
 
 // Fail fast.

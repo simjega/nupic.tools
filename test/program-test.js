@@ -11,7 +11,9 @@ utilStub = {
     constructRepoClients: function() {}
 };
 configReaderStub = {
-    read: function() { return {host: 'host', port: 666}; }
+    read: function(path, callback) {
+        callback(null, {host: 'host', port: 666});
+    }
 };
 
 describe('main program', function() {
@@ -20,7 +22,7 @@ describe('main program', function() {
             proxyquire('./../program', {
                 './utils/general': utilStub,
                 './utils/config-reader': {read: function(configPath) {
-                    assert.equal(configPath, path.join(__dirname, '..', 'conf/config.yml'), 'Wrong default configuration path.');
+                    assert.equal(configPath, path.join(__dirname, '..', 'conf/config.yaml'), 'Wrong default configuration path.');
                     return {host: 'host', port: 666};
                 }}
             });
