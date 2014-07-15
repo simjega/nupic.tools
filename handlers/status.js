@@ -1,4 +1,5 @@
 var url = require('url'),
+    _ = require('underscore'),
     json = require('../utils/json'),
     template = require('../utils/template'),
     repoClients,
@@ -6,7 +7,7 @@ var url = require('url'),
     config,
     validators;
 
-function generateOutputData() {
+function generateOutputData(callback) {
     var handlers = httpHandlers.map(function(handlerConfig) {
         var urls = Object.keys(handlerConfig),
             output = {};
@@ -21,28 +22,33 @@ function generateOutputData() {
         });
         return output;
     });
-    return {
-        monitors: Object.keys(repoClients),
-        validators: validators,
-        handlers: handlers
-    };
+    // Grab one repoClient to get the current rateLimit.
+    _.values(repoClients)[0].rateLimit(function(err, rateLimit) {
+        callback(err, {
+            monitors: Object.keys(repoClients),
+            validators: validators,
+            handlers: handlers,
+            rateLimit: rateLimit
+        });
+    });
 }
 
 function statusReporter(req, res) {
-    var htmlOut,
-        jsonOut = generateOutputData();
-    if (url.parse(req.url, false, true).pathname.split(".").pop() == "json") {
-        if(url.parse(req.url).query !== null)   {
-            json.renderJsonp(jsonOut, url.parse(req.url, true).query.callback, res);
-        }   else    {
-            json.render(jsonOut, res);
+    generateOutputData(function(err, jsonOut) {
+        var htmlOut;
+        if (url.parse(req.url, false, true).pathname.split(".").pop() == "json") {
+            if(url.parse(req.url).query !== null)   {
+                json.renderJsonp(jsonOut, url.parse(req.url, true).query.callback, res);
+            }   else    {
+                json.render(jsonOut, res);
+            }
+        } else {
+            htmlOut = template('status.html', jsonOut);
+            res.setHeader('Content-Type', 'text/html');
+            res.setHeader('Content-Length', htmlOut.length);
+            res.end(htmlOut);
         }
-    } else {
-        htmlOut = template('status.html', jsonOut);
-        res.setHeader('Content-Type', 'text/html');
-        res.setHeader('Content-Length', htmlOut.length);
-        res.end(htmlOut);
-    }
+    });
 }
 
 function handler(_repoClients, _httpHandlers, _config, activeValidators) {

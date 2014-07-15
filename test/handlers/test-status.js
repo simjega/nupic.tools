@@ -29,7 +29,13 @@ describe('status reporter', function() {
         var expectedHtml = fs.readFileSync(path.join(__dirname, '../mockData/mock-status.html'), 'utf-8');
         // Remove all whitespace for comparison.
         expectedHtml = expectedHtml.replace(/\s+/g, '');
-        var mockRepoClients = {'clientA': 0, 'clientB': 1},
+        function mockRateLimit(cb) {
+            cb();
+        }
+        var mockRepoClients = {
+                'clientA': {rateLimit:mockRateLimit},
+                'clientB': {rateLimit:mockRateLimit}
+            },
             handlerA = function() {},
             handlerB = function() {},
             mockHttpHandlers = [{

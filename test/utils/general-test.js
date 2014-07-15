@@ -106,6 +106,10 @@ describe('general utilities', function() {
         MockRepoClientClass.prototype.confirmWebhookExists = function(_, _, cb) {
             cb();
         };
+        // Mock out rateLimit
+        MockRepoClientClass.prototype.rateLimit = function(cb) {
+            cb(null, {});
+        };
 
         it('does not duplicate validator exclusions', function(done) {
 

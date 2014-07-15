@@ -57,6 +57,7 @@ function initializeModulesWithin(dir, exclusions) {
 function constructRepoClients(prWebhookUrl, config, callback) {
     var repoClients = {},
         globalValidatorConfig = config.validators,
+        rateLimitLogged = false,
         count = 0;
     // Set up one github client for each repo target in config.
     Object.keys(config.monitors).forEach(function(monitorKey) {
@@ -84,6 +85,13 @@ function constructRepoClients(prWebhookUrl, config, callback) {
         log.log('RepositoryClient created for '
             + monitorConfig.username.magenta + ' on '
             + repoClient.toString().magenta);
+
+        if (! rateLimitLogged) {
+            repoClient.rateLimit(function(err, rateLimit) {
+                log.debug(rateLimit);
+            });
+            rateLimitLogged = true;
+        }
 
         repoClient.confirmWebhookExists(prWebhookUrl, ['push', 'pull_request', 'status'], function(err, hook) {
             if (err) {

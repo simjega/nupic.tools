@@ -116,6 +116,13 @@ RepositoryClient.prototype.getCommit = function(sha, callback) {
     }, callback);
 };
 
+RepositoryClient.prototype.rateLimit = function(callback) {
+    this.github.misc.rateLimit({
+        user: this.org,
+        repo: this.repo
+    }, callback);
+}
+
 RepositoryClient.prototype.confirmWebhookExists = function(url, events, callback) {
     var me = this;
     this.github.repos.getHooks({
