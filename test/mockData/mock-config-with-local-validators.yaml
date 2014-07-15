@@ -1,14 +1,18 @@
 ---
   host: "issues.numenta.org"
   port: 8081
-  monitors: 
-    numenta/experiments: 
+
+  monitors:
+
+    numenta/experiments:
       contributors: "http://numenta.org/resources/contributors.csv"
-    numenta/nupic.tools: 
+
+    numenta/nupic.tools:
       contributors: "http://numenta.org/resources/contributors.csv"
       validators: 
         exclude: 
           - "Mock Validator"
+
   mailinglists: 
     - 
       name: "NuPIC General"

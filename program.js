@@ -15,79 +15,86 @@ var assert = require('assert'),
     // local libs
     utils = require('./utils/general'),
     githubHookHandler = require('./github-hook'),
-    // The configReader reads the given file, and merges it with any existing user
-    // configuration file.
-    cfg = require('./utils/config-reader').read(path.join(__dirname, 'conf/config.yml')),
+    configReader = require('./utils/config-reader'),
 
-    HOST = cfg.host,
-    PORT = cfg.port || 8081,
-
-    baseUrl = 'http://' + HOST + ':' + PORT,
     // This path is registered with Github as a webhook URL.
     githubHookPath = '/github-hook',
-    prWebhookUrl = baseUrl + githubHookPath,
 
     // This directory contains all the additional service
     // handlers that will be loaded dynamically and attached
     // to this web server.
     HANDLER_DIR = 'handlers';
 
-logger = logger.initialize(cfg.logDirectory, cfg.logLevel);
-logger.info('nupic.tools server starting...');
-logger.info('nupic.tools will use the following configuration:');
-logger.debug('nupic.tools configuration', utils.sterilizeConfig(cfg));
-
-// enable web server logging; pipe those log messages through our logger
-logStream = {
-    write: function(message){
-        logger.info(message);
+// The configReader reads the given file, and merges it with any existing user
+// configuration file.
+configReader.read(path.join(__dirname, 'conf/config.yaml'), function(err, cfg) {
+    if (err) {
+        throw (err);
     }
-};
 
-utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
-    var dynamicHttpHandlerModules,
-        activeValidators,
-        app = express();
+    var host = cfg.host,
+        port = cfg.port || 8081,
+        baseUrl = 'http://' + host + ':' + port,
+        prWebhookUrl = baseUrl + githubHookPath;
 
-    // Enable request/response logging.
-    app.use(morgan({
-        format: 'dev',
-        stream: logStream
-    }));
+    logger = logger.initialize(cfg.logDirectory, cfg.logLevel);
+    logger.info('nupic.tools server starting...');
+    logger.info('nupic.tools will use the following configuration:');
+    logger.debug('nupic.tools configuration', utils.sterilizeConfig(cfg));
 
-    // Auto body parsing is nice.
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: true }));
+    // enable web server logging; pipe those log messages through our logger
+    logStream = {
+        write: function(message){
+            logger.info(message);
+        }
+    };
 
-    // This puts the Github webhook handler into place
-    app.use(githubHookPath, githubHookHandler.initializer(repoClients, cfg));
+    utils.constructRepoClients(prWebhookUrl, cfg, function(repoClients) {
+        var dynamicHttpHandlerModules,
+            activeValidators,
+            app = express();
 
-    logger.verbose('The following validators are active:');
-    activeValidators = githubHookHandler.getValidators();
-    activeValidators.forEach(function(v) {
-        logger.verbose('\t==> ' + v);
-    });
+        // Enable request/response logging.
+        app.use(morgan({
+            format: 'dev',
+            stream: logStream
+        }));
 
-    dynamicHttpHandlerModules = utils.initializeModulesWithin(HANDLER_DIR);
+        // Auto body parsing is nice.
+        app.use(bodyParser.json());
+        app.use(bodyParser.urlencoded({ extended: true }));
 
-    // Loads all the modules within the handlers directory, and registers the URLs
-    // the declared, linked to their request handler functions.
-    logger.verbose('The following URL handlers are active:');
-    dynamicHttpHandlerModules.forEach(function(handlerConfig) {
-        var urls = Object.keys(handlerConfig);
-        urls.forEach(function(url) {
-            var handler = handlerConfig[url](repoClients, dynamicHttpHandlerModules, cfg, activeValidators),
-                name = handler.title,
-                msg = '\t==> ' + name + ' listening for url pattern: ' + url;
-            if (! handler.disabled) {
-                logger.verbose(msg);
-                app.get(url, handler);
-            }
+        // This puts the Github webhook handler into place
+        app.use(githubHookPath, githubHookHandler.initializer(repoClients, cfg));
+
+        logger.verbose('The following validators are active:');
+        activeValidators = githubHookHandler.getValidators();
+        activeValidators.forEach(function(v) {
+            logger.verbose('\t==> ' + v);
         });
-    });
 
-    app.listen(PORT, function() {
-        logger.info('Server running at %s.', baseUrl);
+        dynamicHttpHandlerModules = utils.initializeModulesWithin(HANDLER_DIR);
+
+        // Loads all the modules within the handlers directory, and registers the URLs
+        // the declared, linked to their request handler functions.
+        logger.verbose('The following URL handlers are active:');
+        dynamicHttpHandlerModules.forEach(function(handlerConfig) {
+            var urls = Object.keys(handlerConfig);
+            urls.forEach(function(url) {
+                var handler = handlerConfig[url](repoClients, dynamicHttpHandlerModules, cfg, activeValidators),
+                    name = handler.title,
+                    msg = '\t==> ' + name + ' listening for url pattern: ' + url;
+                if (! handler.disabled) {
+                    logger.verbose(msg);
+                    app.get(url, handler);
+                }
+            });
+        });
+
+        app.listen(port, function() {
+            logger.info('Server running at %s.', baseUrl);
+        });
+
     });
 
 });
