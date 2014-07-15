@@ -30,7 +30,7 @@ describe('status reporter', function() {
         // Remove all whitespace for comparison.
         expectedHtml = expectedHtml.replace(/\s+/g, '');
         function mockRateLimit(cb) {
-            cb();
+            cb(null, {rate: {remaining: 5000}});
         }
         var mockRepoClients = {
                 'clientA': {rateLimit:mockRateLimit},
