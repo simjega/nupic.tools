@@ -266,7 +266,7 @@ function initializer(clients, config) {
 
         if (payload.name) {
             repoName = payload.name;
-        } else if (payload.repository.full_name) {
+        } else if (payload.repository && payload.repository.full_name) {
             repoName = payload.repository.full_name;
         } else if (payload.repository) {
             // Probably a push event.
