@@ -108,7 +108,7 @@ describe('general utilities', function() {
         };
         // Mock out rateLimit
         MockRepoClientClass.prototype.rateLimit = function(cb) {
-            cb(null, {});
+            cb(null, {rate: {remaining: 1000, reset: new Date().getTime()}});
         };
 
         it('does not duplicate validator exclusions', function(done) {
