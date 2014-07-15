@@ -29,6 +29,10 @@ function createMonitorConfigurations(repos, hooks, contributors) {
             password: GH_PASSWORD,
             contributors: contributors
         };
+        // Skip repos explicitly marked as "monitor: false"
+        if (typeof(repo.monitor) == 'boolean' && ! repo.monitor) {
+            return;
+        }
         // Only enable the Travis Validator for repos with travis enabled.
         if (! repo.travis) {
             monitor.validators = {

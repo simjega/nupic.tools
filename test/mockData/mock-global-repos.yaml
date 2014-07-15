@@ -64,7 +64,7 @@
     - slug: numenta/nupic.cerebro2.server
       type: app
 
-    - slug: rhyolight/nupic.critic
+    - slug: numenta/nupic.critic
       type: app
 
     # Misc repositories
@@ -79,9 +79,11 @@
       travis: true
       coverage: true
       deploy: "https://www.npmjs.org/package/sprinter"
+      monitor: false
 
     - slug: "rhyolight/travis-foreman"
       type: app
       travis: true
       coverage: true
       deploy: "https://pypi.python.org/pypi/pycept/"
+      monitor: false

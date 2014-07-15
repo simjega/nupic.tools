@@ -123,6 +123,9 @@ describe('configuration reader', function() {
             reader.read('conf/' + MOCK_CONFIG, function(err, config) {
                 expect(err).to.not.exist;
                 expect(config.monitors).to.include.keys(['numenta/nupic.core', 'numenta/nupic', 'numenta/nupic.tools']);
+                // Two are marked as "monitor:false", so only 18 of the 20 in the global config
+                // will be used.
+                expect(_.keys(config.monitors)).to.have.length(18);
                 _.each(['numenta/nupic.core', 'numenta/nupic', 'numenta/nupic.tools'], function(projectKey) {
                     expect(config.monitors[projectKey]).to.include.keys(['username', 'password']);
                     expect(config.monitors[projectKey].username).to.equal('mockghusername');
