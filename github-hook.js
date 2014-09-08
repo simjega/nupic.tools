@@ -48,12 +48,9 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
     } else {
 
         utils.lastStatusWasExternal(repoClient, sha, function(external) {
-
             if (external) {
-
                 // only runs validation if the PR is mergeable
-                if(pullRequest.mergeable)
-                {
+                if(pullRequest.mergeable) {
                     shaValidator.performCompleteValidation(
                         sha,
                         githubUser,
@@ -62,18 +59,14 @@ function handlePullRequest(action, pullRequest, repoClient, cb) {
                         true,
                         cb
                     );
-                }
-                else
-                {
+                } else {
                     postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient);
-
                     if (cb) { cb(); }
                 }
-
             } else {
                 // ignore statuses that were created by this server
                 // TODO it should never get into this branch, but it's seen in production
-                // just log it for futher investigation
+                // just log it for further investigation
                 log.warn('Ignoring status created by nupic.tools for ' + sha + '...');
                 if (cb) { cb(); }
             }

@@ -147,13 +147,20 @@ function sortStatuses(statuses) {
  * Checks to see if the latest status in the history for this SHA was created by
  * the nupic.tools server or was externally created.
  */
-function lastStatusWasExternal(repoClient, sha, cb) {
+function lastStatusWasExternal(repoClient, sha, callback) {
     repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
         var latestStatus = sortStatuses(statusHistory).shift();
-        if (latestStatus && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
-            if (cb) { cb(false); }
+        if (statusHistory.length > 1
+            && latestStatus
+            && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+
+            if (callback) {
+                callback(false);
+            }
         } else {
-            cb(true);
+            if (callback) {
+                callback(true);
+            }
         }
     });
 }
