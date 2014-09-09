@@ -149,18 +149,18 @@ function sortStatuses(statuses) {
  */
 function lastStatusWasExternal(repoClient, sha, callback) {
     repoClient.getAllStatusesFor(sha, function(err, statusHistory) {
-        var latestStatus = sortStatuses(statusHistory).shift();
-        if (statusHistory.length > 1
-            && latestStatus
-            && latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) == 0) {
+        var latestStatus
+          , external = false;
 
-            if (callback) {
-                callback(false);
+        if (statusHistory.length) {
+            latestStatus = sortStatuses(statusHistory).shift();
+            if (latestStatus.description.indexOf(NUPIC_STATUS_PREFIX) != 0) {
+                external = true;
             }
-        } else {
-            if (callback) {
-                callback(true);
-            }
+        }
+
+        if (callback) {
+            callback(external);
         }
     });
 }
