@@ -218,7 +218,7 @@ function postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient) {
  * @param config {object} Application configuration (used to extract the
  *                        repository monitor configuration and push hook).
  */
-function handlePushEvent(payload, config, callback) {
+function handlePushEvent(payload, config) {
     var repoSlug = payload.repository.organization
             + '/' + payload.repository.name,
         branch = payload.ref.split('/').pop(),
