@@ -90,7 +90,6 @@ configReader.read(path.join(__dirname, 'conf/config.yaml'), function(err, cfg) {
                 }
             });
         });
-console.log(port);
         app.listen(port, function() {
             logger.info('Server running at %s%s.', baseUrl, '/status');
         });
