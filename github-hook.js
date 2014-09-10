@@ -218,7 +218,7 @@ function postStatusForNonMergeablePullRequest(sha, pullRequest, repoClient) {
  * @param config {object} Application configuration (used to extract the
  *                        repository monitor configuration and push hook).
  */
-function handlePushEvent(payload, config) {
+function handlePushEvent(payload, config, callback) {
     var repoSlug = payload.repository.organization
             + '/' + payload.repository.name,
         branch = payload.ref.split('/').pop(),
@@ -315,9 +315,14 @@ function initializer(clients, config) {
             );
         }
         // Assuming everything else is a push event.
-        else {
+        else if (payload.ref) {
             log.debug('** Handle Push Event **')
             handlePushEvent(payload, config);
+            whenDone();
+        } else {
+            log.error('** Unknown GitHub Webhook Payload! **');
+            log.error(payload);
+            whenDone();
         }
     };
 }
