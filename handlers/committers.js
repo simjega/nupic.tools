@@ -1,14 +1,32 @@
 var GitHubApi = require('github'),
+    _ = require('underscore'),
+    async = require('async'),
     json = require('../utils/json'),
     committerTeamId = 418155,
     gh;
 
+function getGitHubUser(username, callback) {
+    gh.user.get({username: username}, callback);
+}
+
 function requestHandler(req, res) {
     gh.orgs.getTeamMembers({id: committerTeamId}, function(err, members) {
+        var userFetchers = [];
         if (err) {
             json.renderErrors(err, res);
         } else {
-            json.render(members, res);
+            _.each(members, function(member) {
+                userFetchers.push(function(callback) {
+                    getGitHubUser(member.login, callback);
+                });
+            });
+            async.parallel(userFetchers, function(err, users) {
+                if (err) {
+                    json.renderErrors(err, res);
+                } else {
+                    json.render(users, res);
+                }
+            });
         }
     });
 }
