@@ -315,9 +315,14 @@ function initializer(clients, config) {
             );
         }
         // Assuming everything else is a push event.
-        else {
+        else if (payload.ref) {
             log.debug('** Handle Push Event **')
             handlePushEvent(payload, config);
+            whenDone();
+        } else {
+            log.error('** Unknown GitHub Webhook Payload! **');
+            log.error(payload);
+            whenDone();
         }
     };
 }
