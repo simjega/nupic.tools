@@ -1,7 +1,7 @@
-var cache =         require('memory-cache'),
-    jsonUtils =     require('../utils/json'),
-    nodeURL =       require('url'),
-    log =           require('../utils/logger').logger,
+var cache = require('memory-cache'),
+    jsonUtils = require('../utils/json'),
+    nodeURL = require('url'),
+    log = require('../utils/logger').logger,
 
     cacheTTL =      1000 * 60 * 60 * 24,    // 24 hour cache
     repoClients =   null;
@@ -133,7 +133,6 @@ function writeResponse(response, errors, dataOut, jsonpCallback) {
  */
 function contributorStatistics (request, response)    {
     var dataOut = {},
-        repoNames = Object.keys(repoClients),
         errors = [],
         urlQuery = nodeURL.parse(request.url, true).query,
         jsonpCallback = urlQuery.callback,

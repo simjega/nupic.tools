@@ -11,6 +11,7 @@ function getGitHubUser(username, callback) {
 }
 
 function requestHandler(req, res) {
+    var jsonpCallback = req.query.callback;
     gh.orgs.getTeamMembers({id: committerTeamId}, function(err, members) {
         var userFetchers;
         if (err) {
@@ -23,9 +24,9 @@ function requestHandler(req, res) {
             });
             async.parallel(userFetchers, function(err, users) {
                 if (err) {
-                    json.renderErrors(err, res);
+                    json.renderErrors(err, res, jsonpCallback);
                 } else {
-                    json.render(users, res);
+                    json.render(users, res, jsonpCallback);
                 }
             });
         }
