@@ -6,19 +6,20 @@ var GitHubApi = require('github'),
     gh;
 
 function getGitHubUser(username, callback) {
-    gh.user.get({username: username}, callback);
+//    gh.user.get({username: username}, callback);
+    gh.user.getFrom({user: username}, callback);
 }
 
 function requestHandler(req, res) {
     gh.orgs.getTeamMembers({id: committerTeamId}, function(err, members) {
-        var userFetchers = [];
+        var userFetchers;
         if (err) {
             json.renderErrors(err, res);
         } else {
-            _.each(members, function(member) {
-                userFetchers.push(function(callback) {
+            userFetchers = _.map(members, function(member) {
+                return function(callback) {
                     getGitHubUser(member.login, callback);
-                });
+                };
             });
             async.parallel(userFetchers, function(err, users) {
                 if (err) {
