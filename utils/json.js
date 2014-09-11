@@ -15,7 +15,6 @@ function renderJsonp(output, cbName, res) {
     }
     textOut = cbName + '(' + out + ')';
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Content-Length', textOut.length);
     res.end(textOut);
 }
 
