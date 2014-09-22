@@ -8,7 +8,7 @@ tools_server="${script_dir}/../program.js"
 
 echo
 echo "Starting: ${tools_server}"
-forever start $tools_server
+forever start $tools_server -m 50
 
 echo
 forever list
